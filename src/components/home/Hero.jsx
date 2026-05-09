@@ -1,4 +1,4 @@
-// components/home/Hero.jsx
+// :// components/home/Hero.jsx
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -46,54 +46,108 @@ const Hero = () => {
   // Reduce floating icons on mobile and low-end devices
   const floatingIcons = isLowEndDevice 
     ? [
-        { Icon: FaSun, size: 28, top: "10%", left: "5%", color: "#f59e0b" },
+        { Icon: FaSun, size: 28, top: "10%", left: "5%", color: "#fbbf24" },
         { Icon: GiCrystalBall, size: 32, bottom: "20%", left: "3%", color: "#a855f7" },
-        { Icon: FaStar, size: 20, top: "70%", left: "15%", color: "#eab308" },
+        { Icon: FaStar, size: 20, top: "70%", left: "15%", color: "#fcd34d" },
       ]
     : isMobile
     ? [
-        { Icon: FaSun, size: 28, top: "10%", left: "5%", delay: 0, duration: 20, color: "#f59e0b" },
-        { Icon: FaMoon, size: 24, top: "15%", right: "8%", delay: 2, duration: 22, color: "#94a3b8" },
+        { Icon: FaSun, size: 28, top: "10%", left: "5%", delay: 0, duration: 20, color: "#fbbf24" },
+        { Icon: FaMoon, size: 24, top: "15%", right: "8%", delay: 2, duration: 22, color: "#cbd5e1" },
         { Icon: GiCrystalBall, size: 32, bottom: "20%", left: "3%", delay: 1, duration: 18, color: "#a855f7" },
-        { Icon: RiStarSLine, size: 20, top: "50%", right: "12%", delay: 3, duration: 24, color: "#f97316" },
-        { Icon: FaStar, size: 18, top: "70%", left: "15%", delay: 1.5, duration: 16, color: "#eab308" },
+        { Icon: RiStarSLine, size: 20, top: "50%", right: "12%", delay: 3, duration: 24, color: "#fb923c" },
+        { Icon: FaStar, size: 18, top: "70%", left: "15%", delay: 1.5, duration: 16, color: "#fcd34d" },
         { Icon: FaRing, size: 22, top: "60%", right: "25%", delay: 0.8, duration: 20, color: "#f43f5e" },
       ]
     : [
-        { Icon: FaSun, size: 32, top: "10%", left: "5%", delay: 0, duration: 20, color: "#f59e0b" },
-        { Icon: FaMoon, size: 28, top: "15%", right: "8%", delay: 2, duration: 22, color: "#94a3b8" },
+        { Icon: FaSun, size: 32, top: "10%", left: "5%", delay: 0, duration: 20, color: "#fbbf24" },
+        { Icon: FaMoon, size: 28, top: "15%", right: "8%", delay: 2, duration: 22, color: "#cbd5e1" },
         { Icon: GiCrystalBall, size: 40, bottom: "20%", left: "3%", delay: 1, duration: 18, color: "#a855f7" },
-        { Icon: RiStarSLine, size: 24, top: "50%", right: "12%", delay: 3, duration: 24, color: "#f97316" },
-        { Icon: FaStar, size: 20, top: "70%", left: "15%", delay: 1.5, duration: 16, color: "#eab308" },
-        { Icon: GiEarthAmerica, size: 36, bottom: "30%", right: "5%", delay: 2.5, duration: 21, color: "#3b82f6" },
-        { Icon: FaGlobe, size: 30, top: "80%", right: "20%", delay: 0.5, duration: 19, color: "#06b6d4" },
-        { Icon: GiAstronautHelmet, size: 35, top: "25%", left: "20%", delay: 1.8, duration: 23, color: "#8b5cf6" },
-        { Icon: GiPlanetCore, size: 28, bottom: "40%", left: "25%", delay: 2.2, duration: 17, color: "#ec489a" },
+        { Icon: RiStarSLine, size: 24, top: "50%", right: "12%", delay: 3, duration: 24, color: "#fb923c" },
+        { Icon: FaStar, size: 20, top: "70%", left: "15%", delay: 1.5, duration: 16, color: "#fcd34d" },
+        { Icon: GiEarthAmerica, size: 36, bottom: "30%", right: "5%", delay: 2.5, duration: 21, color: "#60a5fa" },
+        { Icon: FaGlobe, size: 30, top: "80%", right: "20%", delay: 0.5, duration: 19, color: "#22d3ee" },
+        { Icon: GiAstronautHelmet, size: 35, top: "25%", left: "20%", delay: 1.8, duration: 23, color: "#c084fc" },
+        { Icon: GiPlanetCore, size: 28, bottom: "40%", left: "25%", delay: 2.2, duration: 17, color: "#f472b6" },
         { Icon: FaRing, size: 26, top: "60%", right: "25%", delay: 0.8, duration: 20, color: "#f43f5e" },
-        { Icon: FaFeatherAlt, size: 22, bottom: "15%", right: "15%", delay: 3.2, duration: 25, color: "#d946ef" },
+        { Icon: FaFeatherAlt, size: 22, bottom: "15%", right: "15%", delay: 3.2, duration: 25, color: "#e879f9" },
         { Icon: RiStarSLine, size: 18, top: "35%", left: "35%", delay: 2.7, duration: 18, color: "#facc15" },
       ];
 
   // Stars and planets for space background
-  const starCount = isLowEndDevice ? 30 : isMobile ? 60 : 100;
+  const starCount = isLowEndDevice ? 40 : isMobile ? 80 : 150;
   
   const planets = [
     { name: "Mercury", size: 20, left: "5%", top: "10%", delay: 0, duration: 20, color: "#c4a35a" },
     { name: "Venus", size: 25, left: "85%", top: "15%", delay: 2, duration: 25, color: "#e8b4b4" },
-    { name: "Earth", size: 28, left: "10%", top: "80%", delay: 4, duration: 22, color: "#4a90e2" },
-    { name: "Mars", size: 22, left: "80%", top: "75%", delay: 1, duration: 18, color: "#e74c3c" },
+    { name: "Earth", size: 28, left: "10%", top: "80%", delay: 4, duration: 22, color: "#60a5fa" },
+    { name: "Mars", size: 22, left: "80%", top: "75%", delay: 1, duration: 18, color: "#f87171" },
     { name: "Jupiter", size: 35, left: "90%", top: "85%", delay: 3, duration: 30, color: "#d4a574" },
-    { name: "Saturn", size: 30, left: "2%", top: "50%", delay: 5, duration: 28, color: "#e8c9a0" },
+    { name: "Saturn", size: 30, left: "2%", top: "50%", delay: 5, duration: 28, color: "#fbbf24" },
   ];
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-offWhite to-orange-50/50">
-      {/* Background Gradient Orbs */}
+    <section className="relative overflow-hidden">
+      {/* Full Background - Cosmic Space Theme */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950" />
+      
+      {/* Stars Background - Full Coverage */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-200/30 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-orange-200/30 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-yellow-100/20 rounded-full blur-3xl"></div>
+        {[...Array(starCount)].map((_, i) => (
+          <div
+            key={`star-${i}`}
+            className="absolute bg-white rounded-full animate-twinkle"
+            style={{
+              width: `${Math.random() * 2 + 1}px`,
+              height: `${Math.random() * 2 + 1}px`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${2 + Math.random() * 3}s`,
+              opacity: Math.random() * 0.6 + 0.2,
+            }}
+          />
+        ))}
       </div>
+
+      {/* Floating Planets - Full Coverage */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {planets.map((planet, index) => (
+          <div
+            key={planet.name}
+            className="absolute rounded-full animate-float-planet"
+            style={{
+              width: `${planet.size}px`,
+              height: `${planet.size}px`,
+              left: planet.left,
+              top: planet.top,
+              backgroundColor: planet.color,
+              boxShadow: `0 0 ${planet.size / 3}px ${planet.color}80`,
+              animationDelay: `${planet.delay}s`,
+              animationDuration: `${planet.duration}s`,
+              opacity: isLowEndDevice ? 0.3 : 0.5,
+            }}
+          >
+            <div 
+              className="absolute inset-0 rounded-full blur-md"
+              style={{
+                backgroundColor: planet.color,
+                opacity: 0.4,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Nebula Effects */}
+      {!isLowEndDevice && (
+        <>
+          <div className="absolute top-10 left-5 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl animate-pulse-slow" />
+          <div className="absolute bottom-10 right-5 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse-slower" />
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/8 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute top-20 left-1/3 w-40 h-40 bg-rose-500/8 rounded-full blur-3xl animate-pulse-slow" />
+        </>
+      )}
 
       {/* Floating Icons Container */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -116,9 +170,9 @@ const Hero = () => {
                 <IconComponent
                   size={item.size}
                   color={item.color}
-                  className="opacity-20 transition-opacity duration-300"
+                  className="opacity-30 transition-opacity duration-300"
                   style={{
-                    filter: "drop-shadow(0 0 8px rgba(0,0,0,0.1))",
+                    filter: "drop-shadow(0 0 8px rgba(0,0,0,0.2))",
                   }}
                 />
               </div>
@@ -151,9 +205,9 @@ const Hero = () => {
               <IconComponent
                 size={item.size}
                 color={item.color}
-                className="opacity-20 hover:opacity-30 transition-opacity duration-300"
+                className="opacity-30 hover:opacity-40 transition-opacity duration-300"
                 style={{
-                  filter: "drop-shadow(0 0 8px rgba(0,0,0,0.1))",
+                  filter: "drop-shadow(0 0 8px rgba(0,0,0,0.2))",
                 }}
               />
             </motion.div>
@@ -163,23 +217,23 @@ const Hero = () => {
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12 sm:py-16 lg:py-20 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          {/* Left Side - Text Content */}
+          {/* Left Side - Text Content (light colors on dark background) */}
           <motion.div
             initial={{ opacity: 0, x: -28 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="space-y-5 sm:space-y-6 will-change-transform"
           >
-            <div className="inline-flex items-center gap-3 bg-orange-100/60 text-red-700 px-3 py-1 rounded-full text-sm font-medium w-max shadow-sm backdrop-blur-sm">
-              <RiStarSLine /> Featured
+            <div className="inline-flex items-center gap-3 bg-amber-500/20 backdrop-blur-sm border border-amber-400/30 text-amber-200 px-3 py-1 rounded-full text-sm font-medium w-max shadow-lg">
+              <RiStarSLine className="text-amber-300" /> Featured
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
               Elevate your life with <Accent>astrology</Accent>, yoga &
               authentic ritual tools
             </h1>
 
-            <p className="text-gray-600 max-w-2xl text-base sm:text-lg">
+            <p className="text-gray-300 max-w-2xl text-base sm:text-lg">
               Personalized consultations, premium courses, and ethically sourced
               products — all designed to help you live with clarity, balance,
               and intention.
@@ -187,120 +241,92 @@ const Hero = () => {
 
             <div className="flex flex-wrap gap-3 sm:gap-4 items-center">
               <CTA>Book a Consultation</CTA>
-              <button className="px-4 sm:px-5 py-2 rounded-2xl border border-red-200 text-red-600 font-semibold hover:bg-red-50 transition text-sm sm:text-base">
-                Browse Products
-              </button>
+              <a href="/products">
+                <button className="px-4 sm:px-5 py-2 rounded-2xl border border-amber-400/50 bg-amber-500/10 backdrop-blur-sm text-amber-200 font-semibold hover:bg-amber-500/20 transition text-sm sm:text-base shadow-lg">
+                  Browse Products
+                </button>
+              </a>
             </div>
 
             <div className="flex flex-wrap gap-4 sm:gap-6 items-center mt-4">
-              <div className="flex items-center gap-2 sm:gap-3 bg-white/70 px-3 py-2 rounded-lg shadow-sm backdrop-blur-sm">
-                <HiOutlineUser className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+              <div className="flex items-center gap-2 sm:gap-3 bg-white/10 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-white/20">
+                <HiOutlineUser className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
                 <div>
-                  <div className="text-xs sm:text-sm font-semibold">4.9/5</div>
-                  <div className="text-[10px] sm:text-xs text-gray-500">Avg. rating</div>
+                  <div className="text-xs sm:text-sm font-semibold text-white">4.9/5</div>
+                  <div className="text-[10px] sm:text-xs text-gray-400">Avg. rating</div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 sm:gap-3 bg-white/70 px-3 py-2 rounded-lg shadow-sm backdrop-blur-sm">
-                <GiCrystalBall className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+              <div className="flex items-center gap-2 sm:gap-3 bg-white/10 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-white/20">
+                <GiCrystalBall className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                 <div>
-                  <div className="text-xs sm:text-sm font-semibold">2500+</div>
-                  <div className="text-[10px] sm:text-xs text-gray-500">Clients served</div>
+                  <div className="text-xs sm:text-sm font-semibold text-white">2500+</div>
+                  <div className="text-[10px] sm:text-xs text-gray-400">Clients served</div>
                 </div>
               </div>
 
-              <div className="hidden md:flex items-center gap-2 sm:gap-3 bg-white/70 px-3 py-2 rounded-lg shadow-sm backdrop-blur-sm">
-                <HiOutlineShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+              <div className="hidden md:flex items-center gap-2 sm:gap-3 bg-white/10 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-white/20">
+                <HiOutlineShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-rose-400" />
                 <div>
-                  <div className="text-xs sm:text-sm font-semibold">500+</div>
-                  <div className="text-[10px] sm:text-xs text-gray-500">Products</div>
+                  <div className="text-xs sm:text-sm font-semibold text-white">500+</div>
+                  <div className="text-[10px] sm:text-xs text-gray-400">Products</div>
                 </div>
               </div>
             </div>
           </motion.div>
 
-          {/* Right Side - Dharma Wheel Visualization with Space Background */}
+          {/* Right Side - Dharma Wheel Visualization (enhanced cosmic card) */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
             className="relative"
           >
-            {/* Space Background Container */}
+            {/* Glowing Card Container */}
             <div className="relative rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
-              {/* Dark Space Background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900" />
+              {/* Card Background - semi-transparent dark */}
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-800/60 via-indigo-900/50 to-purple-900/60 backdrop-blur-md" />
               
-              {/* Stars Background */}
+              {/* Card Stars */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {[...Array(starCount)].map((_, i) => (
+                {[...Array(40)].map((_, i) => (
                   <div
-                    key={`star-${i}`}
+                    key={`card-star-${i}`}
                     className="absolute bg-white rounded-full animate-twinkle"
                     style={{
-                      width: `${Math.random() * 2 + 1}px`,
-                      height: `${Math.random() * 2 + 1}px`,
+                      width: `${Math.random() * 1.5 + 0.5}px`,
+                      height: `${Math.random() * 1.5 + 0.5}px`,
                       left: `${Math.random() * 100}%`,
                       top: `${Math.random() * 100}%`,
-                      animationDelay: `${Math.random() * 5}s`,
-                      animationDuration: `${2 + Math.random() * 3}s`,
-                      opacity: Math.random() * 0.7 + 0.3,
+                      animationDelay: `${Math.random() * 4}s`,
+                      animationDuration: `${1.5 + Math.random() * 2}s`,
+                      opacity: Math.random() * 0.5 + 0.2,
                     }}
                   />
                 ))}
               </div>
 
-              {/* Floating Planets */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {planets.map((planet, index) => (
-                  <div
-                    key={planet.name}
-                    className="absolute rounded-full animate-float-planet"
-                    style={{
-                      width: `${planet.size}px`,
-                      height: `${planet.size}px`,
-                      left: planet.left,
-                      top: planet.top,
-                      backgroundColor: planet.color,
-                      boxShadow: `0 0 ${planet.size / 3}px ${planet.color}`,
-                      animationDelay: `${planet.delay}s`,
-                      animationDuration: `${planet.duration}s`,
-                      opacity: isLowEndDevice ? 0.3 : 0.4,
-                    }}
-                  >
-                    <div 
-                      className="absolute inset-0 rounded-full blur-md"
-                      style={{
-                        backgroundColor: planet.color,
-                        opacity: 0.5,
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              {/* Nebula Effects */}
+              {/* Card Nebula Effects */}
               {!isLowEndDevice && (
                 <>
-                  <div className="absolute top-10 left-5 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl animate-pulse-slow" />
-                  <div className="absolute bottom-10 right-5 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl animate-pulse-slower" />
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-3xl animate-pulse" />
+                  <div className="absolute top-0 left-0 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl animate-pulse-slow" />
+                  <div className="absolute bottom-0 right-0 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl animate-pulse-slower" />
                 </>
               )}
 
               {/* Card Content */}
-              <div className="relative p-6 md:p-8 lg:p-10 backdrop-blur-sm">
+              <div className="relative p-6 md:p-8 lg:p-10">
                 {/* Glowing aura behind the wheel */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-48 h-48 md:w-72 md:h-72 rounded-full bg-gradient-to-r from-purple-500/20 to-red-500/20 blur-3xl animate-pulse" />
+                  <div className="w-48 h-48 md:w-72 md:h-72 rounded-full bg-gradient-to-r from-amber-400/10 to-purple-500/10 blur-3xl animate-pulse" />
                 </div>
                 
                 {/* Dharma Wheel Container */}
                 <div className="relative w-full aspect-square max-w-md mx-auto">
                   {/* Outer decorative rings */}
-                  <div className="absolute inset-0 rounded-full border-2 border-purple-500/30 animate-spin-slow" />
-                  <div className="absolute inset-4 rounded-full border border-purple-500/20 animate-spin-reverse-slow" />
-                  <div className="absolute inset-8 rounded-full border border-red-500/20 animate-spin-slower" />
+                  <div className="absolute inset-0 rounded-full border-2 border-amber-400/30 animate-spin-slow" />
+                  <div className="absolute inset-4 rounded-full border border-purple-400/25 animate-spin-reverse-slow" />
+                  <div className="absolute inset-8 rounded-full border border-rose-400/20 animate-spin-slower" />
                   
                   {/* Dharma Wheel Image - Continuously Rotating */}
                   <motion.div
@@ -324,30 +350,30 @@ const Hero = () => {
 
                   {/* Inner decorative elements */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-20 h-20 md:w-32 md:h-32 rounded-full border border-yellow-500/20 animate-pulse-slow" />
-                    <div className="absolute w-12 h-12 md:w-20 md:h-20 rounded-full border border-red-500/20 animate-pulse-slower" />
+                    <div className="w-20 h-20 md:w-32 md:h-32 rounded-full border border-amber-500/20 animate-pulse-slow" />
+                    <div className="absolute w-12 h-12 md:w-20 md:h-20 rounded-full border border-purple-400/20 animate-pulse-slower" />
                   </div>
                 </div>
 
                 {/* Floating energy orbs */}
                 {!isLowEndDevice && (
                   <>
-                    <div className="absolute top-0 left-0 w-6 h-6 md:w-10 md:h-10 bg-purple-500/30 rounded-full blur-xl animate-float-orb" />
-                    <div className="absolute bottom-0 right-0 w-8 h-8 md:w-12 md:h-12 bg-red-500/30 rounded-full blur-xl animate-float-orb-delayed" />
-                    <div className="absolute top-1/2 right-0 w-5 h-5 md:w-6 md:h-6 bg-blue-500/30 rounded-full blur-lg animate-float-orb-slow" />
+                    <div className="absolute top-0 left-0 w-6 h-6 md:w-10 md:h-10 bg-amber-400/30 rounded-full blur-xl animate-float-orb" />
+                    <div className="absolute bottom-0 right-0 w-8 h-8 md:w-12 md:h-12 bg-rose-400/30 rounded-full blur-xl animate-float-orb-delayed" />
+                    <div className="absolute top-1/2 -left-4 w-5 h-5 md:w-6 md:h-6 bg-purple-400/30 rounded-full blur-lg animate-float-orb-slow" />
                   </>
                 )}
 
                 {/* Complimentary Note */}
                 <motion.div 
-                  className="mt-6 md:mt-8 p-3 md:p-4 bg-white/5 backdrop-blur rounded-xl md:rounded-2xl border border-purple-500/30"
+                  className="mt-6 md:mt-8 p-3 md:p-4 bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl border border-amber-400/30 shadow-xl"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.4 }}
                 >
                   <div className="flex items-center gap-1.5 md:gap-2 mb-1 md:mb-2">
-                    <RiStarSLine className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
-                    <strong className="text-yellow-400 text-xs md:text-sm">Complimentary:</strong>
+                    <RiStarSLine className="w-4 h-4 md:w-5 md:h-5 text-amber-300" />
+                    <strong className="text-amber-300 text-xs md:text-sm">Complimentary:</strong>
                   </div>
                   <p className="text-xs md:text-sm text-gray-300">
                     Short follow-up note with every consultation to help implement insights.
@@ -363,7 +389,7 @@ const Hero = () => {
                       cy="50%"
                       r="100"
                       fill="none"
-                      stroke="rgba(168,85,247,0.15)"
+                      stroke="rgba(245,158,11,0.2)"
                       strokeWidth="1"
                       strokeDasharray="3 3"
                       className="animate-spin-slow"
@@ -373,7 +399,7 @@ const Hero = () => {
                       cy="50%"
                       r="80"
                       fill="none"
-                      stroke="rgba(236,72,153,0.1)"
+                      stroke="rgba(168,85,247,0.15)"
                       strokeWidth="1"
                       className="animate-spin-reverse-slow"
                     />
@@ -429,7 +455,7 @@ const Hero = () => {
             transform: scale(0);
           }
           50% {
-            opacity: 0.5;
+            opacity: 0.6;
             transform: scale(1);
           }
         }
@@ -451,33 +477,33 @@ const Hero = () => {
         
         @keyframes pulse {
           0%, 100% {
-            opacity: 0.1;
+            opacity: 0.05;
             transform: scale(1);
           }
           50% {
-            opacity: 0.2;
+            opacity: 0.1;
             transform: scale(1.1);
           }
         }
         
         @keyframes pulse-slow {
           0%, 100% {
-            opacity: 0.15;
+            opacity: 0.06;
             transform: scale(1);
           }
           50% {
-            opacity: 0.25;
+            opacity: 0.12;
             transform: scale(1.05);
           }
         }
         
         @keyframes pulse-slower {
           0%, 100% {
-            opacity: 0.1;
+            opacity: 0.04;
             transform: scale(1);
           }
           50% {
-            opacity: 0.2;
+            opacity: 0.1;
             transform: scale(1.08);
           }
         }
