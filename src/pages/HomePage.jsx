@@ -17,7 +17,7 @@ export default function HomePage() {
       <Stats />
       <Services />
       <Products />
-      <FeaturesList />
+      {/* <FeaturesList /> */}
       <Instructors />
       <Testimonials />
       <FAQ />

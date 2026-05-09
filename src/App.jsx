@@ -22,6 +22,8 @@ import CheckoutPage from "./pages/CheckoutPage";
 import MyBookingsPage from "./pages/MyBookingsPage";
 import AdminDashboardShell from "./admin/AdminDashboard";
 import AdminLogin from "./admin/AdminLogin";
+import BlogPage from "./pages/BlogPage";
+import BlogDetailPage from "./pages/BlogDetailPage";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -67,6 +69,8 @@ const AppRoutes = () => {
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/demo-video" element={<DemoVideoPage />} />
       <Route path="/shop" element={<ShopPage />} />
+      <Route path="/blog" element={<BlogPage />} />
+<Route path="/blog/:slug" element={<BlogDetailPage />} />
       
       {/* Auth Routes */}
       <Route path="/auth" element={!isAuthenticated ? <AuthPage /> : <Navigate to="/" />} />

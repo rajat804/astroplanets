@@ -14,6 +14,9 @@ import BookingsTable from "./components/BookingsTable";
 import BookingStatsCards from "./components/BookingStatsCards";
 import OrdersTable from "./components/OrdersTable";
 import OrderStatsCards from "./components/OrderStatsCards";
+import SocialContentManager from "./components/SocialContentManager";
+import BlogManager from "./components/BlogManager";
+import CouponManager from "./components/CouponManager";
 import { 
   getProducts, 
   createProduct, 
@@ -82,12 +85,12 @@ function AdminDashboard() {
   const [orderStats, setOrderStats] = useState(null);
   const [ordersLoading, setOrdersLoading] = useState(false);
 
-  // Services & Classes State (will be fetched from API later)
+  // Services, Classes & Users State (will be fetched from API later)
   const [services, setServices] = useState([]);
   const [classes, setClasses] = useState([]);
   const [users, setUsers] = useState([]);
 
-  // Fetch Products
+  // Fetch initial data
   useEffect(() => {
     fetchProducts();
     fetchProductStats();
@@ -507,6 +510,42 @@ function AdminDashboard() {
               </motion.section>
             )}
 
+            {/* Content Tab - Social Media Manager */}
+            {tab === "content" && (
+              <motion.section
+                key="content"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <SocialContentManager />
+              </motion.section>
+            )}
+
+            {/* Blog Tab */}
+{tab === "blog" && (
+  <motion.section
+    key="blog"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -20 }}
+  >
+    <BlogManager />
+  </motion.section>
+)}
+
+{/* Coupons Tab */}
+{tab === "coupons" && (
+  <motion.section
+    key="coupons"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -20 }}
+  >
+    <CouponManager />
+  </motion.section>
+)}
+
             {/* Users Tab */}
             {tab === "users" && (
               <motion.section
@@ -690,16 +729,16 @@ function AdminDashboard() {
               </motion.section>
             )}
 
-            {/* Content & Reports Tabs - Placeholder */}
-            {["content", "reports"].includes(tab) && (
+            {/* Reports Tab - Placeholder */}
+            {tab === "reports" && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white rounded-2xl shadow-lg border border-orange-100 p-12 text-center"
               >
-                <div className="text-6xl mb-4">🚧</div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">Coming Soon</h3>
-                <p className="text-gray-500">The {tab} management interface is under development.</p>
+                <div className="text-6xl mb-4">📊</div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">Reports Coming Soon</h3>
+                <p className="text-gray-500">Advanced analytics and reporting features are under development.</p>
               </motion.div>
             )}
           </AnimatePresence>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { createOrder, verifyPayment } from '../services/api';
+import CouponInput from '../components/CouponInput';
 import toast from 'react-hot-toast';
 
 const CheckoutPage = () => {
@@ -10,6 +11,9 @@ const CheckoutPage = () => {
   const { cart, fetchCart, clearAllCart } = useCart();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [discount, setDiscount] = useState(0);
+  const [finalTotal, setFinalTotal] = useState(0);
   const [formData, setFormData] = useState({
     fullName: user?.fullName || '',
     email: user?.email || '',
@@ -25,10 +29,25 @@ const CheckoutPage = () => {
     if (!cart?.items?.length) {
       navigate('/products');
     }
-  }, [cart]);
+    if (cart) {
+      setFinalTotal(cart.totalPrice - discount);
+    }
+  }, [cart, discount, navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleApplyCoupon = (coupon) => {
+    setAppliedCoupon(coupon);
+    setDiscount(coupon.discountAmount);
+    toast.success(`Coupon applied! You saved ₹${coupon.discountAmount}`);
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setDiscount(0);
+    toast.success('Coupon removed');
   };
 
   const loadRazorpayScript = () => {
@@ -55,8 +74,13 @@ const CheckoutPage = () => {
     setLoading(true);
     
     try {
-      // Create order
-      const orderResponse = await createOrder({ shippingAddress: formData });
+      // Create order with coupon data
+      const orderResponse = await createOrder({ 
+        shippingAddress: formData,
+        appliedCoupon: appliedCoupon,
+        discount: discount,
+        finalAmount: finalTotal
+      });
       const { razorpayOrderId, amount, orderId } = orderResponse.order;
       
       // Load Razorpay script
@@ -70,10 +94,10 @@ const CheckoutPage = () => {
       // Initialize Razorpay
       const options = {
         key: orderResponse.razorpayKey,
-        amount: amount * 100,
+        amount: finalTotal * 100, // Use final total after discount
         currency: 'INR',
         name: 'AstroPlanets',
-        description: `Order ${orderId}`,
+        description: `Order ${orderId}${appliedCoupon ? ` | Coupon: ${appliedCoupon.code}` : ''}`,
         order_id: razorpayOrderId,
         handler: async (response) => {
           try {
@@ -99,6 +123,8 @@ const CheckoutPage = () => {
         },
         notes: {
           address: formData.address,
+          coupon: appliedCoupon?.code || 'None',
+          discount: discount,
         },
         theme: {
           color: '#dc2626',
@@ -240,7 +266,7 @@ const CheckoutPage = () => {
                   disabled={loading}
                   className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-50"
                 >
-                  {loading ? 'Processing...' : 'Pay Now'}
+                  {loading ? 'Processing...' : `Pay ₹${finalTotal}`}
                 </button>
               </form>
             </div>
@@ -264,18 +290,36 @@ const CheckoutPage = () => {
                 ))}
               </div>
               
+              {/* Coupon Input */}
+              <CouponInput 
+                orderAmount={cart.totalPrice}
+                productIds={cart?.items?.map(item => item.product._id) || []}
+                onApply={handleApplyCoupon}
+                onRemove={handleRemoveCoupon}
+                appliedCoupon={appliedCoupon}
+              />
+              
               <div className="space-y-2 pt-4 border-t border-orange-100">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal:</span>
                   <span>₹{cart.totalPrice}</span>
                 </div>
+                
+                {discount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount ({appliedCoupon?.code}):</span>
+                    <span>- ₹{discount}</span>
+                  </div>
+                )}
+                
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping:</span>
                   <span>Free</span>
                 </div>
+                
                 <div className="flex justify-between text-gray-800 font-bold text-lg pt-2 border-t border-orange-100">
                   <span>Total:</span>
-                  <span className="text-red-600">₹{cart.totalPrice}</span>
+                  <span className="text-red-600">₹{finalTotal}</span>
                 </div>
               </div>
             </div>

@@ -316,9 +316,7 @@ const Services = () => {
               <FaMoon size={120} className="text-orange-600" />
             </div>
 
-            <div className="absolute left-1/2 -bottom-10 transform -translate-x-1/2 opacity-20 animate-pulse-slow">
-              <FaInfinity size={80} className="text-red-500" />
-            </div>
+            
           </>
         )}
       </div>

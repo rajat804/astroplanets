@@ -365,4 +365,133 @@ export const getBookingStats = async () => {
   return response.data;
 };
 
+// Social Content APIs
+export const getAllSocialContent = async (type = '', page = 1, limit = 12) => {
+  const params = new URLSearchParams();
+  if (type) params.append('type', type);
+  params.append('page', page);
+  params.append('limit', limit);
+  
+  const response = await api.get(`/social-content?${params.toString()}`);
+  return response.data;
+};
+
+export const getSocialContentByType = async (type, page = 1, limit = 12) => {
+  const response = await api.get(`/social-content/type/${type}?page=${page}&limit=${limit}`);
+  return response.data;
+};
+
+export const createSocialContent = async (data) => {
+  const response = await api.post('/social-content/admin', data);
+  return response.data;
+};
+
+export const updateSocialContent = async (id, data) => {
+  const response = await api.put(`/social-content/admin/${id}`, data);
+  return response.data;
+};
+
+export const deleteSocialContent = async (id) => {
+  const response = await api.delete(`/social-content/admin/${id}`);
+  return response.data;
+};
+
+export const incrementContentViews = async (id) => {
+  const response = await api.put(`/social-content/${id}/view`);
+  return response.data;
+};
+
+export const incrementContentLikes = async (id) => {
+  const response = await api.put(`/social-content/${id}/like`);
+  return response.data;
+};
+
+// Blog APIs (Public)
+export const getAllBlogs = async (tag = '', page = 1, limit = 6) => {
+  const params = new URLSearchParams();
+  if (tag) params.append('tag', tag);
+  params.append('page', page);
+  params.append('limit', limit);
+  
+  const response = await api.get(`/blogs?${params.toString()}`);
+  return response.data;
+};
+
+export const getBlogBySlug = async (slug) => {
+  const response = await api.get(`/blogs/${slug}`);
+  return response.data;
+};
+
+export const likeBlog = async (id) => {
+  const response = await api.put(`/blogs/${id}/like`);
+  return response.data;
+};
+
+// Blog APIs (Admin)
+export const getAllBlogsAdmin = async () => {
+  const response = await api.get('/blogs/admin/all');
+  return response.data;
+};
+
+export const getBlogById = async (id) => {
+  const response = await api.get(`/blogs/admin/${id}`);
+  return response.data;
+};
+
+export const createBlog = async (blogData) => {
+  const response = await api.post('/blogs/admin', blogData);
+  return response.data;
+};
+
+export const updateBlog = async (id, blogData) => {
+  const response = await api.put(`/blogs/admin/${id}`, blogData);
+  return response.data;
+};
+
+export const deleteBlog = async (id) => {
+  const response = await api.delete(`/blogs/admin/${id}`);
+  return response.data;
+};
+
+export const toggleBlogPublish = async (id) => {
+  const response = await api.patch(`/blogs/admin/${id}/toggle`);
+  return response.data;
+};
+
+// Coupon APIs
+export const getActiveCoupons = async () => {
+  const response = await api.get('/coupons/active');
+  return response.data;
+};
+
+export const validateCoupon = async (code, orderAmount, productIds = []) => {
+  const response = await api.post('/coupons/validate', { code, orderAmount, productIds });
+  return response.data;
+};
+
+export const getAllCoupons = async () => {
+  const response = await api.get('/coupons/admin');
+  return response.data;
+};
+
+export const createCoupon = async (couponData) => {
+  const response = await api.post('/coupons/admin', couponData);
+  return response.data;
+};
+
+export const updateCoupon = async (id, couponData) => {
+  const response = await api.put(`/coupons/admin/${id}`, couponData);
+  return response.data;
+};
+
+export const deleteCoupon = async (id) => {
+  const response = await api.delete(`/coupons/admin/${id}`);
+  return response.data;
+};
+
+export const toggleCouponStatus = async (id) => {
+  const response = await api.patch(`/coupons/admin/${id}/toggle`);
+  return response.data;
+};
+
 export default api;

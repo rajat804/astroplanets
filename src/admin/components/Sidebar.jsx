@@ -13,16 +13,18 @@ import { HiOutlineShoppingBag } from "react-icons/hi";
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, tab, setTab, logout }) => {
   const sidebarItems = [
-    { key: "overview", label: "Overview", icon: <FaChartLine /> },
-    { key: "services", label: "Services", icon: <FaBook /> },
-    { key: "products", label: "Products", icon: <FaBoxOpen /> },
-    { key: "classes", label: "Classes", icon: <HiOutlineUserCircle /> },
-    { key: "bookings", label: "Bookings", icon: <HiOutlineCalendar /> },
-    { key: "orders", label: "Orders", icon: <HiOutlineShoppingBag /> },
-    { key: "content", label: "Content", icon: <HiOutlineDocumentText /> },
-    { key: "reports", label: "Reports", icon: <HiOutlineChartBar /> },
-    { key: "users", label: "Users", icon: <HiOutlineUsers /> },
-  ];
+  { key: "overview", label: "Overview", icon: <FaChartLine /> },
+  { key: "services", label: "Services", icon: <FaBook /> },
+  { key: "products", label: "Products", icon: <FaBoxOpen /> },
+  { key: "coupons", label: "Coupons", icon: <HiOutlineTicket /> },
+  { key: "classes", label: "Classes", icon: <HiOutlineUserCircle /> },
+  { key: "bookings", label: "Bookings", icon: <HiOutlineCalendar /> },
+  { key: "orders", label: "Orders", icon: <HiOutlineShoppingBag /> },
+  { key: "blog", label: "Blog", icon: <HiOutlineDocumentText /> },
+  { key: "content", label: "Content", icon: <HiOutlineDocumentText /> },
+  { key: "reports", label: "Reports", icon: <HiOutlineChartBar /> },
+  { key: "users", label: "Users", icon: <HiOutlineUsers /> },
+];
 
   return (
     <motion.aside 
