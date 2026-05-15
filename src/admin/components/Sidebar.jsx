@@ -8,12 +8,15 @@ import {
   HiOutlineDocumentText,
   HiOutlineChartBar,
   HiOutlineUsers,
+  HiOutlineTicket, 
 } from "react-icons/hi";
 import { HiOutlineShoppingBag } from "react-icons/hi";
+import { FaImages } from "react-icons/fa";
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, tab, setTab, logout }) => {
   const sidebarItems = [
   { key: "overview", label: "Overview", icon: <FaChartLine /> },
+  { key: "slider", label: "Hero Slider", icon: <FaImages /> },
   { key: "services", label: "Services", icon: <FaBook /> },
   { key: "products", label: "Products", icon: <FaBoxOpen /> },
   { key: "coupons", label: "Coupons", icon: <HiOutlineTicket /> },

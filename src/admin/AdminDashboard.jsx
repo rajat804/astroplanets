@@ -17,24 +17,25 @@ import OrderStatsCards from "./components/OrderStatsCards";
 import SocialContentManager from "./components/SocialContentManager";
 import BlogManager from "./components/BlogManager";
 import CouponManager from "./components/CouponManager";
-import { 
-  getProducts, 
-  createProduct, 
-  updateProduct, 
+import HeroSlide from "./components/HeroSlider";
+import {
+  getProducts,
+  createProduct,
+  updateProduct,
   deleteProduct,
-  getProductStats 
+  getProductStats
 } from "../services/api";
-import { 
-  getAllBookings, 
-  updateBookingStatus, 
+import {
+  getAllBookings,
+  updateBookingStatus,
   deleteBooking,
-  getBookingStats 
+  getBookingStats
 } from "../services/api";
-import { 
-  getAllOrders, 
-  updateOrderStatus, 
+import {
+  getAllOrders,
+  updateOrderStatus,
   deleteOrder,
-  getOrderStats 
+  getOrderStats
 } from "../services/api";
 
 function useCount(to = 0, duration = 1200) {
@@ -170,7 +171,7 @@ function AdminDashboard() {
 
   const handleDeleteProduct = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
-    
+
     try {
       await deleteProduct(id);
       setProducts(products.filter(p => p._id !== id));
@@ -198,7 +199,7 @@ function AdminDashboard() {
       const data = await getAllBookings();
       setBookingsData(data.bookings || []);
       setBookingStats(data.stats);
-      
+
       // Update notifications for new bookings
       const newBookings = data.bookings?.filter(b => b.bookingStatus === 'pending') || [];
       if (newBookings.length > 0) {
@@ -228,7 +229,7 @@ function AdminDashboard() {
 
   const handleDeleteBooking = async (bookingId) => {
     if (!window.confirm('Are you sure you want to delete this booking?')) return;
-    
+
     try {
       await deleteBooking(bookingId);
       toast.success('Booking deleted successfully');
@@ -267,7 +268,7 @@ function AdminDashboard() {
 
   const handleDeleteOrder = async (orderId) => {
     if (!window.confirm('Are you sure you want to delete this order?')) return;
-    
+
     try {
       await deleteOrder(orderId);
       toast.success('Order deleted successfully');
@@ -315,9 +316,9 @@ function AdminDashboard() {
   };
 
   // Calculate totals for overview
-  const totalRevenue = products.reduce((s, p) => s + (p.price * p.sold || 0), 0) + 
-           bookingsData.reduce((s, b) => s + (b.bookingStatus === "completed" ? b.amount : 0), 0);
-  
+  const totalRevenue = products.reduce((s, p) => s + (p.price * p.sold || 0), 0) +
+    bookingsData.reduce((s, b) => s + (b.bookingStatus === "completed" ? b.amount : 0), 0);
+
   const revenueCount = useCount(Math.round(totalRevenue / 1000));
   const usersCount = useCount(users.length);
   const bookingsCount = useCount(bookingsData.length);
@@ -344,7 +345,7 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-offWhite flex">
-      <Sidebar 
+      <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         tab={tab}
@@ -353,7 +354,7 @@ function AdminDashboard() {
       />
 
       <div className="flex-1 overflow-x-hidden">
-        <TopBar 
+        <TopBar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           tab={tab}
@@ -371,7 +372,7 @@ function AdminDashboard() {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <OverviewStats 
+                <OverviewStats
                   revenueCount={revenueCount}
                   usersCount={usersCount}
                   bookingsCount={bookingsCount}
@@ -429,7 +430,7 @@ function AdminDashboard() {
                       </p>
                     )}
                   </div>
-                  <button 
+                  <button
                     onClick={handleAddClick}
                     className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition"
                   >
@@ -442,7 +443,7 @@ function AdminDashboard() {
                     <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 ) : (
-                  <ProductsTable 
+                  <ProductsTable
                     products={products}
                     searchQuery={searchQuery}
                     onEdit={handleEditClick}
@@ -472,7 +473,7 @@ function AdminDashboard() {
                     <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 ) : (
-                  <BookingsTable 
+                  <BookingsTable
                     bookings={bookingsData}
                     onUpdateStatus={handleUpdateBookingStatus}
                     onDelete={handleDeleteBooking}
@@ -501,7 +502,7 @@ function AdminDashboard() {
                     <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 ) : (
-                  <OrdersTable 
+                  <OrdersTable
                     orders={orders}
                     onUpdateStatus={handleUpdateOrderStatus}
                     onDelete={handleDeleteOrder}
@@ -521,30 +522,41 @@ function AdminDashboard() {
                 <SocialContentManager />
               </motion.section>
             )}
+            {/* Hero Slider Tab */}
+            {tab === "slider" && (
+              <motion.section
+                key="slider"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <HeroSlide />
+              </motion.section>
+            )}
 
             {/* Blog Tab */}
-{tab === "blog" && (
-  <motion.section
-    key="blog"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-  >
-    <BlogManager />
-  </motion.section>
-)}
+            {tab === "blog" && (
+              <motion.section
+                key="blog"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <BlogManager />
+              </motion.section>
+            )}
 
-{/* Coupons Tab */}
-{tab === "coupons" && (
-  <motion.section
-    key="coupons"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-  >
-    <CouponManager />
-  </motion.section>
-)}
+            {/* Coupons Tab */}
+            {tab === "coupons" && (
+              <motion.section
+                key="coupons"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <CouponManager />
+              </motion.section>
+            )}
 
             {/* Users Tab */}
             {tab === "users" && (

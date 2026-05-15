@@ -1,11 +1,9 @@
-// :// components/home/Hero.jsx
+// :// components/home/Hero.jsx (Updated)
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   HiOutlineShoppingCart,
-  HiOutlineCalendar,
   HiOutlineUser,
-  HiOutlineMail,
 } from "react-icons/hi";
 import { RiStarSLine } from "react-icons/ri";
 import { GiCrystalBall } from "react-icons/gi";
@@ -19,12 +17,14 @@ import {
 } from "react-icons/fa";
 import { GiEarthAmerica, GiAstronautHelmet, GiPlanetCore } from "react-icons/gi";
 import Accent from "../common/Accent";
-import CTA from "../common/CTA";
 import assets from "../../assets/assets";
+import ConsultationModal from "../common/ConsultationModal";
+import SliderComponent from "../common/SliderComponent";
 
 const Hero = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isLowEndDevice, setIsLowEndDevice] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Detect device performance
   useEffect(() => {
@@ -32,7 +32,6 @@ const Hero = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
       
-      // Check for low-end devices (older phones, tablets)
       const isSlow = navigator.deviceMemory ? navigator.deviceMemory < 4 : false;
       const isLowEnd = mobile && isSlow;
       setIsLowEndDevice(isLowEnd);
@@ -42,6 +41,26 @@ const Hero = () => {
     window.addEventListener('resize', checkDevice);
     return () => window.removeEventListener('resize', checkDevice);
   }, []);
+
+  // Handle consultation booking submission
+  const handleBookingSubmit = async (formData) => {
+    // Here you would typically send this to your backend API
+    console.log("Booking data from Hero:", formData);
+    
+    // Example API call:
+    // const response = await fetch('/api/book-consultation', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(formData)
+    // });
+    // if (!response.ok) throw new Error('Booking failed');
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // You can also integrate with third-party services like Calendly, Cal.com, etc.
+    return formData;
+  };
 
   // Reduce floating icons on mobile and low-end devices
   const floatingIcons = isLowEndDevice 
@@ -87,11 +106,14 @@ const Hero = () => {
   ];
 
   return (
+    <>
+    <SliderComponent />
+
     <section className="relative overflow-hidden">
       {/* Full Background - Cosmic Space Theme */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950" />
       
-      {/* Stars Background - Full Coverage */}
+      {/* Stars Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(starCount)].map((_, i) => (
           <div
@@ -110,9 +132,9 @@ const Hero = () => {
         ))}
       </div>
 
-      {/* Floating Planets - Full Coverage */}
+      {/* Floating Planets */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {planets.map((planet, index) => (
+        {planets.map((planet) => (
           <div
             key={planet.name}
             className="absolute rounded-full animate-float-planet"
@@ -217,7 +239,7 @@ const Hero = () => {
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12 sm:py-16 lg:py-20 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          {/* Left Side - Text Content (light colors on dark background) */}
+          {/* Left Side - Text Content */}
           <motion.div
             initial={{ opacity: 0, x: -28 }}
             animate={{ opacity: 1, x: 0 }}
@@ -240,7 +262,12 @@ const Hero = () => {
             </p>
 
             <div className="flex flex-wrap gap-3 sm:gap-4 items-center">
-              <CTA>Book a Consultation</CTA>
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                className="inline-flex items-center gap-3 px-5 py-2 rounded-2xl font-semibold shadow-md text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition transform hover:scale-105 active:scale-95"
+              >
+                Book a Consultation
+              </button>
               <a href="/products">
                 <button className="px-4 sm:px-5 py-2 rounded-2xl border border-amber-400/50 bg-amber-500/10 backdrop-blur-sm text-amber-200 font-semibold hover:bg-amber-500/20 transition text-sm sm:text-base shadow-lg">
                   Browse Products
@@ -275,19 +302,16 @@ const Hero = () => {
             </div>
           </motion.div>
 
-          {/* Right Side - Dharma Wheel Visualization (enhanced cosmic card) */}
+          {/* Right Side - Dharma Wheel Visualization */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
             className="relative"
           >
-            {/* Glowing Card Container */}
             <div className="relative rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
-              {/* Card Background - semi-transparent dark */}
               <div className="absolute inset-0 bg-gradient-to-br from-gray-800/60 via-indigo-900/50 to-purple-900/60 backdrop-blur-md" />
               
-              {/* Card Stars */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 {[...Array(40)].map((_, i) => (
                   <div
@@ -306,7 +330,6 @@ const Hero = () => {
                 ))}
               </div>
 
-              {/* Card Nebula Effects */}
               {!isLowEndDevice && (
                 <>
                   <div className="absolute top-0 left-0 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl animate-pulse-slow" />
@@ -314,26 +337,19 @@ const Hero = () => {
                 </>
               )}
 
-              {/* Card Content */}
               <div className="relative p-6 md:p-8 lg:p-10">
-                {/* Glowing aura behind the wheel */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-48 h-48 md:w-72 md:h-72 rounded-full bg-gradient-to-r from-amber-400/10 to-purple-500/10 blur-3xl animate-pulse" />
                 </div>
                 
-                {/* Dharma Wheel Container */}
                 <div className="relative w-full aspect-square max-w-md mx-auto">
-                  {/* Outer decorative rings */}
                   <div className="absolute inset-0 rounded-full border-2 border-amber-400/30 animate-spin-slow" />
                   <div className="absolute inset-4 rounded-full border border-purple-400/25 animate-spin-reverse-slow" />
                   <div className="absolute inset-8 rounded-full border border-rose-400/20 animate-spin-slower" />
                   
-                  {/* Dharma Wheel Image - Continuously Rotating */}
                   <motion.div
                     className="absolute inset-0 flex items-center justify-center"
-                    animate={{
-                      rotate: 360,
-                    }}
+                    animate={{ rotate: 360 }}
                     transition={{
                       duration: isLowEndDevice ? 30 : 20,
                       repeat: Infinity,
@@ -348,14 +364,12 @@ const Hero = () => {
                     />
                   </motion.div>
 
-                  {/* Inner decorative elements */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="w-20 h-20 md:w-32 md:h-32 rounded-full border border-amber-500/20 animate-pulse-slow" />
                     <div className="absolute w-12 h-12 md:w-20 md:h-20 rounded-full border border-purple-400/20 animate-pulse-slower" />
                   </div>
                 </div>
 
-                {/* Floating energy orbs */}
                 {!isLowEndDevice && (
                   <>
                     <div className="absolute top-0 left-0 w-6 h-6 md:w-10 md:h-10 bg-amber-400/30 rounded-full blur-xl animate-float-orb" />
@@ -364,7 +378,6 @@ const Hero = () => {
                   </>
                 )}
 
-                {/* Complimentary Note */}
                 <motion.div 
                   className="mt-6 md:mt-8 p-3 md:p-4 bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl border border-amber-400/30 shadow-xl"
                   initial={{ opacity: 0, y: 20 }}
@@ -380,223 +393,103 @@ const Hero = () => {
                     {!isMobile && " Plus, receive a personalized mantra based on your birth chart!"}
                   </p>
                 </motion.div>
-
-                {/* Energy rings SVG */}
-                {!isLowEndDevice && (
-                  <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                    <circle
-                      cx="50%"
-                      cy="50%"
-                      r="100"
-                      fill="none"
-                      stroke="rgba(245,158,11,0.2)"
-                      strokeWidth="1"
-                      strokeDasharray="3 3"
-                      className="animate-spin-slow"
-                    />
-                    <circle
-                      cx="50%"
-                      cy="50%"
-                      r="80"
-                      fill="none"
-                      stroke="rgba(168,85,247,0.15)"
-                      strokeWidth="1"
-                      className="animate-spin-reverse-slow"
-                    />
-                  </svg>
-                )}
               </div>
             </div>
           </motion.div>
         </div>
       </div>
 
+      {/* Consultation Modal */}
+      <ConsultationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleBookingSubmit}
+        consultantName="Our Expert"
+        prefillData={{
+          consultationType: "astrology"
+        }}
+      />
+
       {/* CSS Animations */}
       <style jsx>{`
         @keyframes spin-slow {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
         
         @keyframes spin-reverse-slow {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(-360deg);
-          }
+          from { transform: rotate(0deg); }
+          to { transform: rotate(-360deg); }
         }
         
         @keyframes spin-slower {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
         
         @keyframes float-simple {
-          0%, 100% {
-            transform: translateY(0px) translateX(0px);
-          }
-          50% {
-            transform: translateY(-15px) translateX(10px);
-          }
+          0%, 100% { transform: translateY(0px) translateX(0px); }
+          50% { transform: translateY(-15px) translateX(10px); }
         }
         
         @keyframes twinkle {
-          0%, 100% {
-            opacity: 0;
-            transform: scale(0);
-          }
-          50% {
-            opacity: 0.6;
-            transform: scale(1);
-          }
+          0%, 100% { opacity: 0; transform: scale(0); }
+          50% { opacity: 0.6; transform: scale(1); }
         }
         
         @keyframes float-planet {
-          0%, 100% {
-            transform: translate(0, 0);
-          }
-          25% {
-            transform: translate(10px, -10px);
-          }
-          50% {
-            transform: translate(0, -15px);
-          }
-          75% {
-            transform: translate(-10px, -5px);
-          }
+          0%, 100% { transform: translate(0, 0); }
+          25% { transform: translate(10px, -10px); }
+          50% { transform: translate(0, -15px); }
+          75% { transform: translate(-10px, -5px); }
         }
         
         @keyframes pulse {
-          0%, 100% {
-            opacity: 0.05;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.1;
-            transform: scale(1.1);
-          }
+          0%, 100% { opacity: 0.05; transform: scale(1); }
+          50% { opacity: 0.1; transform: scale(1.1); }
         }
         
         @keyframes pulse-slow {
-          0%, 100% {
-            opacity: 0.06;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.12;
-            transform: scale(1.05);
-          }
+          0%, 100% { opacity: 0.06; transform: scale(1); }
+          50% { opacity: 0.12; transform: scale(1.05); }
         }
         
         @keyframes pulse-slower {
-          0%, 100% {
-            opacity: 0.04;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.1;
-            transform: scale(1.08);
-          }
+          0%, 100% { opacity: 0.04; transform: scale(1); }
+          50% { opacity: 0.1; transform: scale(1.08); }
         }
         
         @keyframes float-orb {
-          0%, 100% {
-            transform: translate(0, 0);
-          }
-          50% {
-            transform: translate(8px, -8px);
-          }
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(8px, -8px); }
         }
         
         @keyframes float-orb-delayed {
-          0%, 100% {
-            transform: translate(0, 0);
-          }
-          50% {
-            transform: translate(-8px, 8px);
-          }
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(-8px, 8px); }
         }
         
         @keyframes float-orb-slow {
-          0%, 100% {
-            transform: translate(0, 0);
-          }
-          50% {
-            transform: translate(5px, -5px);
-          }
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(5px, -5px); }
         }
         
-        .animate-spin-slow {
-          animation: spin-slow 60s linear infinite;
-        }
-        
-        .animate-spin-reverse-slow {
-          animation: spin-reverse-slow 40s linear infinite;
-        }
-        
-        .animate-spin-slower {
-          animation: spin-slower 30s linear infinite;
-        }
-        
-        .animate-float-simple {
-          animation: float-simple 15s ease-in-out infinite;
-          will-change: transform;
-        }
-        
-        .animate-twinkle {
-          animation: twinkle ease-in-out infinite;
-          will-change: opacity, transform;
-        }
-        
-        .animate-float-planet {
-          animation: float-planet ease-in-out infinite;
-          will-change: transform;
-        }
-        
-        .animate-pulse {
-          animation: pulse 4s ease-in-out infinite;
-          will-change: opacity, transform;
-        }
-        
-        .animate-pulse-slow {
-          animation: pulse-slow 6s ease-in-out infinite;
-          will-change: opacity, transform;
-        }
-        
-        .animate-pulse-slower {
-          animation: pulse-slower 8s ease-in-out infinite;
-          will-change: opacity, transform;
-        }
-        
-        .animate-float-orb {
-          animation: float-orb 5s ease-in-out infinite;
-          will-change: transform;
-        }
-        
-        .animate-float-orb-delayed {
-          animation: float-orb-delayed 6s ease-in-out infinite;
-          will-change: transform;
-        }
-        
-        .animate-float-orb-slow {
-          animation: float-orb-slow 8s ease-in-out infinite;
-          will-change: transform;
-        }
-        
-        .will-change-transform {
-          will-change: transform;
-        }
+        .animate-spin-slow { animation: spin-slow 60s linear infinite; }
+        .animate-spin-reverse-slow { animation: spin-reverse-slow 40s linear infinite; }
+        .animate-spin-slower { animation: spin-slower 30s linear infinite; }
+        .animate-float-simple { animation: float-simple 15s ease-in-out infinite; will-change: transform; }
+        .animate-twinkle { animation: twinkle ease-in-out infinite; will-change: opacity, transform; }
+        .animate-float-planet { animation: float-planet ease-in-out infinite; will-change: transform; }
+        .animate-pulse { animation: pulse 4s ease-in-out infinite; will-change: opacity, transform; }
+        .animate-pulse-slow { animation: pulse-slow 6s ease-in-out infinite; will-change: opacity, transform; }
+        .animate-pulse-slower { animation: pulse-slower 8s ease-in-out infinite; will-change: opacity, transform; }
+        .animate-float-orb { animation: float-orb 5s ease-in-out infinite; will-change: transform; }
+        .animate-float-orb-delayed { animation: float-orb-delayed 6s ease-in-out infinite; will-change: transform; }
+        .animate-float-orb-slow { animation: float-orb-slow 8s ease-in-out infinite; will-change: transform; }
+        .will-change-transform { will-change: transform; }
       `}</style>
     </section>
+    </>
   );
 };
 
