@@ -12,7 +12,7 @@ const getApiUrl = () => {
   
   if (isVercel) {
     // Use your backend URL
-    return 'https://ashtroplanet-backend.vercel.app/api';
+    return 'https://astroplanets-backend.vercel.app/api';
   }
   
   // Local development
