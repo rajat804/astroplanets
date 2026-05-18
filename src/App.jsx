@@ -24,6 +24,7 @@ import AdminDashboardShell from "./admin/AdminDashboard";
 import AdminLogin from "./admin/AdminLogin";
 import BlogPage from "./pages/BlogPage";
 import BlogDetailPage from "./pages/BlogDetailPage";
+import Profile from "./user/Profile";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -40,10 +41,10 @@ const AdminProtectedRoute = ({ children }) => {
 // Layout wrapper component to conditionally show Navbar and Footer
 const AppLayout = ({ children }) => {
   const location = useLocation();
-  
+
   // Check if current route is an admin route
   const isAdminRoute = location.pathname.startsWith('/admin');
-  
+
   return (
     <>
       {!isAdminRoute && <Navbar />}
@@ -56,7 +57,7 @@ const AppLayout = ({ children }) => {
 
 const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
-  
+
   return (
     <Routes>
       {/* Public Routes */}
@@ -70,13 +71,16 @@ const AppRoutes = () => {
       <Route path="/demo-video" element={<DemoVideoPage />} />
       <Route path="/shop" element={<ShopPage />} />
       <Route path="/blog" element={<BlogPage />} />
-<Route path="/blog/:slug" element={<BlogDetailPage />} />
-      
+      <Route path="/blog/:slug" element={<BlogDetailPage />} />
+
+      {/* user route */}
+      <Route path="/profile" element={<Profile />} />
+ 
       {/* Auth Routes */}
       <Route path="/auth" element={!isAuthenticated ? <AuthPage /> : <Navigate to="/" />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      
+
       {/* Protected Routes - Require Login */}
       <Route path="/checkout" element={
         <ProtectedRoute>
@@ -88,16 +92,16 @@ const AppRoutes = () => {
           <MyBookingsPage />
         </ProtectedRoute>
       } />
-      
+
       {/* Admin Routes */}
       <Route path="/admin/login" element={<AdminLogin />} />
-      <Route 
-        path="/admin/dashboard" 
+      <Route
+        path="/admin/dashboard"
         element={
           <AdminProtectedRoute>
             <AdminDashboardShell />
           </AdminProtectedRoute>
-        } 
+        }
       />
     </Routes>
   );
