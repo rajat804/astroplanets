@@ -1,25 +1,36 @@
 // src/pages/CoursesPage.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 import {
   HiOutlineClock,
-  HiOutlineUser,
   HiOutlineBookOpen,
-  HiOutlineGlobe,
-  HiOutlineChip,
-  HiOutlineCalendar,
   HiOutlineAcademicCap,
   HiOutlineChat,
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
   HiOutlineMenu,
   HiOutlineX,
+  HiOutlineShieldCheck,
 } from "react-icons/hi";
-import { FaCheck, FaChevronDown, FaStar, FaGraduationCap, FaAward, FaLanguage, FaLaptopCode } from "react-icons/fa";
+import { 
+  FaCheck, 
+  FaChevronDown, 
+  FaStar, 
+  FaGraduationCap, 
+  FaAward, 
+  FaLanguage, 
+  FaLaptopCode,
+  FaRupeeSign,
+  FaSpinner,
+  FaCheckCircle,
+  FaWhatsapp,
+  FaUsers,
+} from "react-icons/fa";
 import { GiCrystalBall, GiYinYang, GiHouse } from "react-icons/gi";
 import { useAuth } from "../context/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 /* ---------- Helpers ---------- */
 const Accent = ({ children }) => (
   <span className="text-green-600">{children}</span>
@@ -38,6 +49,291 @@ const CTA = ({ children, className = "", onClick, disabled, ...rest }) => (
     {children}
   </button>
 );
+
+/* ---------- PAYMENT MODAL COMPONENT ---------- */
+const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, onSuccess }) => {
+  const [loading, setLoading] = useState(false);
+  const [paymentStep, setPaymentStep] = useState("details");
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePayment = async () => {
+    // Check if user is authenticated and user exists
+    console.log(user);
+    if (!isAuthenticated || !user) {
+      toast.error("Please login to continue");
+      onClose();
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setPaymentStep("processing");
+
+      const isScriptLoaded = await loadRazorpayScript();
+      if (!isScriptLoaded) {
+        toast.error("Failed to load payment gateway");
+        setPaymentStep("details");
+        setLoading(false);
+        return;
+      }
+
+      const numericPrice = parseFloat(course.price.replace(/[^0-9.-]+/g, ""));
+      
+      // Get user ID from either id or _id field
+      const userId = user.id || user._id;
+      
+      if (!userId) {
+        toast.error("User ID not found. Please login again.");
+        setPaymentStep("details");
+        setLoading(false);
+        return;
+      }
+
+      const orderResponse = await axios.post(`${API_URL}/coursepayment/create-order`, {
+        courseId: course._id,
+        userId: userId,
+        userEmail: user.email,
+        userName: user.fullName,
+        amount: numericPrice,
+      });
+
+      if (!orderResponse.data.success) {
+        toast.error("Failed to create order");
+        setPaymentStep("details");
+        setLoading(false);
+        return;
+      }
+
+      const { orderId, amount, currency, key } = orderResponse.data;
+
+      const options = {
+        key: key,
+        amount: amount,
+        currency: currency,
+        name: "Astrology Platform",
+        description: `Enrollment for ${course.title}`,
+        order_id: orderId,
+        handler: async (response) => {
+          try {
+            const verifyResponse = await axios.post(`${API_URL}/coursepayment/verify-payment`, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              courseId: course._id,
+              userId: userId,
+            });
+
+            if (verifyResponse.data.success) {
+              setPaymentStep("success");
+              toast.success("Payment successful! You are now enrolled.");
+              setTimeout(() => {
+                if (onSuccess) onSuccess(verifyResponse.data);
+                onClose();
+              }, 2000);
+            } else {
+              toast.error("Payment verification failed");
+              setPaymentStep("details");
+            }
+          } catch (error) {
+            console.error("Verification error:", error);
+            toast.error("Payment verification failed");
+            setPaymentStep("details");
+          }
+        },
+        prefill: {
+          name: user.fullName || "",
+          email: user.email || "",
+          contact: user.phone || "",
+        },
+        notes: {
+          courseId: course._id,
+          courseTitle: course.title,
+        },
+        theme: {
+          color: "#dc2626",
+        },
+        modal: {
+          ondismiss: () => {
+            setPaymentStep("details");
+            setLoading(false);
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error(error.response?.data?.message || "Payment failed");
+      setPaymentStep("details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  const numericPrice = parseFloat(course.price?.replace(/[^0-9.-]+/g, "") || 0);
+  const gst = numericPrice * 0.18;
+  const total = numericPrice;
+
+  if (paymentStep === "success") {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.9, y: 50 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9, y: 50 }}
+            className="bg-white rounded-2xl max-w-md w-full p-8 text-center"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring" }}
+              className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <FaCheckCircle className="w-10 h-10 text-green-500" />
+            </motion.div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">Payment Successful!</h3>
+            <p className="text-gray-600 mb-4">
+              You have successfully enrolled in <strong>{course.title}</strong>
+            </p>
+            <button
+              onClick={onClose}
+              className="w-full py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition"
+            >
+              Continue to Dashboard
+            </button>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.9, y: 50 }}
+          animate={{ scale: 1, y: 0 }}
+          exit={{ scale: 0.9, y: 50 }}
+          className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="bg-gradient-to-r from-red-500 to-red-600 p-5 text-white">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-bold">Complete Payment</h3>
+                <p className="text-sm text-white/80 mt-1">Secure payment gateway</p>
+              </div>
+              <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-lg transition">
+                <HiOutlineX className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="p-5 border-b border-gray-100">
+            <h4 className="font-semibold text-gray-800 mb-2">{course.title}</h4>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500 text-sm">Course Fee</span>
+              <div className="text-right">
+                <span className="text-2xl font-bold text-red-600">{course.price}</span>
+                <span className="text-xs text-gray-500 ml-1">inclusive of tax</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 border-b border-gray-100">
+            <h4 className="font-semibold text-gray-800 mb-3">You'll Get:</h4>
+            <div className="space-y-2">
+              {course.includes?.slice(0, 3).map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+                  <FaCheck className="text-green-500 w-4 h-4" />
+                  <span>{item}</span>
+                </div>
+              ))}
+              {course.includes?.length > 3 && (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <FaCheck className="text-green-500 w-4 h-4" />
+                  <span>+{course.includes.length - 3} more benefits</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="p-5 bg-gray-50">
+            <div className="space-y-2 mb-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Course Price</span>
+                <span className="font-medium">₹{numericPrice.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">GST (18%)</span>
+                <span className="font-medium">₹{Math.round(gst).toLocaleString()}</span>
+              </div>
+              <div className="border-t border-gray-200 pt-2 mt-2">
+                <div className="flex justify-between font-bold">
+                  <span>Total Amount</span>
+                  <span className="text-red-600 text-lg">₹{total.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 mb-4 text-xs text-gray-500">
+              <HiOutlineShieldCheck className="w-4 h-4 text-green-500" />
+              <span>Secured by Razorpay | 100% Safe & Secure</span>
+            </div>
+
+            <button
+              onClick={handlePayment}
+              disabled={loading}
+              className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <FaSpinner className="animate-spin w-4 h-4" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <FaRupeeSign className="w-4 h-4" />
+                  Pay {course.price}
+                </>
+              )}
+            </button>
+
+            <p className="text-center text-xs text-gray-400 mt-3">
+              By proceeding, you agree to our Terms of Service
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
 
 /* ---------- HERO ---------- */
 const Hero = () => (
@@ -140,7 +436,7 @@ const CourseCard = ({ course, onViewDetails }) => {
           </div>
           <div className="flex items-center gap-1.5 text-xs md:text-sm text-gray-600">
             <FaLanguage className="text-red-500 w-3 h-3 md:w-4 md:h-4" />
-            <span>{course.language}</span>
+            <span>{course.courseLanguage || course.language}</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs md:text-sm text-gray-600">
             <FaLaptopCode className="text-red-500 w-3 h-3 md:w-4 md:h-4" />
@@ -169,361 +465,157 @@ const CourseCard = ({ course, onViewDetails }) => {
   );
 };
 
+/* ---------- COURSE DETAILS MODAL WITH PAYMENT ---------- */
 /* ---------- COURSE DETAILS MODAL ---------- */
-const CourseDetailsModal = ({ course, onClose, onEnroll }) => {
-  const { isAuthenticated } = useAuth();
+const CourseDetailsModal = ({ course, onClose, user, isAuthenticated }) => {
   const navigate = useNavigate();
+  const [showPayment, setShowPayment] = useState(false);
 
-  const handleEnroll = () => {
-    if (isAuthenticated) {
-      onEnroll(course);
+  const handleEnrollClick = () => {
+    if (isAuthenticated && user) {
+      setShowPayment(true);
     } else {
-      navigate("/auth");
+      toast.error("Please login to continue");
+      navigate("/auth", { state: { redirectTo: "/courses" } });
     }
   };
 
+  const handlePaymentSuccess = () => {
+    toast.success("Successfully enrolled in the course!");
+    setTimeout(() => {
+      navigate("/profile");
+    }, 1500);
+  };
+
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto"
-        onClick={onClose}
-      >
+    <>
+      <AnimatePresence>
         <motion.div
-          initial={{ scale: 0.9, y: 50 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.9, y: 50 }}
-          className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-          onClick={(e) => e.stopPropagation()}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto"
+          onClick={onClose}
         >
-          {/* Course Header */}
-          <div className="relative h-48 sm:h-56 md:h-64">
-            <img 
-              src={course.image} 
-              alt={course.title}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-            <button 
-              onClick={onClose}
-              className="absolute top-4 right-4 bg-white/20 backdrop-blur rounded-full p-2 text-white hover:bg-white/40 transition"
-            >
-              ✕
-            </button>
-            <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 text-white">
-              <span className={`px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-semibold ${
-                course.level === 'Master' ? 'bg-red-500' : 'bg-orange-500'
-              }`}>
-                {course.level} Certification
-              </span>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mt-2 md:mt-3">{course.title}</h2>
-            </div>
-          </div>
-
-          {/* Course Content */}
-          <div className="p-4 md:p-6 lg:p-8">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-              <div className="bg-orange-50 rounded-xl p-3 md:p-4 text-center">
-                <HiOutlineClock className="w-5 h-5 md:w-6 md:h-6 text-red-500 mx-auto mb-2" />
-                <div className="text-xs md:text-sm text-gray-600">Duration</div>
-                <div className="font-semibold text-sm md:text-base">{course.duration}</div>
-              </div>
-              <div className="bg-orange-50 rounded-xl p-3 md:p-4 text-center">
-                <HiOutlineBookOpen className="w-5 h-5 md:w-6 md:h-6 text-red-500 mx-auto mb-2" />
-                <div className="text-xs md:text-sm text-gray-600">Sessions</div>
-                <div className="font-semibold text-sm md:text-base">{course.sessions}+ Live Classes</div>
-              </div>
-              <div className="bg-orange-50 rounded-xl p-3 md:p-4 text-center">
-                <FaAward className="w-5 h-5 md:w-6 md:h-6 text-red-500 mx-auto mb-2" />
-                <div className="text-xs md:text-sm text-gray-600">Certification</div>
-                <div className="font-semibold text-sm md:text-base">{course.level} Diploma</div>
-              </div>
-            </div>
-
-            <div className="mb-6 md:mb-8">
-              <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4">About This Course</h3>
-              <p className="text-gray-700 leading-relaxed text-sm md:text-base">{course.longDescription}</p>
-            </div>
-
-            <div className="mb-6 md:mb-8">
-              <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4">What You'll Learn</h3>
-              <ul className="grid md:grid-cols-2 gap-2 md:gap-3">
-                {course.syllabus?.map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <FaCheck className="text-green-500 mt-1 flex-shrink-0 w-3 h-3 md:w-4 md:h-4" />
-                    <span className="text-gray-700 text-xs md:text-sm">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="mb-6 md:mb-8">
-              <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4">Course Includes</h3>
-              <div className="grid grid-cols-2 gap-2 md:gap-4">
-                {course.includes?.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
-                    <FaCheck className="text-green-500 w-3 h-3 md:w-4 md:h-4" />
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-4 md:p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div className="text-center sm:text-left">
-                <div className="text-xs md:text-sm text-gray-600">Course Fee</div>
-                <div className="text-2xl md:text-3xl font-bold text-red-600">{course.price}</div>
-                <div className="text-[10px] md:text-xs text-gray-500">Inclusive of all taxes & materials</div>
-              </div>
+          <motion.div
+            initial={{ scale: 0.9, y: 50 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9, y: 50 }}
+            className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Course Header */}
+            <div className="relative h-48 sm:h-56 md:h-64">
+              <img 
+                src={course.image} 
+                alt={course.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
               <button 
-                onClick={handleEnroll}
-                className="px-6 md:px-8 py-2 md:py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition transform hover:scale-105 text-sm md:text-base"
+                onClick={onClose}
+                className="absolute top-4 right-4 bg-white/20 backdrop-blur rounded-full p-2 text-white hover:bg-white/40 transition"
               >
-                Enroll Now
+                ✕
               </button>
+              <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 text-white">
+                <span className={`px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-semibold ${
+                  course.level === 'Master' ? 'bg-red-500' : 'bg-orange-500'
+                }`}>
+                  {course.level} Certification
+                </span>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mt-2 md:mt-3">{course.title}</h2>
+              </div>
             </div>
-          </div>
+
+            <div className="p-4 md:p-6 lg:p-8">
+              {/* Course Content */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+                <div className="bg-orange-50 rounded-xl p-3 md:p-4 text-center">
+                  <HiOutlineClock className="w-5 h-5 md:w-6 md:h-6 text-red-500 mx-auto mb-2" />
+                  <div className="text-xs md:text-sm text-gray-600">Duration</div>
+                  <div className="font-semibold text-sm md:text-base">{course.duration}</div>
+                </div>
+                <div className="bg-orange-50 rounded-xl p-3 md:p-4 text-center">
+                  <HiOutlineBookOpen className="w-5 h-5 md:w-6 md:h-6 text-red-500 mx-auto mb-2" />
+                  <div className="text-xs md:text-sm text-gray-600">Sessions</div>
+                  <div className="font-semibold text-sm md:text-base">{course.sessions}+ Live Classes</div>
+                </div>
+                <div className="bg-orange-50 rounded-xl p-3 md:p-4 text-center">
+                  <FaAward className="w-5 h-5 md:w-6 md:h-6 text-red-500 mx-auto mb-2" />
+                  <div className="text-xs md:text-sm text-gray-600">Certification</div>
+                  <div className="font-semibold text-sm md:text-base">{course.level} Diploma</div>
+                </div>
+              </div>
+
+              <div className="mb-6 md:mb-8">
+                <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4">About This Course</h3>
+                <p className="text-gray-700 leading-relaxed text-sm md:text-base">{course.longDescription}</p>
+              </div>
+
+              <div className="mb-6 md:mb-8">
+                <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4">What You'll Learn</h3>
+                <ul className="grid md:grid-cols-2 gap-2 md:gap-3">
+                  {course.syllabus?.map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <FaCheck className="text-green-500 mt-1 w-3 h-3 md:w-4 md:h-4" />
+                      <span className="text-gray-700 text-xs md:text-sm">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mb-6 md:mb-8">
+                <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4">Course Includes</h3>
+                <div className="grid grid-cols-2 gap-2 md:gap-4">
+                  {course.includes?.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
+                      <FaCheck className="text-green-500 w-3 h-3 md:w-4 md:h-4" />
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-4 md:p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="text-center sm:text-left">
+                  <div className="text-xs md:text-sm text-gray-600">Course Fee</div>
+                  <div className="text-2xl md:text-3xl font-bold text-red-600">{course.price}</div>
+                  <div className="text-[10px] md:text-xs text-gray-500">Inclusive of all taxes</div>
+                </div>
+                <button 
+                  onClick={handleEnrollClick}
+                  className="px-6 md:px-8 py-2 md:py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition transform hover:scale-105 text-sm md:text-base flex items-center gap-2"
+                >
+                  <FaRupeeSign className="w-4 h-4" />
+                  Enroll Now
+                </button>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-100 flex flex-wrap justify-center gap-4 text-xs text-gray-500">
+                <div className="flex items-center gap-1"><FaUsers className="w-3 h-3" /><span>5000+ Students</span></div>
+                <div className="flex items-center gap-1"><FaWhatsapp className="w-3 h-3 text-green-500" /><span>24/7 Support</span></div>
+                <div className="flex items-center gap-1"><HiOutlineShieldCheck className="w-3 h-3" /><span>7-Day Refund</span></div>
+                <div className="flex items-center gap-1"><FaStar className="w-3 h-3 text-yellow-500" /><span>4.9 Rating</span></div>
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
-      </motion.div>
-    </AnimatePresence>
+      </AnimatePresence>
+
+      <CoursePaymentModal
+        isOpen={showPayment}
+        onClose={() => setShowPayment(false)}
+        course={course}
+        user={user}
+        isAuthenticated={isAuthenticated}
+        onSuccess={handlePaymentSuccess}
+      />
+    </>
   );
 };
-
-/* ---------- COURSES DATA ---------- */
-const coursesData = {
-  numerology: [
-    {
-      id: 1,
-      type: 'numerology',
-      title: 'Professional Numerology Course',
-      level: 'Diploma',
-      duration: '3 Months',
-      sessions: '30+',
-      language: 'Hindi/English',
-      mode: 'Live Online',
-      price: '₹24,999',
-      rating: 4.8,
-      image: 'https://images.unsplash.com/photo-1590080876135-2a34e3a3d6a9?w=800&h=500&fit=crop',
-      description: 'Master the ancient science of numbers with our comprehensive diploma program. Learn Vedic, Chaldean, and Pythagorean numerology systems.',
-      longDescription: 'This comprehensive Numerology Diploma program takes you on a transformative journey into the mystical world of numbers. You\'ll learn the ancient wisdom of Vedic, Chaldean, and Pythagorean numerology systems, understand how numbers influence your life path, relationships, and career. Our expert instructors will guide you through practical applications, enabling you to provide professional numerology consultations.',
-      syllabus: [
-        'Introduction to Numerology - Vedic, Chaldean, Pythagorean Systems',
-        'Lo Shu Grid - Complete Analysis & Interpretations',
-        'Introduction of Nine Numbers & Their Characteristics',
-        'Personal Number Calculation - Psychic, Life Path, Destiny Numbers',
-        'Name Numerology & Name Correction Techniques',
-        'Time Cycles - Personal Year, Month & Day Calculations',
-        'Elements, Planets & Their Connection with Numbers',
-        'Karmic Numbers & Master Numbers (11, 22, 33)',
-        'Dasha Systems - Maha Dasha & Antar Dasha Calculations',
-        'Zodiac Sign and Numerology Integration',
-        'Practical Remedies & Solutions',
-        'Client Consultation Techniques & Ethics'
-      ],
-      includes: [
-        '30+ Live Sessions',
-        'Study Material (Soft Copy)',
-        'Practical Training',
-        'Certificate of Completion',
-        'Lifetime Access to Recordings',
-        'WhatsApp Support Group'
-      ]
-    },
-    {
-      id: 2,
-      type: 'numerology',
-      title: 'Master Numerology Certification',
-      level: 'Master',
-      duration: '6 Months',
-      sessions: '60+',
-      language: 'Hindi/English',
-      mode: 'Live Online',
-      price: '₹44,999',
-      rating: 4.9,
-      image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&h=500&fit=crop',
-      description: 'Advanced mastery program with in-depth knowledge of numerology, remedies, and professional practice techniques.',
-      longDescription: 'Take your numerology expertise to the next level with our Master Certification program. This advanced course delves deep into complex numerological concepts, advanced prediction techniques, and professional practice management. You\'ll master the art of combining numerology with other metaphysical sciences and learn to provide comprehensive consultations.',
-      syllabus: [
-        'All Diploma Level Topics in Depth',
-        'Advanced Number Connections & Combinations',
-        'Detailed Lo Shu Grid Analysis & Remedies',
-        'Advanced Name Numerology & Business Name Selection',
-        'Comprehensive Time Cycle Analysis',
-        'Advanced Dasha Calculations & Predictions',
-        'Remedies - Gems, Yantras, Mantras, Colors',
-        'Integrating Numerology with Astrology & Vastu',
-        'Predictive Techniques for Career, Finance, Health, Relationships',
-        'Professional Consultation Practice',
-        'Case Studies & Live Practice Sessions',
-        'Marketing & Business Setup for Numerology Practice'
-      ],
-      includes: [
-        '60+ Live Sessions',
-        'Advanced Study Material',
-        '1-on-1 Mentorship',
-        'Practice Case Studies',
-        'Master Certification',
-        'Lifetime Support',
-        'Business Toolkit'
-      ]
-    }
-  ],
-  vastu: [
-    {
-      id: 3,
-      type: 'vastu',
-      title: 'Vastu Shastra Diploma',
-      level: 'Diploma',
-      duration: '3 Months',
-      sessions: '30+',
-      language: 'Hindi/English',
-      mode: 'Live Online',
-      price: '₹24,999',
-      rating: 4.7,
-      image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&h=500&fit=crop',
-      description: 'Learn the ancient science of architecture and space harmony. Create balanced living and working spaces.',
-      longDescription: 'Vastu Shastra, the ancient Indian science of architecture, teaches us how to create harmonious living spaces that support health, wealth, and happiness. This comprehensive diploma program covers residential and commercial vastu principles, practical analysis techniques, and effective remedies.',
-      syllabus: [
-        'Introduction & Origin of Vastu Shastra',
-        'The Vastu Purush - Understanding Energy Flow',
-        'Instruments & Tools for Vastu Analysis',
-        'Five Elements (Panch Mahabhoot) in Vastu',
-        'Directions & Their Significance',
-        'Site Selection & Land Analysis',
-        'Residential Vastu - Room by Room Guide',
-        'Commercial Vastu Principles',
-        'Vastu Remedies without Demolition',
-        'Mantras, Yantras & Gem Remedies',
-        'Practical Vastu Analysis of Drawings',
-        'Case Studies & Live Practice'
-      ],
-      includes: [
-        '30+ Live Sessions',
-        'Vastu Toolkit (Digital)',
-        'Practical Drawing Analysis',
-        'Certificate of Completion',
-        'Lifetime Access',
-        'Community Support'
-      ]
-    },
-    {
-      id: 4,
-      type: 'vastu',
-      title: 'Master Vastu Consultant',
-      level: 'Master',
-      duration: '6 Months',
-      sessions: '60+',
-      language: 'Hindi/English',
-      mode: 'Live Online',
-      price: '₹44,999',
-      rating: 4.9,
-      image: 'https://images.unsplash.com/photo-1582656999268-7bb53fa3b55b?w=800&h=500&fit=crop',
-      description: 'Become a certified Vastu consultant with advanced knowledge of remedies, commercial vastu, and professional practice.',
-      longDescription: 'Master the art and science of Vastu Shastra with our advanced certification program. This comprehensive course prepares you to become a professional Vastu consultant capable of handling complex residential and commercial projects with confidence.',
-      syllabus: [
-        'All Diploma Level Topics in Depth',
-        'Advanced Directional Analysis',
-        'Detailed Room-by-Room Vastu Planning',
-        'Commercial Vastu - Offices, Factories, Showrooms',
-        'Vastu for Specific Businesses',
-        'Advanced Remedies - Yantras, Pyramids, Feng Shui Integration',
-        'Vedic Remedies & Mantra Applications',
-        'Practical Site Visits & Case Studies',
-        'Client Consultation Protocols',
-        'Drawing Analysis & Software Tools',
-        'Business Development for Vastu Practice',
-        'Live Project Mentorship'
-      ],
-      includes: [
-        '60+ Live Sessions',
-        'Advanced Vastu Toolkit',
-        '1-on-1 Mentorship',
-        'Live Project Experience',
-        'Master Certification',
-        'Business Launch Support'
-      ]
-    }
-  ],
-  yoga: [
-    {
-      id: 5,
-      type: 'yoga',
-      title: 'Yoga Teacher Training',
-      level: 'Diploma',
-      duration: '3 Months',
-      sessions: '45+',
-      language: 'Hindi/English',
-      mode: 'Live Online',
-      price: '₹29,999',
-      rating: 4.9,
-      image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&h=500&fit=crop',
-      description: 'Transformative yoga teacher training program covering asanas, pranayama, philosophy, and teaching methodology.',
-      longDescription: 'Embark on a transformative journey to become a certified yoga teacher. This comprehensive program covers traditional Hatha Yoga, Vinyasa flows, pranayama techniques, meditation practices, yoga philosophy, and teaching methodology. Perfect for those seeking to deepen their practice or start a career as a yoga instructor.',
-      syllabus: [
-        'History & Philosophy of Yoga',
-        'Patanjali\'s Yoga Sutras',
-        'Asanas - Alignment, Modifications, Benefits',
-        'Pranayama Techniques & Benefits',
-        'Meditation & Mindfulness Practices',
-        'Anatomy & Physiology for Yoga',
-        'Sequencing & Class Structure',
-        'Teaching Methodology & Communication',
-        'Adjustments & Hands-on Assistance',
-        'Yoga for Special Conditions',
-        'Business of Yoga',
-        'Practicum & Teaching Practice'
-      ],
-      includes: [
-        '45+ Live Sessions',
-        'Detailed Manual',
-        'Teaching Practice Sessions',
-        'Yoga Alliance Certified',
-        'Lifetime Access',
-        'Community Support'
-      ]
-    },
-    {
-      id: 6,
-      type: 'yoga',
-      title: 'Advanced Yoga Mastery',
-      level: 'Master',
-      duration: '6 Months',
-      sessions: '80+',
-      language: 'Hindi/English',
-      mode: 'Live Online',
-      price: '₹49,999',
-      rating: 4.9,
-      image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&h=500&fit=crop',
-      description: 'Advanced yoga training for experienced practitioners wanting to deepen their practice and teaching skills.',
-      longDescription: 'Take your yoga practice and teaching to the highest level with our Advanced Mastery program. This comprehensive course covers advanced asanas, pranayama techniques, meditation practices, yoga philosophy, and teaching methodology.',
-      syllabus: [
-        'Advanced Asana Practice',
-        'Pranayama Mastery',
-        'Advanced Meditation Techniques',
-        'Yoga Philosophy Deep Dive',
-        'Teaching Methodology Advanced',
-        'Anatomy for Advanced Practitioners',
-        'Adjustments & Hands-on Assistance Advanced',
-        'Yoga for Special Populations',
-        'Business of Yoga Advanced',
-        'Practicum & Teaching Practice Advanced'
-      ],
-      includes: [
-        '80+ Live Sessions',
-        'Advanced Manual',
-        '1-on-1 Mentorship',
-        'Practice Teaching Sessions',
-        'Master Certification',
-        'Lifetime Support'
-      ]
-    }
-  ]
-};
-
 /* ---------- HORIZONTAL SCROLL SECTION ---------- */
-const HorizontalScrollSection = ({ title, category, courses, onViewDetails }) => {
+const HorizontalScrollSection = ({ title, category, courses, onViewDetails, loading }) => {
   const scrollContainerRef = useRef(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
@@ -594,15 +686,28 @@ const HorizontalScrollSection = ({ title, category, courses, onViewDetails }) =>
     if (container) {
       container.addEventListener('scroll', checkScrollPosition);
       checkScrollPosition();
-      
-      // Set cursor style
       container.style.cursor = 'grab';
       
       return () => {
         container.removeEventListener('scroll', checkScrollPosition);
       };
     }
-  }, []);
+  }, [courses]);
+
+  if (loading) {
+    return (
+      <div className="mb-8 md:mb-12">
+        <div className="flex items-center justify-between mb-4 md:mb-6 px-1">
+          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+        <div className="flex gap-4 md:gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="w-[300px] sm:w-[320px] md:w-[350px] h-[400px] bg-gray-200 rounded-2xl animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!courses || courses.length === 0) return null;
 
@@ -611,7 +716,7 @@ const HorizontalScrollSection = ({ title, category, courses, onViewDetails }) =>
       {/* Category Header */}
       <div className="flex items-center justify-between mb-4 md:mb-6 px-1">
         <div className="flex items-center gap-2 md:gap-3">
-          <span className="text-2xl md:text-3xl lg:text-4xl">{categoryIcons[category]}</span>
+          <span className="text-2xl md:text-3xl lg:text-4xl">{categoryIcons[category] || '📚'}</span>
           <div>
             <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
               {title}
@@ -658,7 +763,7 @@ const HorizontalScrollSection = ({ title, category, courses, onViewDetails }) =>
         <div className="flex gap-4 md:gap-6 w-max">
           {courses.map((course) => (
             <CourseCard
-              key={course.id}
+              key={course._id || course.id}
               course={course}
               onViewDetails={onViewDetails}
             />
@@ -670,12 +775,12 @@ const HorizontalScrollSection = ({ title, category, courses, onViewDetails }) =>
 };
 
 /* ---------- SIDEBAR COMPONENT ---------- */
-const Sidebar = ({ activeCategory, onCategoryChange, isMobileMenuOpen, setIsMobileMenuOpen }) => {
+const Sidebar = ({ activeCategory, onCategoryChange, isMobileMenuOpen, setIsMobileMenuOpen, courseCounts }) => {
   const categories = [
-    { id: 'all', name: 'All Courses', icon: '📚', count: Object.values(coursesData).flat().length },
-    { id: 'numerology', name: 'Numerology', icon: '🔮', count: coursesData.numerology.length },
-    { id: 'vastu', name: 'Vastu Shastra', icon: '🏠', count: coursesData.vastu.length },
-    { id: 'yoga', name: 'Yoga', icon: '🧘', count: coursesData.yoga.length },
+    { id: 'all', name: 'All Courses', icon: '📚', count: courseCounts.total },
+    { id: 'numerology', name: 'Numerology', icon: '🔮', count: courseCounts.numerology },
+    { id: 'vastu', name: 'Vastu Shastra', icon: '🏠', count: courseCounts.vastu },
+    { id: 'yoga', name: 'Yoga', icon: '🧘', count: courseCounts.yoga },
   ];
 
   const sidebarContent = (
@@ -794,13 +899,121 @@ const Sidebar = ({ activeCategory, onCategoryChange, isMobileMenuOpen, setIsMobi
 const CoursesSection = ({ onViewDetails }) => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [courseCounts, setCourseCounts] = useState({
+    total: 0,
+    numerology: 0,
+    vastu: 0,
+    yoga: 0
+  });
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+  // Fetch courses from API
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/courses`);
+      
+      if (response.data.success) {
+        const allCourses = response.data.courses;
+        setCourses(allCourses);
+        
+        // Calculate counts
+        const counts = {
+          total: allCourses.length,
+          numerology: allCourses.filter(c => c.type === 'numerology').length,
+          vastu: allCourses.filter(c => c.type === 'vastu').length,
+          yoga: allCourses.filter(c => c.type === 'yoga').length
+        };
+        setCourseCounts(counts);
+      }
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+      toast.error("Failed to load courses");
+      
+      // Fallback to static data if API fails
+      const fallbackCourses = getFallbackCourses();
+      setCourses(fallbackCourses);
+      setCourseCounts({
+        total: fallbackCourses.length,
+        numerology: fallbackCourses.filter(c => c.type === 'numerology').length,
+        vastu: fallbackCourses.filter(c => c.type === 'vastu').length,
+        yoga: fallbackCourses.filter(c => c.type === 'yoga').length
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fallback static data
+  const getFallbackCourses = () => {
+    return [
+      {
+        _id: '1',
+        type: 'numerology',
+        title: 'Professional Numerology Course',
+        level: 'Diploma',
+        duration: '3 Months',
+        sessions: '30+',
+        courseLanguage: 'Hindi, English',
+        mode: 'Live Online',
+        price: '₹24,999',
+        rating: 4.8,
+        image: 'https://images.unsplash.com/photo-1590080876135-2a34e3a3d6a9?w=800&h=500&fit=crop',
+        description: 'Master the ancient science of numbers with our comprehensive diploma program.',
+        longDescription: 'This comprehensive Numerology Diploma program takes you on a transformative journey...',
+        syllabus: ['Introduction to Numerology', 'Lo Shu Grid Analysis', 'Personal Number Calculation'],
+        includes: ['30+ Live Sessions', 'Study Material', 'Certificate of Completion']
+      },
+      {
+        _id: '3',
+        type: 'vastu',
+        title: 'Vastu Shastra Diploma',
+        level: 'Diploma',
+        duration: '3 Months',
+        sessions: '30+',
+        courseLanguage: 'Hindi, English',
+        mode: 'Live Online',
+        price: '₹24,999',
+        rating: 4.7,
+        image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&h=500&fit=crop',
+        description: 'Learn the ancient science of architecture and space harmony.',
+        longDescription: 'Vastu Shastra teaches us how to create harmonious living spaces...',
+        syllabus: ['Introduction to Vastu', 'Five Elements', 'Directions Significance'],
+        includes: ['30+ Live Sessions', 'Vastu Toolkit', 'Certificate']
+      },
+      {
+        _id: '5',
+        type: 'yoga',
+        title: 'Yoga Teacher Training',
+        level: 'Diploma',
+        duration: '3 Months',
+        sessions: '45+',
+        courseLanguage: 'Hindi, English',
+        mode: 'Live Online',
+        price: '₹29,999',
+        rating: 4.9,
+        image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&h=500&fit=crop',
+        description: 'Transformative yoga teacher training program.',
+        longDescription: 'Embark on a transformative journey to become a certified yoga teacher...',
+        syllabus: ['History of Yoga', 'Asanas', 'Pranayama'],
+        includes: ['45+ Live Sessions', 'Detailed Manual', 'Yoga Alliance Certified']
+      }
+    ];
+  };
 
   // Get courses based on active category
   const getFilteredCourses = () => {
     if (activeCategory === 'all') {
-      return Object.values(coursesData).flat();
+      return courses;
     }
-    return coursesData[activeCategory] || [];
+    return courses.filter(course => course.type === activeCategory);
   };
 
   const filteredCourses = getFilteredCourses();
@@ -809,11 +1022,22 @@ const CoursesSection = ({ onViewDetails }) => {
   const getGroupedCourses = () => {
     if (activeCategory !== 'all') return null;
     
-    return [
-      { title: 'Numerology Courses', category: 'numerology', courses: coursesData.numerology },
-      { title: 'Vastu Shastra Courses', category: 'vastu', courses: coursesData.vastu },
-      { title: 'Yoga & Meditation Courses', category: 'yoga', courses: coursesData.yoga },
-    ];
+    const numerologyCourses = courses.filter(c => c.type === 'numerology');
+    const vastuCourses = courses.filter(c => c.type === 'vastu');
+    const yogaCourses = courses.filter(c => c.type === 'yoga');
+    
+    const groups = [];
+    if (numerologyCourses.length > 0) {
+      groups.push({ title: 'Numerology Courses', category: 'numerology', courses: numerologyCourses });
+    }
+    if (vastuCourses.length > 0) {
+      groups.push({ title: 'Vastu Shastra Courses', category: 'vastu', courses: vastuCourses });
+    }
+    if (yogaCourses.length > 0) {
+      groups.push({ title: 'Yoga & Meditation Courses', category: 'yoga', courses: yogaCourses });
+    }
+    
+    return groups;
   };
 
   const groupedCourses = getGroupedCourses();
@@ -838,22 +1062,43 @@ const CoursesSection = ({ onViewDetails }) => {
             onCategoryChange={setActiveCategory}
             isMobileMenuOpen={isMobileMenuOpen}
             setIsMobileMenuOpen={setIsMobileMenuOpen}
+            courseCounts={courseCounts}
           />
 
           {/* Main Content - Right */}
           <div className="flex-1 min-w-0">
-            {activeCategory === 'all' ? (
+            {loading ? (
+              // Loading skeletons
+              <div>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="mb-8">
+                    <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-4"></div>
+                    <div className="flex gap-4">
+                      {[1, 2, 3].map((j) => (
+                        <div key={j} className="w-[300px] sm:w-[320px] md:w-[350px] h-[400px] bg-gray-200 rounded-2xl animate-pulse"></div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : activeCategory === 'all' ? (
               // Show all categories as horizontal scroll sections
               <div>
-                {groupedCourses.map((group, index) => (
+                {groupedCourses && groupedCourses.map((group, index) => (
                   <HorizontalScrollSection
                     key={index}
                     title={group.title}
                     category={group.category}
                     courses={group.courses}
                     onViewDetails={onViewDetails}
+                    loading={false}
                   />
                 ))}
+                {(!groupedCourses || groupedCourses.length === 0) && (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500">No courses available</p>
+                  </div>
+                )}
               </div>
             ) : (
               // Show single category
@@ -873,7 +1118,7 @@ const CoursesSection = ({ onViewDetails }) => {
                 <div className="block lg:hidden">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                     {filteredCourses.map((course) => (
-                      <div key={course.id} className="flex justify-center">
+                      <div key={course._id || course.id} className="flex justify-center">
                         <CourseCard
                           course={course}
                           onViewDetails={onViewDetails}
@@ -888,6 +1133,7 @@ const CoursesSection = ({ onViewDetails }) => {
                     category={activeCategory}
                     courses={filteredCourses}
                     onViewDetails={onViewDetails}
+                    loading={false}
                   />
                 </div>
               </div>
@@ -1035,7 +1281,7 @@ const FAQ = () => {
 
 /* ---------- MAIN PAGE ---------- */
 const CoursesPage = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [selectedCourse, setSelectedCourse] = useState(null);
 
@@ -1045,10 +1291,11 @@ const CoursesPage = () => {
 
   const handleEnroll = (course) => {
     if (isAuthenticated) {
-      navigate(`/checkout/${course.id}`);
+      navigate(`/checkout/${course._id || course.id}`);
     } else {
-      navigate("/auth", { state: { redirectTo: `/checkout/${course.id}` } });
+      navigate("/auth", { state: { redirectTo: `/checkout/${course._id || course.id}` } });
     }
+
   };
 
   return (
@@ -1064,6 +1311,8 @@ const CoursesPage = () => {
           course={selectedCourse}
           onClose={() => setSelectedCourse(null)}
           onEnroll={handleEnroll}
+          user={user}
+  isAuthenticated={isAuthenticated}
         />
       )}
     </main>
@@ -1071,3 +1320,4 @@ const CoursesPage = () => {
 };
 
 export default CoursesPage;
+
