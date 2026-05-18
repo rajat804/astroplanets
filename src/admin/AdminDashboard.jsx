@@ -29,14 +29,16 @@ import {
   getAllBookings,
   updateBookingStatus,
   deleteBooking,
-  getBookingStats
+  // getBookingStats
 } from "../services/api";
 import {
   getAllOrders,
   updateOrderStatus,
   deleteOrder,
-  getOrderStats
+  // getOrderStats
 } from "../services/api";
+import AddCourse from "./components/AddCourse";
+import Users from "./components/Users";
 
 function useCount(to = 0, duration = 1200) {
   const [num, setNum] = useState(0);
@@ -533,7 +535,17 @@ function AdminDashboard() {
                 <HeroSlide />
               </motion.section>
             )}
-
+            {/* course add */}
+            {tab === "course" && (
+              <motion.section
+                key="course"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <AddCourse />
+              </motion.section>
+            )}
             {/* Blog Tab */}
             {tab === "blog" && (
               <motion.section
@@ -566,60 +578,7 @@ function AdminDashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                <div className="bg-white rounded-2xl shadow-lg border border-orange-100 overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-orange-50">
-                        <tr className="text-left text-sm text-gray-600">
-                          <th className="px-6 py-4">Name</th>
-                          <th className="px-6 py-4">Email</th>
-                          <th className="px-6 py-4">Joined</th>
-                          <th className="px-6 py-4">Status</th>
-                          <th className="px-6 py-4">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-orange-100">
-                        {users.length === 0 ? (
-                          <tr>
-                            <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-                              No users found
-                            </td>
-                          </tr>
-                        ) : (
-                          users.map((u) => (
-                            <tr key={u._id} className="hover:bg-orange-50 transition">
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                    {u.fullName?.charAt(0) || 'U'}
-                                  </div>
-                                  <span className="font-medium text-gray-800">{u.fullName}</span>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 text-gray-600">{u.email}</td>
-                              <td className="px-6 py-4 text-gray-600">{new Date(u.createdAt).toLocaleDateString()}</td>
-                              <td className="px-6 py-4">
-                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                  {u.isActive ? 'Active' : 'Inactive'}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex gap-2">
-                                  <button className="p-2 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 transition">
-                                    View
-                                  </button>
-                                  <button className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition">
-                                    {u.isActive ? 'Block' : 'Unblock'}
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                <Users />
               </motion.section>
             )}
 
