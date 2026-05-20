@@ -33,7 +33,7 @@ const SliderComponent = () => {
         resolve(imageDimensions[imageUrl]);
         return;
       }
-      
+
       const img = new Image();
       img.src = imageUrl;
       img.onload = () => {
@@ -42,7 +42,7 @@ const SliderComponent = () => {
         resolve(dimensions);
       };
       img.onerror = () => {
-        resolve({ width: 1920, height: 1080, aspectRatio: 1080/1920 });
+        resolve({ width: 1920, height: 1080, aspectRatio: 1080 / 1920 });
       };
     });
   }, [imageDimensions]);
@@ -64,7 +64,7 @@ const SliderComponent = () => {
         const response = await axios.get(`${API_URL}/hero-slides`);
         const slides = response.data.slides || response.data;
         setBanners(slides);
-        
+
         // Get dimensions for first slide
         if (slides[0]?.image) {
           const dimensions = await getImageDimensions(slides[0].image);
@@ -159,7 +159,7 @@ const SliderComponent = () => {
 
   return (
     <section className="relative w-full overflow-hidden bg-black">
-      <div 
+      <div
         className="relative w-full"
         style={{ height: containerHeight }}
         onTouchStart={handleTouchStart}
@@ -170,25 +170,47 @@ const SliderComponent = () => {
           {banners.map((banner, index) => (
             index === currentSlide && (
               <motion.div
-                key={banner.id || index}
+                key={banner._id || index}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5 }}
                 className="absolute inset-0"
               >
-                <img
-                  src={banner.image}
-                  alt={banner.title || `Hero Slide ${index + 1}`}
-                  className="w-full h-full object-contain"
-                  style={{ 
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain'
-                  }}
-                  loading="eager"
-                  draggable="false"
-                />
+                {banner.link ? (
+                  <a
+                    href={banner.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full h-full"
+                  >
+                    <img
+                      src={banner.image}
+                      alt={banner.title || `Hero Slide ${index + 1}`}
+                      className="w-full h-full object-contain cursor-pointer"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                      }}
+                      loading="eager"
+                      draggable="false"
+                    />
+                  </a>
+                ) : (
+                  <img
+                    src={banner.image}
+                    alt={banner.title || `Hero Slide ${index + 1}`}
+                    className="w-full h-full object-contain"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                    }}
+                    loading="eager"
+                    draggable="false"
+                  />
+                )}
               </motion.div>
             )
           ))}
@@ -196,7 +218,7 @@ const SliderComponent = () => {
 
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/30 pointer-events-none" />
-        
+
         {/* Bottom Gradient for better visibility */}
         <div className="absolute bottom-0 left-0 right-0 h-16 md:h-24 lg:h-32 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
 
@@ -240,8 +262,8 @@ const SliderComponent = () => {
                 onClick={() => setCurrentSlide(index)}
                 className={`transition-all duration-300 rounded-full
                   focus:outline-none focus:ring-1 focus:ring-white/50
-                  ${currentSlide === index 
-                    ? `bg-white shadow-lg ${isMobile ? 'w-6 h-1' : 'w-8 md:w-10 h-1.5 md:h-2'}` 
+                  ${currentSlide === index
+                    ? `bg-white shadow-lg ${isMobile ? 'w-6 h-1' : 'w-8 md:w-10 h-1.5 md:h-2'}`
                     : `bg-white/50 hover:bg-white/80 ${isMobile ? 'w-1.5 h-1' : 'w-1.5 md:w-2 h-1.5 md:h-2'}`
                   }`}
                 aria-label={`Go to slide ${index + 1}`}
@@ -254,10 +276,10 @@ const SliderComponent = () => {
         {banners.length > 1 && (
           <div className={`absolute z-30
                           bg-black/50 backdrop-blur-sm rounded-full
-                          ${isMobile 
-                            ? 'top-2 right-2 px-2 py-0.5' 
-                            : 'top-3 md:top-4 right-3 md:right-4 px-2.5 md:px-3 py-0.5 md:py-1'
-                          }`}>
+                          ${isMobile
+              ? 'top-2 right-2 px-2 py-0.5'
+              : 'top-3 md:top-4 right-3 md:right-4 px-2.5 md:px-3 py-0.5 md:py-1'
+            }`}>
             <span className={`text-white font-medium ${isMobile ? 'text-[10px]' : 'text-xs md:text-sm'}`}>
               {currentSlide + 1} / {banners.length}
             </span>
