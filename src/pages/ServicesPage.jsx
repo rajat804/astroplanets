@@ -1,5 +1,6 @@
 // ServicesPage.jsx
 import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   HiOutlineCalendar,
@@ -7,7 +8,7 @@ import {
   HiOutlineUserGroup,
 } from "react-icons/hi";
 import { FaCheck, FaStar, FaChevronDown } from "react-icons/fa";
-
+import BookConsultationButton from "../components/common/BookConsultationButton";
 /* ---------- Helpers ---------- */
 const Accent = ({ children }) => (
   <span className="text-green-600">{children}</span>
@@ -26,22 +27,35 @@ const CTA = ({ children, className = "", ...rest }) => (
 );
 
 /* ---------- HERO ---------- */
-const Hero = () => (
-  <section className="relative bg-gradient-to-b from-orange-50/50 to-offWhite py-20">
-    <div className="max-w-6xl mx-auto px-6 text-center">
-      <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">
-        Talk to our experts about <Accent>Astro, Numero, Vastu, Yoga</Accent> & more
-      </h1>
-      <p className="text-gray-600 mt-4 max-w-2xl mx-auto text-lg">
-        From astrology to vastu, numerology, and personalized wellness — find
-        the right guidance and tools crafted for your journey.
-      </p>
-      <div className="mt-6">
-        <CTA>Book a Consultation</CTA>
+const Hero = () => {
+
+  const { user } = useAuth();
+
+  return (
+    <section className="relative bg-gradient-to-b from-orange-50/50 to-offWhite py-20">
+      <div className="max-w-6xl mx-auto px-6 text-center">
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">
+          Talk to our experts about <Accent>Astro, Numero, Vastu, Yoga</Accent> & more
+        </h1>
+
+        <p className="text-gray-600 mt-4 max-w-2xl mx-auto text-lg">
+          From astrology to vastu, numerology, and personalized wellness — find
+          the right guidance and tools crafted for your journey.
+        </p>
+
+        <div className="mt-6">
+          <BookConsultationButton
+            prefillData={{
+              name: user?.name || "",
+              email: user?.email || "",
+              phone: user?.phone || "",
+            }}
+          />
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 /* ---------- SERVICE CATEGORIES ---------- */
 const Categories = () => {
