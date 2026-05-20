@@ -31,6 +31,7 @@ import { GiCrystalBall, GiYinYang, GiHouse } from "react-icons/gi";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+
 /* ---------- Helpers ---------- */
 const Accent = ({ children }) => (
   <span className="text-green-600">{children}</span>
@@ -67,8 +68,6 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
   };
 
   const handlePayment = async () => {
-    // Check if user is authenticated and user exists
-    console.log(user);
     if (!isAuthenticated || !user) {
       toast.error("Please login to continue");
       onClose();
@@ -89,7 +88,6 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
 
       const numericPrice = parseFloat(course.price.replace(/[^0-9.-]+/g, ""));
       
-      // Get user ID from either id or _id field
       const userId = user.id || user._id;
       
       if (!userId) {
@@ -335,6 +333,169 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
   );
 };
 
+/* ---------- SIDEBAR COMPONENT ---------- */
+const CoursesSidebar = ({ activeCategory, onCategoryChange, isMobileMenuOpen, setIsMobileMenuOpen, courseCounts }) => {
+  const [dynamicCategories, setDynamicCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+  const getDisplayName = (type) => {
+    const names = {
+      numerology: 'Numerology',
+      astrology: 'Astrology',
+      tarot: 'Tarot Reading',
+      vastu: 'Vastu Shastra',
+      palmistry: 'Palmistry',
+      reiki: 'Reiki Healing',
+      yoga: 'Yoga',
+      meditation: 'Meditation',
+    };
+    return names[type] || type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
+  const getIconForType = (type) => {
+    const icons = {
+      numerology: '🔮',
+      astrology: '✨',
+      tarot: '🃏',
+      vastu: '🏠',
+      palmistry: '✋',
+      reiki: '🌟',
+      yoga: '🧘',
+      meditation: '🧠',
+      default: '📚'
+    };
+    return icons[type] || icons.default;
+  };
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/courses/types`);
+        if (response.data.success) {
+          const categories = response.data.types.map(type => ({
+            id: type,
+            name: getDisplayName(type),
+            icon: getIconForType(type),
+            count: courseCounts[type] || 0
+          }));
+          setDynamicCategories(categories);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, [courseCounts]);
+
+  const allCategories = [
+    { id: 'all', name: 'All Courses', icon: '📚', count: courseCounts.total },
+    ...dynamicCategories
+  ];
+
+  const sidebarContent = (
+    <div className="bg-white rounded-2xl shadow-lg border border-orange-100 p-4">
+      <div className="mb-4 md:mb-6 pb-3 border-b border-orange-100">
+        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">📚 Categories</h3>
+        <p className="text-xs text-gray-500 mt-1">Filter courses by category</p>
+      </div>
+      
+      <div className="space-y-2">
+        {loading ? (
+          [...Array(4)].map((_, i) => (
+            <div key={i} className="flex items-center justify-between p-3 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+                <div className="w-24 h-4 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="w-8 h-5 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          ))
+        ) : (
+          allCategories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => {
+                onCategoryChange(category.id);
+                if (setIsMobileMenuOpen) setIsMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-300 ${
+                activeCategory === category.id
+                  ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md'
+                  : 'bg-gray-50 text-gray-700 hover:bg-red-50 hover:text-red-600'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-xl">{category.icon}</span>
+                <span className="font-semibold">{category.name}</span>
+              </div>
+              <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                activeCategory === category.id
+                  ? 'bg-white/20 text-white'
+                  : 'bg-gray-200 text-gray-600'
+              }`}>
+                {category.count}
+              </span>
+            </button>
+          ))
+        )}
+      </div>
+
+      <div className="mt-6 pt-4 border-t border-orange-100">
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-2xl">🏆</span>
+            <span className="font-semibold text-gray-800">Why Choose Us?</span>
+          </div>
+          <ul className="space-y-2 text-sm text-gray-600">
+            <li className="flex items-center gap-2"><FaCheck className="text-green-500" />Certified Experts</li>
+            <li className="flex items-center gap-2"><FaCheck className="text-green-500" />Lifetime Access</li>
+            <li className="flex items-center gap-2"><FaCheck className="text-green-500" />Practical Training</li>
+            <li className="flex items-center gap-2"><FaCheck className="text-green-500" />Recognized Certificate</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <div className="hidden lg:block lg:w-72 xl:w-80 flex-shrink-0">
+        <div className="sticky top-24">{sidebarContent}</div>
+      </div>
+
+      <div className="lg:hidden mb-4">
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="w-full flex items-center justify-between bg-white rounded-xl shadow-lg border border-orange-100 p-3"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-xl">📚</span>
+            <span className="font-semibold text-gray-800">Filter Categories</span>
+          </div>
+          {isMobileMenuOpen ? <HiOutlineX className="w-5 h-5" /> : <HiOutlineMenu className="w-5 h-5" />}
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden mb-4"
+          >
+            {sidebarContent}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
+
 /* ---------- HERO ---------- */
 const Hero = () => (
   <section className="relative bg-gradient-to-br from-red-50 via-orange-50/30 to-offWhite py-16 md:py-20 overflow-hidden">
@@ -375,6 +536,8 @@ const CourseCard = ({ course, onViewDetails }) => {
         return <GiHouse className="w-6 h-6 md:w-8 md:h-8 text-red-500" />;
       case 'yoga':
         return <GiYinYang className="w-6 h-6 md:w-8 md:h-8 text-red-500" />;
+      case 'meditation':
+        return <GiCrystalBall className="w-6 h-6 md:w-8 md:h-8 text-red-500" />;
       default:
         return <FaGraduationCap className="w-6 h-6 md:w-8 md:h-8 text-red-500" />;
     }
@@ -389,7 +552,6 @@ const CourseCard = ({ course, onViewDetails }) => {
       className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-orange-100 w-[300px] sm:w-[320px] md:w-[350px] flex-shrink-0"
       onClick={() => onViewDetails(course)}
     >
-      {/* Course Image Banner */}
       <div className="relative h-40 sm:h-44 md:h-48 overflow-hidden">
         <img 
           src={course.image} 
@@ -409,7 +571,6 @@ const CourseCard = ({ course, onViewDetails }) => {
         </div>
       </div>
 
-      {/* Course Info */}
       <div className="p-4 md:p-5">
         <div className="flex items-center gap-2 mb-2">
           <FaStar className="text-yellow-500 w-3 h-3 md:w-4 md:h-4" />
@@ -424,7 +585,6 @@ const CourseCard = ({ course, onViewDetails }) => {
           {course.description}
         </p>
 
-        {/* Key Features */}
         <div className="grid grid-cols-2 gap-2 mb-3">
           <div className="flex items-center gap-1.5 text-xs md:text-sm text-gray-600">
             <HiOutlineClock className="text-red-500 w-3 h-3 md:w-4 md:h-4" />
@@ -444,7 +604,6 @@ const CourseCard = ({ course, onViewDetails }) => {
           </div>
         </div>
 
-        {/* Price and CTA */}
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-orange-100">
           <div>
             <span className="text-[10px] md:text-xs text-gray-500">Starting from</span>
@@ -465,7 +624,6 @@ const CourseCard = ({ course, onViewDetails }) => {
   );
 };
 
-/* ---------- COURSE DETAILS MODAL WITH PAYMENT ---------- */
 /* ---------- COURSE DETAILS MODAL ---------- */
 const CourseDetailsModal = ({ course, onClose, user, isAuthenticated }) => {
   const navigate = useNavigate();
@@ -504,7 +662,6 @@ const CourseDetailsModal = ({ course, onClose, user, isAuthenticated }) => {
             className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Course Header */}
             <div className="relative h-48 sm:h-56 md:h-64">
               <img 
                 src={course.image} 
@@ -529,7 +686,6 @@ const CourseDetailsModal = ({ course, onClose, user, isAuthenticated }) => {
             </div>
 
             <div className="p-4 md:p-6 lg:p-8">
-              {/* Course Content */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
                 <div className="bg-orange-50 rounded-xl p-3 md:p-4 text-center">
                   <HiOutlineClock className="w-5 h-5 md:w-6 md:h-6 text-red-500 mx-auto mb-2" />
@@ -614,6 +770,7 @@ const CourseDetailsModal = ({ course, onClose, user, isAuthenticated }) => {
     </>
   );
 };
+
 /* ---------- HORIZONTAL SCROLL SECTION ---------- */
 const HorizontalScrollSection = ({ title, category, courses, onViewDetails, loading }) => {
   const scrollContainerRef = useRef(null);
@@ -626,10 +783,10 @@ const HorizontalScrollSection = ({ title, category, courses, onViewDetails, load
   const categoryIcons = {
     numerology: '🔮',
     vastu: '🏠',
-    yoga: '🧘'
+    yoga: '🧘',
+    meditation: '🧠'
   };
 
-  // Check scroll position to show/hide arrows
   const checkScrollPosition = () => {
     const container = scrollContainerRef.current;
     if (container) {
@@ -640,7 +797,6 @@ const HorizontalScrollSection = ({ title, category, courses, onViewDetails, load
     }
   };
 
-  // Scroll functions
   const scroll = (direction) => {
     const container = scrollContainerRef.current;
     if (container) {
@@ -656,7 +812,6 @@ const HorizontalScrollSection = ({ title, category, courses, onViewDetails, load
     }
   };
 
-  // Mouse drag scrolling
   const handleMouseDown = (e) => {
     setIsDragging(true);
     setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
@@ -713,44 +868,39 @@ const HorizontalScrollSection = ({ title, category, courses, onViewDetails, load
 
   return (
     <div className="mb-8 md:mb-12">
-      {/* Category Header */}
       <div className="flex items-center justify-between mb-4 md:mb-6 px-1">
         <div className="flex items-center gap-2 md:gap-3">
           <span className="text-2xl md:text-3xl lg:text-4xl">{categoryIcons[category] || '📚'}</span>
           <div>
-            <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
-              {title}
-            </h2>
+            <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">{title}</h2>
             <p className="text-gray-500 text-xs md:text-sm mt-0.5 md:mt-1">
               {courses.length} {courses.length === 1 ? 'Course' : 'Courses'} Available
             </p>
           </div>
         </div>
         
-        {/* Navigation Arrows */}
         <div className="hidden lg:flex gap-2">
           <button
             onClick={() => scroll('left')}
+            disabled={!showLeftArrow}
             className={`p-1.5 md:p-2 rounded-full bg-white border border-orange-200 text-gray-600 hover:bg-red-500 hover:text-white transition-all duration-300 ${
               !showLeftArrow ? 'opacity-30 cursor-not-allowed' : ''
             }`}
-            disabled={!showLeftArrow}
           >
             <HiOutlineChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
           </button>
           <button
             onClick={() => scroll('right')}
+            disabled={!showRightArrow}
             className={`p-1.5 md:p-2 rounded-full bg-white border border-orange-200 text-gray-600 hover:bg-red-500 hover:text-white transition-all duration-300 ${
               !showRightArrow ? 'opacity-30 cursor-not-allowed' : ''
             }`}
-            disabled={!showRightArrow}
           >
             <HiOutlineChevronRight className="w-4 h-4 md:w-5 md:h-5" />
           </button>
         </div>
       </div>
 
-      {/* Horizontal Scroll Container */}
       <div
         ref={scrollContainerRef}
         className="overflow-x-auto scrollbar-hide pb-4 px-1"
@@ -774,143 +924,16 @@ const HorizontalScrollSection = ({ title, category, courses, onViewDetails, load
   );
 };
 
-/* ---------- SIDEBAR COMPONENT ---------- */
-const Sidebar = ({ activeCategory, onCategoryChange, isMobileMenuOpen, setIsMobileMenuOpen, courseCounts }) => {
-  const categories = [
-    { id: 'all', name: 'All Courses', icon: '📚', count: courseCounts.total },
-    { id: 'numerology', name: 'Numerology', icon: '🔮', count: courseCounts.numerology },
-    { id: 'vastu', name: 'Vastu Shastra', icon: '🏠', count: courseCounts.vastu },
-    { id: 'yoga', name: 'Yoga', icon: '🧘', count: courseCounts.yoga },
-  ];
-
-  const sidebarContent = (
-    <div className="bg-white rounded-2xl shadow-lg border border-orange-100 p-4">
-      <div className="mb-4 md:mb-6 pb-3 md:pb-4 border-b border-orange-100">
-        <h3 className="text-lg md:text-xl font-bold text-gray-800 flex items-center gap-2">
-          📚 Categories
-        </h3>
-        <p className="text-xs md:text-sm text-gray-500 mt-1">Filter courses by category</p>
-      </div>
-      
-      <div className="space-y-2">
-        {categories.map((category) => (
-          <button
-            key={category.id}
-            onClick={() => {
-              onCategoryChange(category.id);
-              if (setIsMobileMenuOpen) setIsMobileMenuOpen(false);
-            }}
-            className={`w-full flex items-center justify-between p-2.5 md:p-3 rounded-xl transition-all duration-300 ${
-              activeCategory === category.id
-                ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md'
-                : 'bg-gray-50 text-gray-700 hover:bg-red-50 hover:text-red-600'
-            }`}
-          >
-            <div className="flex items-center gap-2 md:gap-3">
-              <span className="text-lg md:text-xl">{category.icon}</span>
-              <span className="font-semibold text-sm md:text-base">{category.name}</span>
-            </div>
-            <span className={`text-xs md:text-sm font-medium px-1.5 md:px-2 py-0.5 md:py-1 rounded-full ${
-              activeCategory === category.id
-                ? 'bg-white/20 text-white'
-                : 'bg-gray-200 text-gray-600'
-            }`}>
-              {category.count}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {/* Featured Badge */}
-      <div className="mt-4 md:mt-6 pt-4 border-t border-orange-100">
-        <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-3 md:p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xl md:text-2xl">🏆</span>
-            <span className="font-semibold text-gray-800 text-sm md:text-base">Why Choose Us?</span>
-          </div>
-          <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-gray-600">
-            <li className="flex items-center gap-2">
-              <FaCheck className="text-green-500 w-3 h-3" />
-              <span>Certified Experts</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <FaCheck className="text-green-500 w-3 h-3" />
-              <span>Lifetime Access</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <FaCheck className="text-green-500 w-3 h-3" />
-              <span>Practical Training</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <FaCheck className="text-green-500 w-3 h-3" />
-              <span>Recognized Certificate</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <>
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block lg:w-72 xl:w-80 flex-shrink-0">
-        <div className="sticky top-24">
-          {sidebarContent}
-        </div>
-      </div>
-
-      {/* Mobile Sidebar Button */}
-      <div className="lg:hidden mb-4">
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="w-full flex items-center justify-between bg-white rounded-xl shadow-lg border border-orange-100 p-3"
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-xl">📚</span>
-            <span className="font-semibold text-gray-800">Filter Categories</span>
-          </div>
-          {isMobileMenuOpen ? (
-            <HiOutlineX className="w-5 h-5 text-gray-600" />
-          ) : (
-            <HiOutlineMenu className="w-5 h-5 text-gray-600" />
-          )}
-        </button>
-      </div>
-
-      {/* Mobile Sidebar Drawer */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden mb-4"
-          >
-            {sidebarContent}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  );
-};
-
 /* ---------- COURSES SECTION ---------- */
 const CoursesSection = ({ onViewDetails }) => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [courseCounts, setCourseCounts] = useState({
-    total: 0,
-    numerology: 0,
-    vastu: 0,
-    yoga: 0
-  });
+  const [courseCounts, setCourseCounts] = useState({ total: 0 });
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-  // Fetch courses from API
   useEffect(() => {
     fetchCourses();
   }, []);
@@ -924,91 +947,25 @@ const CoursesSection = ({ onViewDetails }) => {
         const allCourses = response.data.courses;
         setCourses(allCourses);
         
-        // Calculate counts
-        const counts = {
-          total: allCourses.length,
-          numerology: allCourses.filter(c => c.type === 'numerology').length,
-          vastu: allCourses.filter(c => c.type === 'vastu').length,
-          yoga: allCourses.filter(c => c.type === 'yoga').length
-        };
+        // Dynamic counts for all course types
+        const counts = { total: allCourses.length };
+        allCourses.forEach(course => {
+          if (course.type) {
+            counts[course.type] = (counts[course.type] || 0) + 1;
+          }
+        });
+        
+        console.log("Course counts:", counts);
         setCourseCounts(counts);
       }
     } catch (error) {
       console.error("Error fetching courses:", error);
       toast.error("Failed to load courses");
-      
-      // Fallback to static data if API fails
-      const fallbackCourses = getFallbackCourses();
-      setCourses(fallbackCourses);
-      setCourseCounts({
-        total: fallbackCourses.length,
-        numerology: fallbackCourses.filter(c => c.type === 'numerology').length,
-        vastu: fallbackCourses.filter(c => c.type === 'vastu').length,
-        yoga: fallbackCourses.filter(c => c.type === 'yoga').length
-      });
     } finally {
       setLoading(false);
     }
   };
 
-  // Fallback static data
-  const getFallbackCourses = () => {
-    return [
-      {
-        _id: '1',
-        type: 'numerology',
-        title: 'Professional Numerology Course',
-        level: 'Diploma',
-        duration: '3 Months',
-        sessions: '30+',
-        courseLanguage: 'Hindi, English',
-        mode: 'Live Online',
-        price: '₹24,999',
-        rating: 4.8,
-        image: 'https://images.unsplash.com/photo-1590080876135-2a34e3a3d6a9?w=800&h=500&fit=crop',
-        description: 'Master the ancient science of numbers with our comprehensive diploma program.',
-        longDescription: 'This comprehensive Numerology Diploma program takes you on a transformative journey...',
-        syllabus: ['Introduction to Numerology', 'Lo Shu Grid Analysis', 'Personal Number Calculation'],
-        includes: ['30+ Live Sessions', 'Study Material', 'Certificate of Completion']
-      },
-      {
-        _id: '3',
-        type: 'vastu',
-        title: 'Vastu Shastra Diploma',
-        level: 'Diploma',
-        duration: '3 Months',
-        sessions: '30+',
-        courseLanguage: 'Hindi, English',
-        mode: 'Live Online',
-        price: '₹24,999',
-        rating: 4.7,
-        image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&h=500&fit=crop',
-        description: 'Learn the ancient science of architecture and space harmony.',
-        longDescription: 'Vastu Shastra teaches us how to create harmonious living spaces...',
-        syllabus: ['Introduction to Vastu', 'Five Elements', 'Directions Significance'],
-        includes: ['30+ Live Sessions', 'Vastu Toolkit', 'Certificate']
-      },
-      {
-        _id: '5',
-        type: 'yoga',
-        title: 'Yoga Teacher Training',
-        level: 'Diploma',
-        duration: '3 Months',
-        sessions: '45+',
-        courseLanguage: 'Hindi, English',
-        mode: 'Live Online',
-        price: '₹29,999',
-        rating: 4.9,
-        image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&h=500&fit=crop',
-        description: 'Transformative yoga teacher training program.',
-        longDescription: 'Embark on a transformative journey to become a certified yoga teacher...',
-        syllabus: ['History of Yoga', 'Asanas', 'Pranayama'],
-        includes: ['45+ Live Sessions', 'Detailed Manual', 'Yoga Alliance Certified']
-      }
-    ];
-  };
-
-  // Get courses based on active category
   const getFilteredCourses = () => {
     if (activeCategory === 'all') {
       return courses;
@@ -1018,23 +975,35 @@ const CoursesSection = ({ onViewDetails }) => {
 
   const filteredCourses = getFilteredCourses();
 
-  // Group courses by category for "All Courses" view
   const getGroupedCourses = () => {
     if (activeCategory !== 'all') return null;
     
-    const numerologyCourses = courses.filter(c => c.type === 'numerology');
-    const vastuCourses = courses.filter(c => c.type === 'vastu');
-    const yogaCourses = courses.filter(c => c.type === 'yoga');
+    // Group courses by their type dynamically
+    const groupsMap = new Map();
+    courses.forEach(course => {
+      if (course.type && course.type !== 'all') {
+        if (!groupsMap.has(course.type)) {
+          groupsMap.set(course.type, []);
+        }
+        groupsMap.get(course.type).push(course);
+      }
+    });
     
     const groups = [];
-    if (numerologyCourses.length > 0) {
-      groups.push({ title: 'Numerology Courses', category: 'numerology', courses: numerologyCourses });
-    }
-    if (vastuCourses.length > 0) {
-      groups.push({ title: 'Vastu Shastra Courses', category: 'vastu', courses: vastuCourses });
-    }
-    if (yogaCourses.length > 0) {
-      groups.push({ title: 'Yoga & Meditation Courses', category: 'yoga', courses: yogaCourses });
+    for (const [type, coursesList] of groupsMap) {
+      let title = '';
+      switch(type) {
+        case 'numerology': title = 'Numerology Courses'; break;
+        case 'astrology': title = 'Astrology Courses'; break;
+        case 'tarot': title = 'Tarot Reading Courses'; break;
+        case 'vastu': title = 'Vastu Shastra Courses'; break;
+        case 'palmistry': title = 'Palmistry Courses'; break;
+        case 'reiki': title = 'Reiki Healing Courses'; break;
+        case 'yoga': title = 'Yoga Courses'; break;
+        case 'meditation': title = 'Meditation Courses'; break;
+        default: title = type.charAt(0).toUpperCase() + type.slice(1) + ' Courses';
+      }
+      groups.push({ title, category: type, courses: coursesList });
     }
     
     return groups;
@@ -1054,10 +1023,8 @@ const CoursesSection = ({ onViewDetails }) => {
           </p>
         </div>
 
-        {/* Sidebar + Content Layout */}
         <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
-          {/* Sidebar */}
-          <Sidebar 
+          <CoursesSidebar 
             activeCategory={activeCategory} 
             onCategoryChange={setActiveCategory}
             isMobileMenuOpen={isMobileMenuOpen}
@@ -1065,10 +1032,8 @@ const CoursesSection = ({ onViewDetails }) => {
             courseCounts={courseCounts}
           />
 
-          {/* Main Content - Right */}
           <div className="flex-1 min-w-0">
             {loading ? (
-              // Loading skeletons
               <div>
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="mb-8">
@@ -1082,39 +1047,35 @@ const CoursesSection = ({ onViewDetails }) => {
                 ))}
               </div>
             ) : activeCategory === 'all' ? (
-              // Show all categories as horizontal scroll sections
               <div>
-                {groupedCourses && groupedCourses.map((group, index) => (
-                  <HorizontalScrollSection
-                    key={index}
-                    title={group.title}
-                    category={group.category}
-                    courses={group.courses}
-                    onViewDetails={onViewDetails}
-                    loading={false}
-                  />
-                ))}
-                {(!groupedCourses || groupedCourses.length === 0) && (
+                {groupedCourses && groupedCourses.length > 0 ? (
+                  groupedCourses.map((group, index) => (
+                    <HorizontalScrollSection
+                      key={index}
+                      title={group.title}
+                      category={group.category}
+                      courses={group.courses}
+                      onViewDetails={onViewDetails}
+                      loading={false}
+                    />
+                  ))
+                ) : (
                   <div className="text-center py-12">
                     <p className="text-gray-500">No courses available</p>
                   </div>
                 )}
               </div>
             ) : (
-              // Show single category
               <div>
                 <div className="mb-4 md:mb-6">
-                  <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
-                    {activeCategory === 'numerology' && '🔮 Numerology Courses'}
-                    {activeCategory === 'vastu' && '🏠 Vastu Shastra Courses'}
-                    {activeCategory === 'yoga' && '🧘 Yoga & Meditation Courses'}
+                  <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 capitalize">
+                    {activeCategory} Courses
                   </h2>
                   <p className="text-gray-500 text-xs md:text-sm mt-1">
                     {filteredCourses.length} {filteredCourses.length === 1 ? 'Course' : 'Courses'} Available
                   </p>
                 </div>
                 
-                {/* Grid layout for mobile, horizontal scroll for desktop */}
                 <div className="block lg:hidden">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                     {filteredCourses.map((course) => (
@@ -1142,10 +1103,13 @@ const CoursesSection = ({ onViewDetails }) => {
         </div>
       </div>
 
-      {/* Custom Scrollbar Hide Styles */}
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </section>
@@ -1282,20 +1246,10 @@ const FAQ = () => {
 /* ---------- MAIN PAGE ---------- */
 const CoursesPage = () => {
   const { isAuthenticated, user } = useAuth();
-  const navigate = useNavigate();
   const [selectedCourse, setSelectedCourse] = useState(null);
 
   const handleViewDetails = (course) => {
     setSelectedCourse(course);
-  };
-
-  const handleEnroll = (course) => {
-    if (isAuthenticated) {
-      navigate(`/checkout/${course._id || course.id}`);
-    } else {
-      navigate("/auth", { state: { redirectTo: `/checkout/${course._id || course.id}` } });
-    }
-
   };
 
   return (
@@ -1305,14 +1259,12 @@ const CoursesPage = () => {
       <WhyChooseUs />
       <FAQ />
       
-      {/* Course Details Modal */}
       {selectedCourse && (
         <CourseDetailsModal 
           course={selectedCourse}
           onClose={() => setSelectedCourse(null)}
-          onEnroll={handleEnroll}
           user={user}
-  isAuthenticated={isAuthenticated}
+          isAuthenticated={isAuthenticated}
         />
       )}
     </main>
@@ -1320,4 +1272,3 @@ const CoursesPage = () => {
 };
 
 export default CoursesPage;
-
