@@ -12,6 +12,7 @@ import {
   HiOutlineMenu,
   HiOutlineX,
   HiOutlineShieldCheck,
+  HiOutlineTag,
 } from "react-icons/hi";
 import { 
   FaCheck, 
@@ -26,6 +27,7 @@ import {
   FaCheckCircle,
   FaWhatsapp,
   FaUsers,
+  FaPercent,
 } from "react-icons/fa";
 import { GiCrystalBall, GiYinYang, GiHouse } from "react-icons/gi";
 import { useAuth } from "../context/AuthContext";
@@ -51,11 +53,57 @@ const CTA = ({ children, className = "", onClick, disabled, ...rest }) => (
   </button>
 );
 
+/* ---------- Helper Functions for Price Calculation ---------- */
+const calculatePriceDetails = (course) => {
+  // Get selling price (already discounted price from backend)
+  const sellingPrice = parseFloat(course.price?.replace(/[^0-9.-]+/g, "") || 0);
+  
+  // Get MRP if available
+  const mrp = course.mrpPrice ? parseFloat(course.mrpPrice.replace(/[^0-9.-]+/g, "")) : sellingPrice;
+  
+  // Calculate discount percentage
+  const discountPercent = mrp > sellingPrice ? Math.round(((mrp - sellingPrice) / mrp) * 100) : 0;
+  
+  // Get GST percentage
+  const gstPercent = course.gstPercentage || 18;
+  
+  // Calculate GST amount
+  const gstAmount = (sellingPrice * gstPercent) / 100;
+  
+  // Get extra discount if any
+  const extraDiscountPercent = course.extraDiscount || 0;
+  const extraDiscountAmount = (sellingPrice * extraDiscountPercent) / 100;
+  
+  // Calculate final price after extra discount
+  const priceAfterExtraDiscount = sellingPrice - extraDiscountAmount;
+  
+  // Calculate total price including GST
+  const totalPrice = priceAfterExtraDiscount + gstAmount;
+  
+  // Calculate you save amount
+  const youSave = mrp - priceAfterExtraDiscount;
+  
+  return {
+    mrp,
+    sellingPrice,
+    discountPercent,
+    gstPercent,
+    gstAmount,
+    extraDiscountPercent,
+    extraDiscountAmount,
+    priceAfterExtraDiscount,
+    totalPrice,
+    youSave,
+  };
+};
+
 /* ---------- PAYMENT MODAL COMPONENT ---------- */
 const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [paymentStep, setPaymentStep] = useState("details");
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+  const priceDetails = calculatePriceDetails(course);
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -85,8 +133,6 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
         setLoading(false);
         return;
       }
-
-      const numericPrice = parseFloat(course.price.replace(/[^0-9.-]+/g, ""));
       
       const userId = user.id || user._id;
       
@@ -102,7 +148,7 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
         userId: userId,
         userEmail: user.email,
         userName: user.fullName,
-        amount: numericPrice,
+        amount: priceDetails.totalPrice,
       });
 
       if (!orderResponse.data.success) {
@@ -181,10 +227,6 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
 
   if (!isOpen) return null;
 
-  const numericPrice = parseFloat(course.price?.replace(/[^0-9.-]+/g, "") || 0);
-  const gst = numericPrice * 0.18;
-  const total = numericPrice;
-
   if (paymentStep === "success") {
     return (
       <AnimatePresence>
@@ -254,52 +296,46 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
           </div>
 
           <div className="p-5 border-b border-gray-100">
-            <h4 className="font-semibold text-gray-800 mb-2">{course.title}</h4>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-500 text-sm">Course Fee</span>
-              <div className="text-right">
-                <span className="text-2xl font-bold text-red-600">{course.price}</span>
-                <span className="text-xs text-gray-500 ml-1">inclusive of tax</span>
-              </div>
-            </div>
+            <h4 className="font-semibold text-gray-800 mb-2 line-clamp-1">{course.title}</h4>
           </div>
 
           <div className="p-5 border-b border-gray-100">
-            <h4 className="font-semibold text-gray-800 mb-3">You'll Get:</h4>
+            <h4 className="font-semibold text-gray-800 mb-3">Price Breakdown</h4>
             <div className="space-y-2">
-              {course.includes?.slice(0, 3).map((item, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-sm text-gray-600">
-                  <FaCheck className="text-green-500 w-4 h-4" />
-                  <span>{item}</span>
-                </div>
-              ))}
-              {course.includes?.length > 3 && (
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <FaCheck className="text-green-500 w-4 h-4" />
-                  <span>+{course.includes.length - 3} more benefits</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="p-5 bg-gray-50">
-            <div className="space-y-2 mb-4">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Course Price</span>
-                <span className="font-medium">₹{numericPrice.toLocaleString()}</span>
+                <span className="text-gray-600">MRP</span>
+                <span className="text-gray-400 line-through">₹{priceDetails.mrp.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">GST (18%)</span>
-                <span className="font-medium">₹{Math.round(gst).toLocaleString()}</span>
+                <span className="text-gray-600">Course Price</span>
+                <span className="font-medium text-gray-800">₹{priceDetails.sellingPrice.toLocaleString()}</span>
+              </div>
+              {priceDetails.discountPercent > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Discount</span>
+                  <span className="text-green-600">-{priceDetails.discountPercent}%</span>
+                </div>
+              )}
+              {priceDetails.extraDiscountPercent > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Extra Discount</span>
+                  <span className="text-green-600">-{priceDetails.extraDiscountPercent}%</span>
+                </div>
+              )}
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">GST ({priceDetails.gstPercent}%)</span>
+                <span className="font-medium">+₹{Math.round(priceDetails.gstAmount).toLocaleString()}</span>
               </div>
               <div className="border-t border-gray-200 pt-2 mt-2">
                 <div className="flex justify-between font-bold">
                   <span>Total Amount</span>
-                  <span className="text-red-600 text-lg">₹{total.toLocaleString()}</span>
+                  <span className="text-red-600 text-lg">₹{Math.round(priceDetails.totalPrice).toLocaleString()}</span>
                 </div>
               </div>
             </div>
+          </div>
 
+          <div className="p-5 bg-gray-50">
             <div className="flex items-center justify-center gap-2 mb-4 text-xs text-gray-500">
               <HiOutlineShieldCheck className="w-4 h-4 text-green-500" />
               <span>Secured by Razorpay | 100% Safe & Secure</span>
@@ -318,7 +354,7 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
               ) : (
                 <>
                   <FaRupeeSign className="w-4 h-4" />
-                  Pay {course.price}
+                  Pay ₹{Math.round(priceDetails.totalPrice).toLocaleString()}
                 </>
               )}
             </button>
@@ -528,6 +564,8 @@ const Hero = () => (
 
 /* ---------- FEATURED COURSE CARDS ---------- */
 const CourseCard = ({ course, onViewDetails }) => {
+  const priceDetails = calculatePriceDetails(course);
+  
   const getIcon = () => {
     switch(course.type) {
       case 'numerology':
@@ -566,6 +604,11 @@ const CourseCard = ({ course, onViewDetails }) => {
             {course.level}
           </span>
         </div>
+        {priceDetails.discountPercent > 0 && (
+          <div className="absolute top-3 left-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+            {priceDetails.discountPercent}% OFF
+          </div>
+        )}
         <div className="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-full p-1.5 md:p-2">
           {getIcon()}
         </div>
@@ -606,8 +649,14 @@ const CourseCard = ({ course, onViewDetails }) => {
 
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-orange-100">
           <div>
-            <span className="text-[10px] md:text-xs text-gray-500">Starting from</span>
-            <div className="text-lg md:text-xl lg:text-2xl font-bold text-red-600">{course.price}</div>
+            {priceDetails.mrp > priceDetails.sellingPrice && (
+              <span className="text-[10px] md:text-xs text-gray-400 line-through block">
+                ₹{priceDetails.mrp.toLocaleString()}
+              </span>
+            )}
+            <div className="text-lg md:text-xl lg:text-2xl font-bold text-red-600">
+              ₹{priceDetails.sellingPrice.toLocaleString()}
+            </div>
           </div>
           <button 
             className="px-3 md:px-4 py-1.5 md:py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition text-xs md:text-sm"
@@ -624,10 +673,11 @@ const CourseCard = ({ course, onViewDetails }) => {
   );
 };
 
-/* ---------- COURSE DETAILS MODAL ---------- */
+/* ---------- COURSE DETAILS MODAL WITH DISCOUNT TABLE ---------- */
 const CourseDetailsModal = ({ course, onClose, user, isAuthenticated }) => {
   const navigate = useNavigate();
   const [showPayment, setShowPayment] = useState(false);
+  const priceDetails = calculatePriceDetails(course);
 
   const handleEnrollClick = () => {
     if (isAuthenticated && user) {
@@ -733,11 +783,78 @@ const CourseDetailsModal = ({ course, onClose, user, isAuthenticated }) => {
                 </div>
               </div>
 
+              {/* PRICE BREAKDOWN TABLE */}
+              <div className="mb-6 md:mb-8">
+                <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4">Fee Breakdown</h3>
+                <div className="bg-gradient-to-r from-gray-50 to-orange-50 rounded-xl overflow-hidden border border-orange-100">
+                  <div className="divide-y divide-orange-100">
+                    <div className="flex justify-between items-center p-4">
+                      <div>
+                        <span className="font-medium text-gray-700">Course MRP</span>
+                        {priceDetails.discountPercent > 0 && (
+                          <span className="ml-2 text-xs text-green-600">({priceDetails.discountPercent}% OFF)</span>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <span className="text-gray-400 line-through">₹{priceDetails.mrp.toLocaleString()}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center p-4 bg-white/50">
+                      <span className="font-medium text-gray-700">Course Price</span>
+                      <span className="font-semibold text-gray-800">₹{priceDetails.sellingPrice.toLocaleString()}</span>
+                    </div>
+                    
+                    {priceDetails.extraDiscountPercent > 0 && (
+                      <div className="flex justify-between items-center p-4">
+                        <span className="font-medium text-green-600 flex items-center gap-1">
+                          <FaPercent className="w-3 h-3" /> Extra Discount ({priceDetails.extraDiscountPercent}%)
+                        </span>
+                        <span className="text-green-600">-₹{Math.round(priceDetails.extraDiscountAmount).toLocaleString()}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between items-center p-4 bg-white/50">
+                      <span className="font-medium text-gray-700">Price after Discount</span>
+                      <span className="font-semibold text-gray-800">₹{Math.round(priceDetails.priceAfterExtraDiscount).toLocaleString()}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center p-4">
+                      <span className="font-medium text-gray-700">GST ({priceDetails.gstPercent}%)</span>
+                      <span className="text-gray-700">+₹{Math.round(priceDetails.gstAmount).toLocaleString()}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center p-4 bg-gradient-to-r from-red-50 to-orange-50">
+                      <span className="font-bold text-gray-800">Total Amount to Pay</span>
+                      <div className="text-right">
+                        <span className="text-2xl font-bold text-red-600">₹{Math.round(priceDetails.totalPrice).toLocaleString()}</span>
+                        <p className="text-xs text-gray-500">Inclusive of all taxes</p>
+                      </div>
+                    </div>
+                    
+                    {priceDetails.youSave > 0 && (
+                      <div className="flex justify-between items-center p-4 bg-green-50">
+                        <span className="font-medium text-green-700 flex items-center gap-1">
+                          <HiOutlineTag className="w-4 h-4" /> You Save
+                        </span>
+                        <span className="text-green-700 font-semibold">₹{Math.round(priceDetails.youSave).toLocaleString()}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-4 md:p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="text-center sm:text-left">
                   <div className="text-xs md:text-sm text-gray-600">Course Fee</div>
-                  <div className="text-2xl md:text-3xl font-bold text-red-600">{course.price}</div>
-                  <div className="text-[10px] md:text-xs text-gray-500">Inclusive of all taxes</div>
+                  <div className="text-2xl md:text-3xl font-bold text-red-600">
+                    ₹{Math.round(priceDetails.totalPrice).toLocaleString()}
+                  </div>
+                  {priceDetails.youSave > 0 && (
+                    <div className="text-xs text-green-600 mt-1">
+                      You save ₹{Math.round(priceDetails.youSave).toLocaleString()}
+                    </div>
+                  )}
                 </div>
                 <button 
                   onClick={handleEnrollClick}
@@ -947,7 +1064,6 @@ const CoursesSection = ({ onViewDetails }) => {
         const allCourses = response.data.courses;
         setCourses(allCourses);
         
-        // Dynamic counts for all course types
         const counts = { total: allCourses.length };
         allCourses.forEach(course => {
           if (course.type) {
@@ -955,7 +1071,6 @@ const CoursesSection = ({ onViewDetails }) => {
           }
         });
         
-        console.log("Course counts:", counts);
         setCourseCounts(counts);
       }
     } catch (error) {
@@ -978,7 +1093,6 @@ const CoursesSection = ({ onViewDetails }) => {
   const getGroupedCourses = () => {
     if (activeCategory !== 'all') return null;
     
-    // Group courses by their type dynamically
     const groupsMap = new Map();
     courses.forEach(course => {
       if (course.type && course.type !== 'all') {
