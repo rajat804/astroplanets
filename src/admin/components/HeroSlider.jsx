@@ -15,7 +15,7 @@ const HeroSlider = () => {
   const [preview, setPreview] = useState("");
   const [loading, setLoading] = useState(false);
   const [editId, setEditId] = useState(null);
-
+const [link, setLink] = useState("");
   // GET SLIDES
   const fetchSlides = async () => {
     try {
@@ -58,6 +58,7 @@ const HeroSlider = () => {
       const formData = new FormData();
 
       formData.append("image", image);
+      formData.append("link", link);
 
       // UPDATE
       if (editId) {
@@ -88,6 +89,7 @@ const HeroSlider = () => {
       setImage(null);
       setPreview("");
       setEditId(null);
+      setLink("");
 
       fetchSlides();
     } catch (error) {
@@ -124,6 +126,7 @@ const HeroSlider = () => {
   const handleEdit = (slide) => {
     setPreview(slide.image);
     setEditId(slide._id);
+    setLink(slide.link || "");
   };
 
   return (
@@ -159,7 +162,13 @@ const HeroSlider = () => {
               className="w-full md:w-72 h-48 object-cover rounded-xl border"
             />
           )}
-
+<input
+  type="text"
+  placeholder="Enter redirect link"
+  value={link}
+  onChange={(e) => setLink(e.target.value)}
+  className="w-full border p-3 rounded-xl"
+/>
           <button
             type="submit"
             disabled={loading}
