@@ -1,9 +1,10 @@
 // components/home/Products.jsx
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronRight,
+  ChevronLeft,
   ShoppingCart,
   Star,
   Eye,
@@ -13,24 +14,19 @@ import { getProducts } from "../../services/api";
 import { useCart } from "../../context/CartContext";
 import toast from "react-hot-toast";
 
-// Categories based on actual product types from your database
-const categories = [
-  { key: "all", label: "All Products" },
-  { key: "Rudraksha", label: "Rudraksha" },
-  { key: "Mala", label: "Mala" },
-  { key: "Bracelet", label: "Bracelets" },
-  { key: "Necklace", label: "Necklaces" },
-  { key: "108 Mala", label: "108 Mala" },
-  { key: "Rare", label: "Rare Collection" },
-];
-
 const Products = () => {
   const navigate = useNavigate();
   const { addItem } = useCart();
 
   const [products, setProducts] = useState([]);
-  const [activeCategory, setActiveCategory] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const scrollContainerRef = useRef(null);
 
   useEffect(() => {
     fetchProducts();
@@ -48,21 +44,70 @@ const Products = () => {
     }
   };
 
-  const filteredProducts = useMemo(() => {
-    if (!products?.length) return [];
-
-    if (activeCategory === "all") {
-      return products;
+  // Check scroll position for arrows
+  const checkScrollPosition = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      setShowLeftArrow(container.scrollLeft > 20);
+      setShowRightArrow(
+        container.scrollLeft < container.scrollWidth - container.clientWidth - 20
+      );
     }
+  };
 
-    return products.filter(
-      (p) =>
-        p.type?.toLowerCase() === activeCategory.toLowerCase() ||
-        p.category?.toLowerCase() === activeCategory.toLowerCase()
-    );
-  }, [products, activeCategory]);
+  // Scroll functions
+  const scroll = (direction) => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      const scrollAmount = container.clientWidth * 0.8;
+      const newScrollLeft = direction === 'left' 
+        ? container.scrollLeft - scrollAmount 
+        : container.scrollLeft + scrollAmount;
+      
+      container.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+      });
+    }
+  };
 
-  const displayProducts = filteredProducts.slice(0, 6);
+  // Mouse drag scrolling
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
+    setScrollLeft(scrollContainerRef.current.scrollLeft);
+    scrollContainerRef.current.style.cursor = 'grabbing';
+    scrollContainerRef.current.style.userSelect = 'none';
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    scrollContainerRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.style.cursor = 'grab';
+      scrollContainerRef.current.style.userSelect = 'auto';
+    }
+  };
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', checkScrollPosition);
+      checkScrollPosition();
+      container.style.cursor = 'grab';
+      
+      return () => {
+        container.removeEventListener('scroll', checkScrollPosition);
+      };
+    }
+  }, [products]);
 
   const handleProductClick = (id) => {
     navigate(`/product/${id}`);
@@ -89,6 +134,9 @@ const Products = () => {
     );
   }
 
+  // Show only first 10 products
+  const displayProducts = products.slice(0, 10);
+
   return (
     <section className="py-16 md:py-20 bg-gradient-to-br from-red-50 via-orange-50 to-offWhite">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -103,71 +151,47 @@ const Products = () => {
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* LEFT SIDEBAR - Categories */}
-          <div className="lg:w-[280px] flex-shrink-0">
-            <div className="sticky top-24">
-              <div className="bg-white rounded-2xl shadow-lg border border-orange-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-red-500 to-red-600 px-5 py-4">
-                  <h3 className="text-white font-semibold text-lg">Categories</h3>
-                </div>
-                <div className="divide-y divide-orange-100">
-                  {categories.map((category) => (
-                    <button
-                      key={category.key}
-                      onClick={() => setActiveCategory(category.key)}
-                      className={`w-full flex items-center justify-between px-5 py-3.5 transition-all duration-300 group ${
-                        activeCategory === category.key
-                          ? "bg-gradient-to-r from-red-50 to-orange-50 text-red-600 font-semibold border-l-4 border-red-500"
-                          : "text-gray-700 hover:bg-orange-50 hover:text-red-600"
-                      }`}
-                    >
-                      <span className="text-[14px] md:text-[15px]">
-                        {category.label}
-                      </span>
-                      <ChevronRight
-                        size={16}
-                        className={`transition-all duration-300 ${
-                          activeCategory === category.key
-                            ? "translate-x-1 text-red-500"
-                            : "group-hover:translate-x-1 group-hover:text-red-500"
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Decorative element */}
-              <div className="mt-6 bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-5 text-center border border-orange-100">
-                <div className="text-3xl mb-2">🔮</div>
-                <p className="text-sm text-gray-700 font-medium">Need Help?</p>
-                <p className="text-xs text-gray-500 mt-1">Contact us for personalized recommendations</p>
-                <button 
-                  onClick={() => navigate('/contact')}
-                  className="mt-3 text-red-500 text-sm font-semibold hover:underline"
-                >
-                  Contact Support →
-                </button>
-              </div>
-            </div>
+        {/* Products Horizontal Scroll Section */}
+        {displayProducts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-lg border border-orange-100">
+            <div className="text-6xl mb-4">🔍</div>
+            <p className="text-gray-500 text-lg">No products found</p>
           </div>
+        ) : (
+          <div className="relative">
+            {/* Left Arrow */}
+            {showLeftArrow && displayProducts.length > 4 && (
+              <button
+                onClick={() => scroll('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur rounded-full p-2 shadow-lg border border-gray-200 hover:bg-red-500 hover:text-white transition-all duration-300"
+                style={{ transform: 'translateY(-50%)' }}
+              >
+                <ChevronLeft size={24} />
+              </button>
+            )}
 
-          {/* PRODUCTS GRID - Using flex wrap instead of grid */}
-          <div className="flex-1">
-            {displayProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-lg border border-orange-100">
-                <div className="text-6xl mb-4">🔍</div>
-                <p className="text-gray-500 text-lg">No products found in this category</p>
-                <button
-                  onClick={() => setActiveCategory("all")}
-                  className="mt-4 text-red-500 font-semibold hover:underline"
-                >
-                  View all products →
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-6">
+            {/* Right Arrow */}
+            {showRightArrow && displayProducts.length > 4 && (
+              <button
+                onClick={() => scroll('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur rounded-full p-2 shadow-lg border border-gray-200 hover:bg-red-500 hover:text-white transition-all duration-300"
+                style={{ transform: 'translateY(-50%)' }}
+              >
+                <ChevronRight size={24} />
+              </button>
+            )}
+
+            {/* Horizontal Scroll Container */}
+            <div
+              ref={scrollContainerRef}
+              className="overflow-x-auto scrollbar-hide pb-4"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              onMouseDown={handleMouseDown}
+              onMouseLeave={handleMouseUp}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+            >
+              <div className="flex gap-6">
                 {displayProducts.map((p, index) => (
                   <motion.div
                     key={p._id || index}
@@ -176,8 +200,8 @@ const Products = () => {
                     viewport={{ once: true }}
                     transition={{ duration: 0.4, delay: index * 0.05 }}
                     whileHover={{ y: -5 }}
-                    className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-orange-100"
-                    style={{ width: "calc(33.333% - 1rem)", minWidth: "250px", flex: "0 0 auto" }}
+                    className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-orange-100 flex-shrink-0"
+                    style={{ width: "280px" }}
                     onClick={() => handleProductClick(p._id)}
                   >
                     {/* IMAGE */}
@@ -296,12 +320,12 @@ const Products = () => {
                   </motion.div>
                 ))}
               </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* View All Button */}
-        {displayProducts.length > 0 && products.length > 6 && (
+        {displayProducts.length > 0 && products.length > 10 && (
           <div className="text-center mt-12">
             <button
               onClick={() => navigate('/shop')}
@@ -313,6 +337,17 @@ const Products = () => {
           </div>
         )}
       </div>
+
+      {/* Custom CSS for hiding scrollbar */}
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </section>
   );
 };
