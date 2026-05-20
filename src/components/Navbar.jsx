@@ -1,3 +1,4 @@
+// components/Navbar.jsx
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -15,12 +16,12 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import CartDrawer from "./CartDrawer";
 
-// CTA Button - Updated to red gradient with larger font
+// CTA Button - Red gradient
 const CTAButton = ({ children, onClick, to }) => (
   <Link
     to={to}
     onClick={onClick}
-    className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold px-5 py-2.5 rounded-lg shadow-md transform transition-transform active:scale-95 text-base md:text-lg"
+    className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transform transition-all duration-300 active:scale-95 text-sm md:text-base"
   >
     {children}
   </Link>
@@ -52,7 +53,7 @@ const Navbar = () => {
     navigate('/');
   };
 
-  // Get user's display name (first name or full name)
+  // Get user's display name
   const getUserDisplayName = () => {
     if (!user) return 'User';
     return user.fullName?.split(' ')[0] || user.fullName || 'User';
@@ -60,90 +61,90 @@ const Navbar = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-offWhite/80 backdrop-blur-md border-b border-orange-100">
+      <header className="sticky top-0 z-40 bg-white shadow-md border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20 md:h-28">
-            {/* Logo - Increased size significantly */}
-            <Link to="/" className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex justify-between items-center py-4 md:py-5">
+            {/* Logo - Larger size */}
+            <Link to="/" className="flex items-center flex-shrink-0">
               <img 
                 src={assets.logo} 
-                className="w-36 sm:w-44 md:w-52 lg:w-52" 
+                className="h-14 sm:h-16 md:h-20 lg:h-24 w-auto object-contain" 
                 alt="Logo" 
               />
             </Link>
 
-            {/* Desktop nav - Increased font sizes */}
+            {/* Desktop nav */}
             <nav className="hidden md:flex items-center gap-8 lg:gap-10">
-              <Link to="/services" className="text-gray-700 hover:text-red-600 transition text-base lg:text-lg font-medium">Services</Link>
-              <Link to="/courses" className="text-gray-700 hover:text-red-600 transition text-base lg:text-lg font-medium">Courses</Link>
-              <Link to="/products" className="text-gray-700 hover:text-red-600 transition text-base lg:text-lg font-medium">Products</Link>
-              <Link to="/about" className="text-gray-700 hover:text-red-600 transition text-base lg:text-lg font-medium">About</Link>
-              <Link to="/contact" className="text-gray-700 hover:text-red-600 transition text-base lg:text-lg font-medium">Contact</Link>
+              <Link to="/services" className="text-gray-600 hover:text-red-500 transition text-base lg:text-lg font-medium whitespace-nowrap">Services</Link>
+              <Link to="/courses" className="text-gray-600 hover:text-red-500 transition text-base lg:text-lg font-medium whitespace-nowrap">Courses</Link>
+              <Link to="/products" className="text-gray-600 hover:text-red-500 transition text-base lg:text-lg font-medium whitespace-nowrap">Products</Link>
+              <Link to="/about" className="text-gray-600 hover:text-red-500 transition text-base lg:text-lg font-medium whitespace-nowrap">About</Link>
+              <Link to="/contact" className="text-gray-600 hover:text-red-500 transition text-base lg:text-lg font-medium whitespace-nowrap">Contact</Link>
             </nav>
 
             {/* Right side */}
             <div className="flex items-center gap-3 md:gap-4">
-              {/* Cart Button with count - Larger icon */}
+              {/* Cart Button */}
               <button 
                 onClick={() => setCartDrawerOpen(true)}
-                className="hidden sm:block p-2 rounded-md hover:bg-red-50 transition relative"
+                className="hidden sm:block p-2 rounded-md hover:bg-gray-100 transition relative"
               >
                 <HiOutlineShoppingCart className="w-6 h-6 md:w-7 md:h-7 text-gray-600" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs md:text-sm w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center font-bold">
+                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
                     {cartCount}
                   </span>
                 )}
               </button>
 
-              {/* Auth buttons - Larger text */}
+              {/* Auth buttons */}
               <div className="hidden sm:flex gap-3 items-center">
                 {isAuthenticated ? (
                   <div className="relative user-menu">
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold px-5 py-2.5 rounded-lg shadow-md hover:from-red-600 hover:to-red-700 transition group text-base md:text-lg"
+                      className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold px-5 py-2.5 rounded-lg shadow-md hover:from-red-600 hover:to-red-700 transition text-sm md:text-base"
                     >
                       <HiOutlineUserCircle className="w-5 h-5 md:w-6 md:h-6" />
-                      <span>{getUserDisplayName()}</span>
+                      <span className="hidden sm:inline">{getUserDisplayName()}</span>
                       <HiOutlineChevronDown className={`w-4 h-4 md:w-5 md:h-5 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
                     
-                    {/* User Dropdown Menu - Larger text */}
+                    {/* User Dropdown Menu */}
                     <AnimatePresence>
                       {userMenuOpen && (
                         <motion.div
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
-                          className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-orange-100 overflow-hidden z-50"
+                          className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden z-50"
                         >
-                          <div className="px-4 py-3 border-b border-orange-100 bg-gradient-to-r from-red-50 to-orange-50">
-                            <p className="text-base font-semibold text-gray-800">{user?.fullName}</p>
-                            <p className="text-sm text-gray-500 mt-1">{user?.email}</p>
+                          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                            <p className="text-sm font-semibold text-gray-800 truncate">{user?.fullName}</p>
+                            <p className="text-xs text-gray-500 mt-1 truncate">{user?.email}</p>
                           </div>
-                          <div className="py-2">
+                          <div className="py-1">
                             <Link
                               to="/profile"
                               onClick={() => setUserMenuOpen(false)}
-                              className="flex items-center gap-3 px-4 py-2.5 text-base text-gray-700 hover:bg-red-50 hover:text-red-600 transition"
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-red-50 hover:text-red-500 transition"
                             >
-                              <HiOutlineUser className="w-5 h-5" />
+                              <HiOutlineUser className="w-4 h-4" />
                               My Profile
                             </Link>
                             <Link
                               to="/my-bookings"
                               onClick={() => setUserMenuOpen(false)}
-                              className="flex items-center gap-3 px-4 py-2.5 text-base text-gray-700 hover:bg-red-50 hover:text-red-600 transition"
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-red-50 hover:text-red-500 transition"
                             >
-                              <HiOutlineShoppingCart className="w-5 h-5" />
+                              <HiOutlineShoppingCart className="w-4 h-4" />
                               My Bookings
                             </Link>
                             <button
                               onClick={handleLogout}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition border-t border-orange-100 mt-1"
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition border-t border-gray-100 mt-1"
                             >
-                              <HiOutlineLogout className="w-5 h-5" />
+                              <HiOutlineLogout className="w-4 h-4" />
                               Logout
                             </button>
                           </div>
@@ -156,92 +157,92 @@ const Navbar = () => {
                 )}
               </div>
 
-              {/* Mobile menu button - Larger icon */}
+              {/* Mobile menu button */}
               <div className="md:hidden">
                 <button
                   onClick={() => setOpen(!open)}
-                  className="p-2 rounded-md hover:bg-red-50 transition"
+                  className="p-2 rounded-md hover:bg-gray-100 transition"
                 >
-                  {open ? <HiOutlineX className="w-7 h-7" /> : <HiOutlineMenu className="w-7 h-7" />}
+                  {open ? <HiOutlineX className="w-6 h-6 text-gray-600" /> : <HiOutlineMenu className="w-6 h-6 text-gray-600" />}
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Mobile menu - Larger font sizes */}
+        {/* Mobile menu */}
         <AnimatePresence>
           {open && (
             <motion.nav
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-offWhite border-t border-orange-100"
+              className="md:hidden bg-white border-t border-gray-100"
             >
-              <div className="px-4 py-5 space-y-3">
+              <div className="px-4 py-4 space-y-2">
                 {["Services","Courses","Products","About","Contact"].map((label) => (
                   <Link
                     key={label}
                     to={`/${label.toLowerCase()}`}
                     onClick={() => setOpen(false)}
-                    className="block py-2.5 text-gray-700 hover:text-red-600 transition text-lg font-medium"
+                    className="block py-2.5 text-gray-600 hover:text-red-500 transition text-base font-medium"
                   >
                     {label}
                   </Link>
                 ))}
                 
-                {/* Cart in mobile menu - Larger text */}
+                {/* Cart in mobile menu */}
                 <button
                   onClick={() => {
                     setOpen(false);
                     setCartDrawerOpen(true);
                   }}
-                  className="w-full flex items-center justify-between py-2.5 text-gray-700 hover:text-red-600 transition text-lg font-medium"
+                  className="w-full flex items-center justify-between py-2.5 text-gray-600 hover:text-red-500 transition text-base font-medium"
                 >
                   <span>Cart</span>
                   {cartCount > 0 && (
-                    <span className="bg-red-500 text-white text-sm px-3 py-1 rounded-full">
+                    <span className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs px-2 py-1 rounded-full">
                       {cartCount} items
                     </span>
                   )}
                 </button>
                 
-                {/* User Info in Mobile Menu - Larger text */}
+                {/* User Info in Mobile Menu */}
                 {isAuthenticated && user && (
-                  <div className="pt-4 pb-2 border-t border-orange-100 mt-2">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center">
-                        <HiOutlineUserCircle className="w-7 h-7 text-white" />
+                  <div className="pt-3 pb-2 border-t border-gray-100 mt-2">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center">
+                        <HiOutlineUserCircle className="w-5 h-5 text-white" />
                       </div>
-                      <div>
-                        <p className="text-base font-semibold text-gray-800">{user.fullName}</p>
-                        <p className="text-sm text-gray-500">{user.email}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 truncate">{user.fullName}</p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
                       </div>
                     </div>
                     <Link
                       to="/profile"
                       onClick={() => setOpen(false)}
-                      className="block py-2.5 text-gray-700 hover:text-red-600 transition text-lg font-medium"
+                      className="block py-2 text-gray-600 hover:text-red-500 transition text-base font-medium"
                     >
                       My Profile
                     </Link>
                     <Link
                       to="/my-bookings"
                       onClick={() => setOpen(false)}
-                      className="block py-2.5 text-gray-700 hover:text-red-600 transition text-lg font-medium"
+                      className="block py-2 text-gray-600 hover:text-red-500 transition text-base font-medium"
                     >
                       My Bookings
                     </Link>
                   </div>
                 )}
                 
-                <div className="pt-3 flex flex-col gap-3">
+                <div className="pt-3">
                   {isAuthenticated ? (
                     <button
                       onClick={handleLogout}
-                      className="inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold px-5 py-2.5 rounded-lg shadow-md transition text-base"
+                      className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold px-4 py-2.5 rounded-lg shadow-md transition text-sm"
                     >
-                      <HiOutlineLogout className="w-5 h-5" />
+                      <HiOutlineLogout className="w-4 h-4" />
                       Logout
                     </button>
                   ) : (
