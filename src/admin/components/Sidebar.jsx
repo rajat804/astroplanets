@@ -19,6 +19,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, tab, setTab, logout }) => {
   { key: "slider", label: "Hero Slider", icon: <FaImages /> },
   { key: "services", label: "Services", icon: <FaBook /> },
   { key: "products", label: "Products", icon: <FaBoxOpen /> },
+  { key: "expert", label: "Add Experts", icon: <FaBook /> },
   { key: "course", label: "Add Course", icon: <FaBoxOpen /> },
   { key: "coupons", label: "Coupons", icon: <HiOutlineTicket /> },
   { key: "classes", label: "Classes", icon: <HiOutlineUserCircle /> },
