@@ -39,6 +39,8 @@ import {
 } from "../services/api";
 import AddCourse from "./components/AddCourse";
 import Users from "./components/Users";
+import AddServices from "./components/AddServices";
+import AdminExperts from "./components/AdminExperts";
 
 function useCount(to = 0, duration = 1200) {
   const [num, setNum] = useState(0);
@@ -535,6 +537,19 @@ function AdminDashboard() {
                 <HeroSlide />
               </motion.section>
             )}
+
+            {/* expert tab */}
+            {tab === "expert" && (
+              <motion.section
+                key="slider"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <AdminExperts />
+              </motion.section>
+            )}
+
             {/* course add */}
             {tab === "course" && (
               <motion.section
@@ -584,60 +599,7 @@ function AdminDashboard() {
 
             {/* Services Tab */}
             {tab === "services" && (
-              <motion.section
-                key="services"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <div className="bg-white rounded-2xl shadow-lg border border-orange-100 overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-orange-50">
-                        <tr className="text-left text-sm text-gray-600">
-                          <th className="px-6 py-4">Service</th>
-                          <th className="px-6 py-4">Category</th>
-                          <th className="px-6 py-4">Price</th>
-                          <th className="px-6 py-4">Status</th>
-                          <th className="px-6 py-4">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {services.length === 0 ? (
-                          <tr>
-                            <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-                              No services found
-                            </td>
-                          </tr>
-                        ) : (
-                          services.map((s) => (
-                            <tr key={s._id} className="hover:bg-orange-50 transition border-b border-orange-100">
-                              <td className="px-6 py-4 font-medium text-gray-800">{s.title}</td>
-                              <td className="px-6 py-4 text-gray-600">{s.category}</td>
-                              <td className="px-6 py-4 font-semibold text-gray-800">₹{s.price}</td>
-                              <td className="px-6 py-4">
-                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                  {s.status}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex gap-2">
-                                  <button className="p-2 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 transition">
-                                    Edit
-                                  </button>
-                                  <button className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition">
-                                    Delete
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </motion.section>
+              <AddServices />
             )}
 
             {/* Classes Tab */}
