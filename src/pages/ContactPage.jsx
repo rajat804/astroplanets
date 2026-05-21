@@ -86,17 +86,11 @@ import SocialMediaSection from "../components/SocialMediaSection";
       {
         icon: <Phone className="w-8 h-8" />,
         title: "Call Us",
-        details: ["+91 98765 43210", "+91 98765 43211"],
+        details: ["+91 91751 96579", "+91   99107 55649"],
         link: "tel:+919876543210",
         color: "from-orange-50 to-red-50"
       },
-      {
-        icon: <MapPin className="w-8 h-8" />,
-        title: "Visit Us",
-        details: ["123 Galaxy Avenue", "Delhi, India - 110001"],
-        link: "https://maps.google.com",
-        color: "from-red-50 to-orange-50"
-      }
+      
     ];
 
     const faqs = [
