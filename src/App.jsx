@@ -25,6 +25,7 @@ import AdminLogin from "./admin/AdminLogin";
 import BlogPage from "./pages/BlogPage";
 import BlogDetailPage from "./pages/BlogDetailPage";
 import Profile from "./user/Profile";
+import VastuCalendar from "./components/VastuCalendar";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -64,6 +65,7 @@ const AppRoutes = () => {
       <Route path="/" element={<HomePage />} />
       <Route path="/services" element={<ServicesPage />} />
       <Route path="/courses" element={<Classes />} />
+      <Route path="/vastu" element={<VastuCalendar />} />
       <Route path="/products" element={<ProductsPage />} />
       <Route path="/product/:id" element={<ProductDetails />} />
       <Route path="/about" element={<AboutPage />} />
