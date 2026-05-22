@@ -9,12 +9,14 @@ import Instructors from "../components/home/Instructors";
 import Testimonials from "../components/home/Testimonials";
 import FAQ from "../components/home/FAQ";
 import BlogPreview from "../components/home/BlogPreview";
+import VastuCalendar from "../components/VastuCalendar";
 
 export default function HomePage() {
   return (
     <div className="bg-offWhite text-gray-900">
       <Hero />
       <Stats />
+      <VastuCalendar />
       <Services />
       <Products />
       {/* <FeaturesList /> */}
