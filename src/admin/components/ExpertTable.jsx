@@ -14,7 +14,7 @@ const ExpertTable = ({ experts, onEdit, onDelete, onToggleStatus }) => {
               <th className="px-6 py-4">Specialties</th>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4">Featured</th>
-              <th className="px-6 py-4">Order</th>
+              {/* <th className="px-6 py-4">Order</th> */}
               <th className="px-6 py-4">Actions</th>
             </tr>
           </thead>
@@ -67,7 +67,7 @@ const ExpertTable = ({ experts, onEdit, onDelete, onToggleStatus }) => {
                     <span className="text-gray-400">-</span>
                   )}
                 </td>
-                <td className="px-6 py-4 text-gray-600">{expert.order || 0}</td>
+                {/* <td className="px-6 py-4 text-gray-600">{expert.order || 0}</td> */}
                 <td className="px-6 py-4">
                   <div className="flex gap-2">
                     <button
