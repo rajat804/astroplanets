@@ -189,6 +189,47 @@ export const adminLogout = () => {
   window.location.href = '/admin/login';
 };
 
+// ==================== ADMIN DASHBOARD APIs ====================
+export const getAdminDashboardStats = async () => {
+  try {
+    const response = await api.get('/admindashboard/overview-stats');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    throw error;
+  }
+};
+
+export const getAdminRecentActivities = async () => {
+  try {
+    const response = await api.get('/admindashboard/recent-activities');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching recent activities:', error);
+    throw error;
+  }
+};
+
+export const getAdminTopProducts = async () => {
+  try {
+    const response = await api.get('/admindashboard/top-products');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching top products:', error);
+    throw error;
+  }
+};
+
+export const getAdminPopularServices = async () => {
+  try {
+    const response = await api.get('/admindashboard/popular-services');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching popular services:', error);
+    throw error;
+  }
+};
+
 // ==================== PRODUCT APIs ====================
 export const getProducts = async (filters = {}) => {
   const params = new URLSearchParams(filters).toString();
