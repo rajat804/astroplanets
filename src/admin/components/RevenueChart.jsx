@@ -1,27 +1,88 @@
+// src/components/admin/RevenueChart.jsx
 import React from "react";
 import { motion } from "framer-motion";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
-const RevenueChart = () => {
-  const data = [42, 65, 48, 78, 62, 89, 95, 72, 84, 68, 91, 108];
-  const max = Math.max(...data);
-  
-  return (
-    <div className="h-64 flex items-end gap-2">
-      {data.map((d, i) => (
-        <div key={i} className="flex-1 flex flex-col items-center">
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: `${(d / max) * 100}%` }}
-            transition={{ duration: 1, delay: i * 0.05 }}
-            className="w-full bg-gradient-to-t from-red-500 to-red-400 rounded-t-lg"
-            style={{ height: `${(d / max) * 100}%`, minHeight: 4 }}
-          />
-          <div className="text-xs text-gray-500 mt-2 rotate-45 origin-left">
-            {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][i]}
-          </div>
+const RevenueChart = ({ data = [] }) => {
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+          <p className="text-sm font-semibold text-gray-800">{label}</p>
+          <p className="text-lg font-bold text-green-600">
+            ₹{payload[0].value.toLocaleString()}
+          </p>
         </div>
-      ))}
-    </div>
+      );
+    }
+    return null;
+  };
+
+  const defaultData = [
+    { month: "Jan", revenue: 0 },
+    { month: "Feb", revenue: 0 },
+    { month: "Mar", revenue: 0 },
+    { month: "Apr", revenue: 0 },
+    { month: "May", revenue: 0 },
+    { month: "Jun", revenue: 0 },
+    { month: "Jul", revenue: 0 },
+    { month: "Aug", revenue: 0 },
+    { month: "Sep", revenue: 0 },
+    { month: "Oct", revenue: 0 },
+    { month: "Nov", revenue: 0 },
+    { month: "Dec", revenue: 0 },
+  ];
+
+  const chartData = data.length > 0 ? data : defaultData;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+      className="w-full h-[300px]"
+    >
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={chartData}>
+          <defs>
+            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <XAxis
+            dataKey="month"
+            stroke="#9ca3af"
+            fontSize={12}
+            tickLine={false}
+          />
+          <YAxis
+            stroke="#9ca3af"
+            fontSize={12}
+            tickLine={false}
+            tickFormatter={(value) => `₹${value / 1000}K`}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Area
+            type="monotone"
+            dataKey="revenue"
+            stroke="#ef4444"
+            strokeWidth={2}
+            fill="url(#colorRevenue)"
+            fillOpacity={1}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </motion.div>
   );
 };
 
