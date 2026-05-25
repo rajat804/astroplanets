@@ -12,11 +12,12 @@ import {
 } from "react-icons/hi";
 import { HiOutlineShoppingBag } from "react-icons/hi";
 import { FaImages } from "react-icons/fa";
-
+import { Layers } from 'lucide-react';
 const Sidebar = ({ sidebarOpen, setSidebarOpen, tab, setTab, logout }) => {
   const sidebarItems = [
   { key: "overview", label: "Overview", icon: <FaChartLine /> },
   { key: "slider", label: "Hero Slider", icon: <FaImages /> },
+  { key: "plan", label: "Plan Management", icon: <Layers /> },
   { key: "services", label: "Services", icon: <FaBook /> },
   { key: "products", label: "Products", icon: <FaBoxOpen /> },
   { key: "expert", label: "Add Experts", icon: <FaBook /> },
