@@ -1,6 +1,6 @@
-// AboutPage.jsx - Optimized for Performance
-import React, { useEffect, useState, useRef } from "react";
-import { motion, useInView } from "framer-motion";
+// AboutPage.jsx - Complete Professional Version
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import {
   Star,
   Sparkles,
@@ -10,229 +10,285 @@ import {
   Award,
   Users,
   Calendar,
-  Instagram,
-  Facebook,
-  Twitter,
-  Linkedin,
-  Compass,
   Activity,
-  Hand
+  Compass,
+  Hand,
+  Shield,
+  Target,
+  Zap,
+  Clock,
+  CheckCircle,
+  ArrowRight
 } from "lucide-react";
-import assets from "../assets/assets";
+import axios from "axios";
+import BookConsultationButton from "../components/common/BookConsultationButton";
+
 const AboutPage = () => {
-  // Track which sections are visible
-  const [visibleSections, setVisibleSections] = useState({
-    hero: true,
-    shrivya: false,
-    anuja: false,
-    himesh: false,
-    stats: false,
-    philosophy: false,
-    testimonials: false,
-    cta: false
-  });
+  const [experts, setExperts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Refs for each section
-  const sectionRefs = {
-    shrivya: useRef(null),
-    anuja: useRef(null),
-    himesh: useRef(null),
-    stats: useRef(null),
-    philosophy: useRef(null),
-    testimonials: useRef(null),
-    cta: useRef(null)
-  };
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-  // Check visibility using Intersection Observer
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setVisibleSections((prev) => ({
-              ...prev,
-              [entry.target.id]: true
-            }));
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: "100px" } // Reduced threshold and added margin
-    );
-
-    // Observe each section
-    Object.entries(sectionRefs).forEach(([key, ref]) => {
-      if (ref.current) {
-        ref.current.id = key;
-        observer.observe(ref.current);
-      }
-    });
-
-    return () => observer.disconnect();
+    fetchExperts();
   }, []);
 
-  // Simple fade animation
-  const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+  const fetchExperts = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/experts`);
+      
+      if (response.data.success) {
+        setExperts(response.data.experts);
+      } else {
+        setError("Failed to fetch experts");
+      }
+    } catch (error) {
+      console.error("Error fetching experts:", error);
+      setError("Error loading experts. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const teamMembers = [
-    {
-      id: "anuja",
-      name: "Anuja S Chavaan",
-      role: "Vastu & Numerology Expert",
-      expertise: "Vastu Shastra | Numerology | Space Healing",
-      image: assets.anuja,
-      icon: Compass,
-      intro: `Welcome to a space where ancient wisdom meets modern living. We specialize in the powerful sciences of Vastu Shastra and Numerology. Our goal is to bring harmony, balance, and success into every area of your life.
-
-Your home, your workplace, and even your name carry unique energies. These energies impact your health, relationships, and financial success. By fine-tuning these energies through Vastu and discovering the secrets of numbers, we can bring a more positive and successful life into being.
-
-Are you planning a new home? Do you face difficulties and need solutions? Do you need a clearer and more successful life? Our personal consultations are here to bring clarity, stability, and prosperity into your life.
-
-Join us on a journey of transformation—where your space and numbers work for you, not against you.`,
-      color: "from-orange-500 to-red-600",
-      bgColor: "bg-orange-50",
-      iconColor: "text-orange-600",
-      delay: 0.1
-    },
-    {
-      id: "himesh",
-      name: "Himesh A Kumar",
-      role: "Palmistry & Life Path Guide",
-      expertise: "Palmistry | Hand Analysis | Life Guidance",
-      image: assets.hemant,
-      icon: Hand,
-      intro: `Welcome to the ancient art of Palmistry—where the lines on your hands tell the story of your life. Every palm bears unique markings that reveal your personality, your strengths and weaknesses, as well as your future prospects.
-
-By interpreting the lines, mounts, and formations of your hands, we provide profound and meaningful insights into your life. Palmistry is not merely a method of fortune-telling; it is also a medium for self-discovery and for making informed, sound decisions.
-
-Are you seeking clarity, true guidance, or peace of mind in your life? Our palmistry readings will help you understand the hidden patterns within yourself and fully unlock your true potential.`,
-      color: "from-purple-500 to-pink-600",
-      bgColor: "bg-purple-50",
-      iconColor: "text-purple-600",
-      delay: 0.2
-    }
-  ];
+  const getIconComponent = (iconName) => {
+    const icons = {
+      Compass: Compass,
+      Hand: Hand,
+      Activity: Activity,
+      Heart: Heart,
+      Shield: Shield,
+      Target: Target,
+      Zap: Zap,
+      Clock: Clock
+    };
+    return icons[iconName] || Compass;
+  };
 
   const stats = [
-    { icon: Users, value: "10,000+", label: "Happy Clients" },
-    { icon: Calendar, value: "15+", label: "Years Experience" },
-    { icon: Star, value: "4.9", label: "Average Rating", suffix: "/5" },
-    { icon: Award, value: "25+", label: "Awards Won" }
+    { icon: Users, value: "10,000+", label: "Happy Clients", color: "text-blue-500" },
+    { icon: Calendar, value: "15+", label: "Years Experience", color: "text-green-500" },
+    { icon: Star, value: "4.9", label: "Average Rating", suffix: "/5", color: "text-yellow-500" },
+    { icon: Award, value: "25+", label: "Awards Won", color: "text-purple-500" }
   ];
 
+  const philosophies = [
+    { icon: Activity, title: "Holistic Healing", desc: "Integrating body, mind, and spirit for complete wellness", color: "from-green-500 to-emerald-600" },
+    { icon: Compass, title: "Space Harmony", desc: "Creating balanced environments that nurture success", color: "from-blue-500 to-cyan-600" },
+    { icon: Hand, title: "Self Discovery", desc: "Unlocking your true potential through ancient arts", color: "from-purple-500 to-pink-600" },
+    { icon: Shield, title: "Authentic Wisdom", desc: "Time-tested practices passed through generations", color: "from-orange-500 to-red-600" },
+    { icon: Target, title: "Personalized Guidance", desc: "Custom solutions tailored to your unique needs", color: "from-teal-500 to-emerald-600" },
+    { icon: Zap, title: "Transformative Results", desc: "Real, measurable changes in your life journey", color: "from-yellow-500 to-orange-600" }
+  ];
+
+  const testimonials = [
+    { name: "Priya Sharma", role: "Homemaker", text: "Anuja's Vastu consultation transformed my home's energy. Within weeks, I noticed positive changes in family harmony and peace.", rating: 5, image: null },
+    { name: "Rahul Mehta", role: "Business Owner", text: "The numerology guidance helped me choose the perfect business name. My business has seen 40% growth since then!", rating: 5, image: null },
+    { name: "Neha Gupta", role: "Software Engineer", text: "Himesh's palmistry reading gave me incredible clarity about my career path. I'm now pursuing my passion with confidence.", rating: 5, image: null },
+    { name: "Amit Patel", role: "Architect", text: "The Vastu principles I learned have completely changed how I design spaces. My clients love the positive energy.", rating: 5, image: null },
+    { name: "Sneha Reddy", role: "Yoga Practitioner", text: "Shrivya's guidance helped me deepen my practice. I feel more connected to myself than ever before.", rating: 5, image: null },
+    { name: "Vikram Singh", role: "Entrepreneur", text: "The palmistry session revealed strengths I never knew I had. Highly recommended for anyone seeking direction.", rating: 5, image: null }
+  ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative">
+            <div className="animate-spin rounded-full h-20 w-20 border-b-4 border-red-500 mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Sparkles className="w-8 h-8 text-red-500 animate-pulse" />
+            </div>
+          </div>
+          <p className="mt-6 text-gray-600 font-medium">Loading our experts...</p>
+          <p className="text-sm text-gray-400 mt-1">Preparing spiritual guidance for you</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8 bg-white rounded-2xl shadow-lg">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Heart className="w-10 h-10 text-red-500" />
+          </div>
+          <p className="text-red-500 mb-4 font-medium">{error}</p>
+          <button 
+            onClick={fetchExperts} 
+            className="px-6 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition shadow-md"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-offWhite">
-      {/* Hero Section - Always visible */}
-      <section className="relative overflow-hidden py-20 md:py-24 px-6 text-center bg-gradient-to-br from-red-50 via-orange-50 to-offWhite">
+    <div className="bg-gradient-to-br from-white via-orange-50/30 to-red-50/30">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden py-20 md:py-28 px-6 text-center">
+        {/* Animated Background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-red-200 rounded-full filter blur-3xl opacity-30"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-orange-200 rounded-full filter blur-3xl opacity-30"></div>
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-red-200 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-orange-200 rounded-full filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-r from-transparent via-red-100/10 to-transparent"></div>
         </div>
         
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
+        <div className="relative z-10 max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-red-100 to-orange-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium mb-6 shadow-sm"
+          >
             <Sparkles className="w-4 h-4" />
-            Meet Our Masters
-          </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
-            Guiding You to Your <br />
+            Meet Our Spiritual Masters
+          </motion.div>
+          
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-5xl md:text-6xl lg:text-7xl font-extrabold bg-gradient-to-r from-red-600 via-orange-600 to-red-600 bg-clip-text text-transparent"
+          >
+            Guiding You to Your
+            <br />
             <span className="text-gray-800">Highest Self</span>
-          </h1>
-          <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed"
+          >
             Three masters, three ancient sciences, one mission — to help you discover balance, 
             harmony, and purpose in every aspect of your life.
-          </p>
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mt-8 flex flex-wrap gap-4 justify-center"
+          >
+            <BookConsultationButton />
+            <button className="px-6 py-3 border-2 border-red-500 text-red-600 font-semibold rounded-xl hover:bg-red-50 transition">
+              Learn More
+            </button>
+          </motion.div>
         </div>
       </section>
 
-      {/* Team Members Section - Optimized with Intersection Observer */}
-      <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
-        {teamMembers.map((member, index) => (
-          <div
-            key={member.id}
-            ref={sectionRefs[member.id]}
-            className={`flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-8 md:gap-12 items-center mb-20 last:mb-0`}
-          >
-            {/* Image Section - Preserving Original Aspect Ratio */}
-<div className="lg:w-1/2 relative group">
-  <div className={`absolute -inset-2 bg-gradient-to-r ${member.color} rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition duration-500`}></div>
-  <div className="relative overflow-hidden rounded-2xl shadow-xl">
-    <img
-      src={member.image}
-      alt={member.name}
-      className="w-full h-auto object-contain group-hover:scale-105 transition duration-500"
-      loading={index === 0 ? "eager" : "lazy"}
-    />
-  </div>
-</div>
-
-            {/* Content Section - Fade in when visible */}
-            <motion.div
-              initial="hidden"
-              animate={visibleSections[member.id] ? "visible" : "hidden"}
-              variants={fadeIn}
-              transition={{ delay: member.delay }}
-              className="lg:w-1/2 space-y-5"
+      {/* Team Members Section */}
+      <div className="max-w-7xl mx-auto px-6 py-12 md:py-20">
+        {experts.map((member, index) => {
+          const ExpertIcon = getIconComponent(member.icon);
+          const isEven = index % 2 === 0;
+          
+          return (
+            <div
+              key={member._id}
+              className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-10 md:gap-16 items-center mb-24 last:mb-0`}
             >
-              {/* Badge */}
-              <div className={`inline-flex items-center gap-2 ${member.bgColor} rounded-full px-3 py-1.5 md:px-4 md:py-2`}>
-                <member.icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${member.iconColor}`} />
-                <span className={`text-xs md:text-sm font-medium ${member.iconColor}`}>{member.role}</span>
+              {/* Image Section with Decorative Elements */}
+              <div className="lg:w-1/2 relative group">
+                <div className={`absolute -inset-3 bg-gradient-to-r ${member.color} rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition duration-700`}></div>
+                <div className="relative overflow-hidden rounded-3xl shadow-2xl">
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="w-full h-auto object-contain group-hover:scale-105 transition duration-700"
+                  />
+                  {/* Decorative Badge */}
+                  <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur rounded-full px-3 py-1.5 shadow-lg">
+                    <div className="flex items-center gap-1 text-xs font-semibold">
+                      <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                      <span>4.9 Rating</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Name */}
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800">
-                {member.name}
-                <div className={`w-12 md:w-16 h-1 bg-gradient-to-r ${member.color} mt-2 rounded-full`}></div>
-              </h2>
+              {/* Content Section */}
+              <div className="lg:w-1/2 space-y-6">
+                <div className={`inline-flex items-center gap-2 ${member.bgColor} rounded-full px-4 py-2`}>
+                  <ExpertIcon className={`w-4 h-4 ${member.iconColor}`} />
+                  <span className={`text-sm font-semibold ${member.iconColor}`}>{member.role}</span>
+                </div>
 
-              {/* Expertise */}
-              <p className="text-red-600 font-semibold text-sm md:text-base">{member.expertise}</p>
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800">
+                  {member.name}
+                  <div className={`w-20 h-1 bg-gradient-to-r ${member.color} mt-3 rounded-full`}></div>
+                </h2>
 
-              {/* Quote Icon */}
-              <Quote className="w-6 h-6 text-gray-300" />
+                <div className="flex items-center gap-2">
+                  <div className="flex text-yellow-500">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-current" />
+                    ))}
+                  </div>
+                  <span className="text-sm text-gray-500">(500+ reviews)</span>
+                </div>
 
-              {/* Intro Text - Truncated on mobile */}
-              <div className="text-gray-600 leading-relaxed text-sm md:text-base space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                {member.intro.split('\n\n').slice(0, 2).map((paragraph, idx) => (
-                  <p key={idx}>{paragraph}</p>
-                ))}
+                <p className={`font-semibold text-lg ${member.iconColor}`}>{member.expertise}</p>
+
+                <Quote className="w-8 h-8 text-gray-300" />
+
+                <div className="text-gray-600 leading-relaxed space-y-4">
+                  {member.intro ? (
+                    member.intro.split('\n\n').slice(0, 2).map((paragraph, idx) => (
+                      <p key={idx} className="text-base">{paragraph}</p>
+                    ))
+                  ) : (
+                    <p>Expert in {member.role} with years of experience guiding people toward balance and harmony.</p>
+                  )}
+                </div>
+
+                {/* Specialties Tags */}
+                {member.specialties && member.specialties.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {member.specialties.map((specialty, idx) => (
+                      <span key={idx} className={`text-xs px-3 py-1 rounded-full ${member.bgColor} ${member.iconColor} font-medium`}>
+                        {specialty}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Stats Row */}
+                <div className="grid grid-cols-3 gap-4 pt-4">
+                  <div className="text-center">
+                    <div className={`text-2xl font-bold ${member.iconColor}`}>15+</div>
+                    <div className="text-xs text-gray-500">Years Exp</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-2xl font-bold ${member.iconColor}`}>500+</div>
+                    <div className="text-xs text-gray-500">Clients</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-2xl font-bold ${member.iconColor}`}>100%</div>
+                    <div className="text-xs text-gray-500">Satisfaction</div>
+                  </div>
+                </div>
+
+                <BookConsultationButton />
               </div>
-
-              {/* Connect Button */}
-              <button className={`mt-4 inline-flex items-center gap-2 px-5 py-2.5 md:px-6 md:py-3 rounded-xl font-semibold transition-all transform hover:scale-105 ${member.bgColor} ${member.iconColor} hover:shadow-lg group text-sm md:text-base`}>
-                Book a Consultation
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
-              </button>
-
-              {/* Social Links */}
-              <div className="flex gap-2 pt-2">
-                <a href="#" className={`p-1.5 md:p-2 rounded-full ${member.bgColor} ${member.iconColor} hover:scale-110 transition`}>
-                  <Instagram className="w-4 h-4 md:w-5 md:h-5" />
-                </a>
-                <a href="#" className={`p-1.5 md:p-2 rounded-full ${member.bgColor} ${member.iconColor} hover:scale-110 transition`}>
-                  <Facebook className="w-4 h-4 md:w-5 md:h-5" />
-                </a>
-                <a href="#" className={`p-1.5 md:p-2 rounded-full ${member.bgColor} ${member.iconColor} hover:scale-110 transition`}>
-                  <Twitter className="w-4 h-4 md:w-5 md:h-5" />
-                </a>
-                <a href="#" className={`p-1.5 md:p-2 rounded-full ${member.bgColor} ${member.iconColor} hover:scale-110 transition`}>
-                  <Linkedin className="w-4 h-4 md:w-5 md:h-5" />
-                </a>
-              </div>
-            </motion.div>
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Stats Section - Simplified */}
-      <section ref={sectionRefs.stats} className="py-16 md:py-20 px-6 bg-gradient-to-r from-red-600 to-red-700 text-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3">Our Impact in Numbers</h2>
-            <p className="text-white/90 text-sm md:text-base max-w-2xl mx-auto">
+      {/* Stats Section */}
+      <section className="py-16 md:py-20 px-6 bg-gradient-to-r from-red-600 to-red-700">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Our Impact in Numbers</h2>
+            <p className="text-white/90 text-lg max-w-2xl mx-auto">
               Thousands of lives transformed through ancient wisdom and modern guidance
             </p>
           </div>
@@ -241,100 +297,143 @@ Are you seeking clarity, true guidance, or peace of mind in your life? Our palmi
             {stats.map((stat, idx) => (
               <div
                 key={idx}
-                className="text-center p-4 md:p-6 bg-white/10 backdrop-blur-sm rounded-xl md:rounded-2xl"
+                className="text-center p-6 bg-white/10 backdrop-blur-sm rounded-2xl hover:bg-white/20 transition group"
               >
-                <stat.icon className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 md:mb-3" />
-                <h3 className="text-xl md:text-2xl lg:text-3xl font-extrabold">{stat.value}</h3>
-                <p className="mt-1 text-white/90 text-xs md:text-sm">{stat.label}</p>
+                <stat.icon className={`w-10 h-10 mx-auto mb-3 ${stat.color} group-hover:scale-110 transition`} />
+                <h3 className="text-2xl md:text-3xl font-extrabold text-white">{stat.value}</h3>
+                <p className="mt-2 text-white/80 text-sm">{stat.label}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Philosophy Section - Simplified */}
-      <section ref={sectionRefs.philosophy} className="py-16 md:py-20 px-6 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 bg-red-100 text-red-700 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-medium mb-4">
-              <Heart className="w-3.5 h-3.5 md:w-4 md:h-4" />
+      {/* Philosophy Section */}
+      <section className="py-16 md:py-20 px-6 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium mb-4">
+              <Heart className="w-4 h-4" />
               Our Philosophy
             </div>
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-3">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
               Ancient Wisdom for <span className="text-red-600">Modern Living</span>
             </h2>
-            <p className="text-gray-600 text-sm md:text-base max-w-2xl mx-auto">
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
               Combining time-tested practices with contemporary understanding for lasting transformation.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { icon: Activity, title: "Holistic Healing", desc: "Integrating body, mind, and spirit for complete wellness" },
-              { icon: Compass, title: "Space Harmony", desc: "Creating balanced environments that nurture success" },
-              { icon: Hand, title: "Self Discovery", desc: "Unlocking your true potential through ancient arts" }
-            ].map((item, idx) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {philosophies.map((item, idx) => (
               <div
                 key={idx}
-                className="bg-offWhite rounded-xl md:rounded-2xl p-6 text-center border border-orange-100 shadow-md hover:shadow-lg transition"
+                className="group bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 text-center border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="w-12 h-12 md:w-14 md:h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
-                  <item.icon className="w-6 h-6 md:w-7 md:h-7 text-red-500" />
+                <div className={`w-16 h-16 bg-gradient-to-r ${item.color} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition`}>
+                  <item.icon className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-2">{item.title}</h3>
-                <p className="text-gray-600 text-xs md:text-sm">{item.desc}</p>
+                <h3 className="text-xl font-bold text-gray-800 mb-3">{item.title}</h3>
+                <p className="text-gray-600 text-sm">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonial Section - Simplified */}
-      <section ref={sectionRefs.testimonials} className="py-16 md:py-20 px-6 bg-gradient-to-br from-red-50 to-orange-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-red-100 text-red-700 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-medium mb-4">
-            <Star className="w-3.5 h-3.5 md:w-4 md:h-4 fill-current" />
-            Client Stories
+      {/* Testimonials Section */}
+      <section className="py-16 md:py-20 px-6 bg-gradient-to-br from-red-50 via-orange-50 to-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium mb-4">
+              <Star className="w-4 h-4 fill-current" />
+              Client Stories
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+              What Our Clients Say
+            </h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              Real experiences from real people who transformed their lives with our guidance
+            </p>
           </div>
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 md:mb-10">
-            What Our Clients Say
-          </h2>
-          <div className="grid md:grid-cols-3 gap-5 md:gap-6">
-            {[
-              { name: "Priya Sharma", text: "Shrivya's yoga classes transformed my life. I feel more balanced and at peace.", rating: 5 },
-              { name: "Rahul Mehta", text: "Anuja's Vastu consultation brought incredible positive energy to my home.", rating: 5 },
-              { name: "Neha Gupta", text: "Himesh's palmistry reading gave me clarity about my life path.", rating: 5 }
-            ].map((testimonial, idx) => (
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {testimonials.map((testimonial, idx) => (
               <div
                 key={idx}
-                className="bg-white p-5 md:p-6 rounded-xl md:rounded-2xl shadow-md border border-orange-100"
+                className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition group"
               >
-                <div className="flex text-yellow-500 mb-2 md:mb-3 justify-center">
+                <div className="flex text-yellow-500 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 md:w-4 md:h-4 fill-current" />
+                    <Star key={i} className="w-4 h-4 fill-current" />
                   ))}
                 </div>
-                <p className="text-gray-600 text-xs md:text-sm italic">"{testimonial.text}"</p>
-                <p className="mt-3 md:mt-4 font-semibold text-gray-800 text-sm md:text-base">— {testimonial.name}</p>
+                <Quote className="w-8 h-8 text-gray-200 mb-3" />
+                <p className="text-gray-600 text-sm leading-relaxed mb-4">"{testimonial.text}"</p>
+                <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+                  <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center text-white font-bold">
+                    {testimonial.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800">{testimonial.name}</p>
+                    <p className="text-xs text-gray-500">{testimonial.role}</p>
+                  </div>
+                </div>
               </div>
             ))}
+          </div>
+
+          {/* Rating Summary */}
+          <div className="mt-12 text-center">
+            <div className="inline-flex items-center gap-2 bg-white px-6 py-3 rounded-full shadow-md">
+              <div className="flex text-yellow-500">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-current" />
+                ))}
+              </div>
+              <span className="font-bold text-gray-800">4.9</span>
+              <span className="text-gray-500">out of 5</span>
+              <span className="text-gray-400">•</span>
+              <span className="text-gray-600">2,500+ reviews</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section - Simplified */}
-      <section ref={sectionRefs.cta} className="py-16 md:py-20 px-6 text-center bg-gradient-to-r from-red-600 to-red-700 text-white">
-        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3 md:mb-4">Begin Your Journey Today 🌟</h2>
-        <p className="mb-5 md:mb-6 text-white/90 text-sm md:text-base max-w-2xl mx-auto">
-          Connect with our experts and take the first step toward a more balanced, harmonious, and purposeful life.
-        </p>
-        <div className="flex flex-wrap gap-3 md:gap-4 justify-center">
-          <button className="px-6 py-2.5 md:px-8 md:py-3 bg-white text-red-600 font-semibold rounded-xl shadow-lg hover:bg-orange-50 transition text-sm md:text-base">
-            Book a Consultation
-          </button>
-          <button className="px-6 py-2.5 md:px-8 md:py-3 border-2 border-white text-white font-semibold rounded-xl hover:bg-white/10 transition text-sm md:text-base">
-            Learn More
-          </button>
+      {/* CTA Section */}
+      <section className="py-16 md:py-20 px-6 text-center bg-gradient-to-r from-red-600 to-red-700 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=80')] opacity-10 bg-cover bg-center"></div>
+        <div className="relative z-10 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur px-4 py-2 rounded-full text-white text-sm font-medium mb-6">
+            <Sparkles className="w-4 h-4" />
+            Begin Your Journey
+          </div>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+            Ready to Transform Your Life? 🌟
+          </h2>
+          <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
+            Connect with our experts and take the first step toward a more balanced, harmonious, and purposeful life.
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <BookConsultationButton />
+            <button className="px-8 py-3 border-2 border-white text-white font-semibold rounded-xl hover:bg-white/10 transition">
+              Explore Services
+            </button>
+          </div>
+          <div className="mt-8 flex items-center justify-center gap-4 text-white/70 text-sm">
+            <div className="flex items-center gap-1">
+              <CheckCircle className="w-4 h-4" />
+              <span>100% Confidential</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span>Flexible Scheduling</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Heart className="w-4 h-4" />
+              <span>Authentic Guidance</span>
+            </div>
+          </div>
         </div>
       </section>
     </div>
