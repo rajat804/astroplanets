@@ -26,6 +26,7 @@ import BlogPage from "./pages/BlogPage";
 import BlogDetailPage from "./pages/BlogDetailPage";
 import Profile from "./user/Profile";
 import VastuCalendar from "./components/VastuCalendar";
+import WhatsAppFloatingButton from "./components/WhatsAppFloatingButton";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -51,6 +52,7 @@ const AppLayout = ({ children }) => {
       {!isAdminRoute && <Navbar />}
       <ScrollToTop />
       {children}
+      {!isAdminRoute && <WhatsAppFloatingButton />}
       {!isAdminRoute && <Footer />}
     </>
   );
