@@ -8,7 +8,8 @@ import {
   HiOutlineUser,
   HiOutlineLogout,
   HiOutlineUserCircle,
-  HiOutlineChevronDown
+  HiOutlineChevronDown,
+
 } from "react-icons/hi";
 import assets from "../assets/assets";
 import { Link, useNavigate } from "react-router-dom";
@@ -16,7 +17,7 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import CartDrawer from "./CartDrawer";
 
-// CTA Button - Red gradient
+// CTA Button - Red gradient (kept as is)
 const CTAButton = ({ children, onClick, to }) => (
   <Link
     to={to}
@@ -59,27 +60,46 @@ const Navbar = () => {
     return user.fullName?.split(' ')[0] || user.fullName || 'User';
   };
 
+  // Navigation links with Home added
+  const navLinks = [
+    { name: "Home", path: "/", icon: null },
+    { name: "Services", path: "/services", icon: null },
+    { name: "Courses", path: "/courses", icon: null },
+    { name: "Products", path: "/products", icon: null },
+    { name: "About", path: "/about", icon: null },
+    { name: "Contact", path: "/contact", icon: null },
+  ];
+
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white shadow-md border-b border-gray-100">
+      <header className="sticky top-0 z-40 shadow-lg border-b border-green-800/30"
+        style={{
+          background: "linear-gradient(135deg, #064e3b 0%, #065f46 25%, #047857 50%, #065f46 75%, #064e3b 100%)"
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4 md:py-5">
             {/* Logo - Larger size */}
             <Link to="/" className="flex items-center flex-shrink-0">
               <img 
                 src={assets.logo} 
-                className="h-14 sm:h-16 md:h-20 lg:h-24 w-auto object-contain" 
+                className="h-14 sm:h-16 md:h-20 lg:h-24 w-auto object-contain drop-shadow-lg" 
                 alt="Logo" 
               />
             </Link>
 
-            {/* Desktop nav */}
+            {/* Desktop nav - White text on green background */}
             <nav className="hidden md:flex items-center gap-8 lg:gap-10">
-              <Link to="/services" className="text-gray-600 hover:text-red-500 transition text-base lg:text-lg font-medium whitespace-nowrap">Services</Link>
-              <Link to="/courses" className="text-gray-600 hover:text-red-500 transition text-base lg:text-lg font-medium whitespace-nowrap">Courses</Link>
-              <Link to="/products" className="text-gray-600 hover:text-red-500 transition text-base lg:text-lg font-medium whitespace-nowrap">Products</Link>
-              <Link to="/about" className="text-gray-600 hover:text-red-500 transition text-base lg:text-lg font-medium whitespace-nowrap">About</Link>
-              <Link to="/contact" className="text-gray-600 hover:text-red-500 transition text-base lg:text-lg font-medium whitespace-nowrap">Contact</Link>
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  className="text-white hover:text-amber-300 transition text-base lg:text-lg font-medium whitespace-nowrap flex items-center gap-1"
+                >
+                  {link.icon && <link.icon className="w-4 h-4" />}
+                  {link.name}
+                </Link>
+              ))}
             </nav>
 
             {/* Right side */}
@@ -87,9 +107,9 @@ const Navbar = () => {
               {/* Cart Button */}
               <button 
                 onClick={() => setCartDrawerOpen(true)}
-                className="hidden sm:block p-2 rounded-md hover:bg-gray-100 transition relative"
+                className="hidden sm:block p-2 rounded-md hover:bg-white/10 transition relative"
               >
-                <HiOutlineShoppingCart className="w-6 h-6 md:w-7 md:h-7 text-gray-600" />
+                <HiOutlineShoppingCart className="w-6 h-6 md:w-7 md:h-7 text-white" />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
                     {cartCount}
@@ -103,7 +123,7 @@ const Navbar = () => {
                   <div className="relative user-menu">
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold px-5 py-2.5 rounded-lg shadow-md hover:from-red-600 hover:to-red-700 transition text-sm md:text-base"
+                      className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold px-5 py-2.5 rounded-lg shadow-md hover:bg-white/20 transition text-sm md:text-base"
                     >
                       <HiOutlineUserCircle className="w-5 h-5 md:w-6 md:h-6" />
                       <span className="hidden sm:inline">{getUserDisplayName()}</span>
@@ -127,7 +147,7 @@ const Navbar = () => {
                             <Link
                               to="/profile"
                               onClick={() => setUserMenuOpen(false)}
-                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-red-50 hover:text-red-500 transition"
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-green-50 hover:text-green-600 transition"
                             >
                               <HiOutlineUser className="w-4 h-4" />
                               My Profile
@@ -135,7 +155,7 @@ const Navbar = () => {
                             <Link
                               to="/my-bookings"
                               onClick={() => setUserMenuOpen(false)}
-                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-red-50 hover:text-red-500 transition"
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-green-50 hover:text-green-600 transition"
                             >
                               <HiOutlineShoppingCart className="w-4 h-4" />
                               My Bookings
@@ -161,33 +181,37 @@ const Navbar = () => {
               <div className="md:hidden">
                 <button
                   onClick={() => setOpen(!open)}
-                  className="p-2 rounded-md hover:bg-gray-100 transition"
+                  className="p-2 rounded-md hover:bg-white/10 transition"
                 >
-                  {open ? <HiOutlineX className="w-6 h-6 text-gray-600" /> : <HiOutlineMenu className="w-6 h-6 text-gray-600" />}
+                  {open ? <HiOutlineX className="w-6 h-6 text-white" /> : <HiOutlineMenu className="w-6 h-6 text-white" />}
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile menu - Green background */}
         <AnimatePresence>
           {open && (
             <motion.nav
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-white border-t border-gray-100"
+              className="md:hidden border-t border-green-700/30"
+              style={{
+                background: "linear-gradient(135deg, #064e3b 0%, #065f46 100%)"
+              }}
             >
               <div className="px-4 py-4 space-y-2">
-                {["Services","Courses","Products","About","Contact"].map((label) => (
+                {navLinks.map((link) => (
                   <Link
-                    key={label}
-                    to={`/${label.toLowerCase()}`}
+                    key={link.name}
+                    to={link.path}
                     onClick={() => setOpen(false)}
-                    className="block py-2.5 text-gray-600 hover:text-red-500 transition text-base font-medium"
+                    className="flex items-center gap-2 py-2.5 text-white hover:text-amber-300 transition text-base font-medium"
                   >
-                    {label}
+                    {link.icon && <link.icon className="w-4 h-4" />}
+                    {link.name}
                   </Link>
                 ))}
                 
@@ -197,7 +221,7 @@ const Navbar = () => {
                     setOpen(false);
                     setCartDrawerOpen(true);
                   }}
-                  className="w-full flex items-center justify-between py-2.5 text-gray-600 hover:text-red-500 transition text-base font-medium"
+                  className="w-full flex items-center justify-between py-2.5 text-white hover:text-amber-300 transition text-base font-medium"
                 >
                   <span>Cart</span>
                   {cartCount > 0 && (
@@ -209,27 +233,27 @@ const Navbar = () => {
                 
                 {/* User Info in Mobile Menu */}
                 {isAuthenticated && user && (
-                  <div className="pt-3 pb-2 border-t border-gray-100 mt-2">
+                  <div className="pt-3 pb-2 border-t border-green-700/30 mt-2">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                         <HiOutlineUserCircle className="w-5 h-5 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-800 truncate">{user.fullName}</p>
-                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        <p className="text-sm font-semibold text-white truncate">{user.fullName}</p>
+                        <p className="text-xs text-green-200 truncate">{user.email}</p>
                       </div>
                     </div>
                     <Link
                       to="/profile"
                       onClick={() => setOpen(false)}
-                      className="block py-2 text-gray-600 hover:text-red-500 transition text-base font-medium"
+                      className="block py-2 text-white hover:text-amber-300 transition text-base font-medium"
                     >
                       My Profile
                     </Link>
                     <Link
                       to="/my-bookings"
                       onClick={() => setOpen(false)}
-                      className="block py-2 text-gray-600 hover:text-red-500 transition text-base font-medium"
+                      className="block py-2 text-white hover:text-amber-300 transition text-base font-medium"
                     >
                       My Bookings
                     </Link>
