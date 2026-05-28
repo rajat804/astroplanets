@@ -19,10 +19,10 @@ export default function HomePage() {
       <Hero />
       {/* <SectionDivider variant="wave" /> */}
 
-    {/* Planet Signs Section - Add this right after Hero */}
+      {/* Planet Signs Section - Add this right after Hero */}
       <PlanetSigns />
       <Stats />
-         <div className="h-4 bg-gradient-to-b from-white/0 to-white"></div>
+      <div className="h-4 bg-gradient-to-b from-white/0 to-white"></div>
       <VastuCalendar />
       <Services />
       <Products />
