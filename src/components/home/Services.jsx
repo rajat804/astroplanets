@@ -1,10 +1,13 @@
 // components/home/Services.jsx
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { 
   HiOutlineClock, 
   HiOutlineSparkles,
+  HiOutlineTag,
+  HiOutlineChevronRight,
 } from "react-icons/hi";
 import { 
   GiCrystalBall, 
@@ -18,6 +21,7 @@ import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 
 const Services = () => {
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,8 +30,56 @@ const Services = () => {
   const [isLowEndDevice, setIsLowEndDevice] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("all");
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  // Helper function to get category display name
+  const getCategoryDisplayName = (categoryValue) => {
+    const categoryMap = {
+      career_counselling: "Career Counselling",
+      relationship_counselling: "Relationship Counselling",
+      all_over_guidance: "All Over Guidance",
+      home_vastu_1bhk: "Home Vastu (1BHK)",
+      home_vastu_2bhk: "Home Vastu (2BHK)",
+      home_vastu_other: "Home Vastu (Other)",
+      plot_vastu: "Plot Vastu",
+      factory_vastu: "Factory Vastu",
+      name_numerology: "Name Numerology",
+      marriage_compatibility: "Marriage Compatibility",
+      vehicle_number_selection: "Vehicle Number Selection",
+      counselling: "Counselling",
+    };
+    return categoryMap[categoryValue] || categoryValue || "General";
+  };
+
+  // Helper function to extract numeric price
+  const extractNumericPrice = (priceStr) => {
+    if (!priceStr) return 0;
+    const match = priceStr.match(/\d+(?:,\d+)*/);
+    if (match) {
+      return parseInt(match[0].replace(/,/g, ''));
+    }
+    return 0;
+  };
+
+  // Helper function to calculate discount percentage
+  const calculateDiscount = (mrpPrice, sellingPrice) => {
+    const mrp = extractNumericPrice(mrpPrice);
+    const selling = extractNumericPrice(sellingPrice);
+    
+    if (mrp > 0 && selling > 0 && mrp > selling) {
+      return Math.round(((mrp - selling) / mrp) * 100);
+    }
+    return 0;
+  };
+
+  // Helper function to format price with ₹ symbol
+  const formatPrice = (priceStr) => {
+    if (!priceStr) return "₹0";
+    if (priceStr.startsWith('₹')) return priceStr;
+    return `₹${priceStr}`;
+  };
 
   // Fetch services from API
   useEffect(() => {
@@ -38,10 +90,9 @@ const Services = () => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/services`);
-      if (response.data.success) {
+      if (response.data.success && response.data.services.length > 0) {
         setServices(response.data.services);
       } else {
-        // Fallback to static data if API fails
         setServices(getFallbackServices());
       }
     } catch (error) {
@@ -53,50 +104,106 @@ const Services = () => {
     }
   };
 
-  // Fallback static data
+  // Fallback static data with categories
   const getFallbackServices = () => {
     return [
       {
         _id: "1",
-        title: "One-on-one Natal Chart Reading",
-        description: "Deep, personalized chart analysis, career & relationship guidance.",
+        title: "Palmistry Online Consultation",
+        titleKey: "palmistry",
+        category: "career_counselling",
+        categoryDescription: "Get guidance on career path, job changes, promotions, and professional growth based on your palm lines.",
+        description: "Deep, personalized palm analysis for career guidance and life predictions.",
         duration: "60 min",
         price: "₹2,499",
+        mrpPrice: "₹3,999",
+        discount: 38,
         image: "https://media.istockphoto.com/id/1935644904/photo/zodiac-wheel-natal-chart-astrology-dices-and-stones-on-grey-table-flat-lay.jpg?s=612x612&w=0&k=20&c=128i99Orc9Y_RU3nSYKNLjf-INw5inM6q_H9FDCi_JE=",
         icon: "GiCrystalBall",
         iconColor: "text-purple-500",
         gradientKey: "purple",
-        benefits: ["Birth Chart Analysis", "Career Guidance", "Relationship Insights"],
+        benefits: ["Career Analysis", "Relationship Insights", "Life Predictions", "Health Indicators"],
         symbolType: "zodiac"
       },
       {
         _id: "2",
-        title: "Numerology Life Path Report",
+        title: "Numerology Online Consultation",
+        titleKey: "numerology",
+        category: "name_numerology",
+        categoryDescription: "Analyze your name numbers for success, compatibility, and life path corrections.",
         description: "Actionable insights from your core numbers and cycles.",
         duration: "45 min",
         price: "₹1,299",
+        mrpPrice: "₹2,499",
+        discount: 48,
         image: "https://astrala.imgix.net/3GFULF5okVu23twscOo7Fd/7406ee47eac22e71767ea4f4ec1412c7/life-path-number-7-meaning.jpg?w=3840&h=2560&fit=crop&q=60&auto=format,compress",
         icon: "GiStarsStack",
         iconColor: "text-blue-500",
         gradientKey: "blue",
-        benefits: ["Life Path Number", "Destiny Matrix", "Cycle Analysis"],
+        benefits: ["Life Path Number", "Destiny Matrix", "Cycle Analysis", "Name Correction"],
         symbolType: "numbers"
       },
       {
         _id: "3",
-        title: "Vastu Home Harmony Session",
+        title: "Vastu Online Consultation",
+        titleKey: "vastu",
+        category: "home_vastu_2bhk",
+        categoryDescription: "Complete Vastu consultation for 2BHK homes including room placements, directions, and remedies.",
         description: "Practical remedies to balance your living & working space.",
         duration: "90 min",
         price: "₹3,999",
+        mrpPrice: "₹5,999",
+        discount: 33,
         image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb",
         icon: "GiVibratingShield",
         iconColor: "text-green-500",
         gradientKey: "green",
-        benefits: ["Space Analysis", "Energy Balancing", "Remedial Solutions"],
+        benefits: ["Space Analysis", "Energy Balancing", "Remedial Solutions", "Direction Planning"],
         symbolType: "directions"
+      },
+      {
+        _id: "4",
+        title: "Yoga Online Consultation",
+        titleKey: "yoga",
+        category: "counselling",
+        categoryDescription: "Personalized yoga counselling for mental peace, stress relief, and holistic wellness.",
+        description: "Personalized yoga and wellness guidance for holistic health.",
+        duration: "50 min",
+        price: "₹1,999",
+        mrpPrice: "₹2,999",
+        discount: 33,
+        image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b",
+        icon: "GiCrystalBall",
+        iconColor: "text-orange-500",
+        gradientKey: "orange",
+        benefits: ["Stress Management", "Pranayama", "Meditation", "Wellness Tips"],
+        symbolType: "zodiac"
       },
     ];
   };
+
+  // Get unique service titles for filter
+  const getUniqueTitles = () => {
+    const titles = new Map();
+    services.forEach(service => {
+      if (service.titleKey && !titles.has(service.titleKey)) {
+        titles.set(service.titleKey, {
+          key: service.titleKey,
+          label: service.title
+        });
+      }
+    });
+    return Array.from(titles.values());
+  };
+
+  // Filter services based on selected title
+  const getFilteredServices = () => {
+    if (activeFilter === "all") return services;
+    return services.filter(service => service.titleKey === activeFilter);
+  };
+
+  const filteredServices = getFilteredServices();
+  const titleFilters = getUniqueTitles();
 
   // Detect device performance
   useEffect(() => {
@@ -119,6 +226,10 @@ const Services = () => {
     } else {
       toast.error("Please login to continue");
     }
+  };
+
+  const handleViewAllServices = () => {
+    navigate('/services');
   };
 
   const iconMap = {
@@ -214,7 +325,7 @@ const Services = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.4 }}
-          className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 md:mb-12"
+          className="flex flex-col items-start justify-between mb-8 md:mb-12"
         >
           <div className="mb-4 md:mb-0">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-100 to-orange-100 px-3 md:px-4 py-1.5 md:py-2 rounded-full mb-3 md:mb-4">
@@ -230,143 +341,242 @@ const Services = () => {
           </div>
         </motion.div>
 
-        {/* Services Grid */}
-        <div className="grid md:grid-cols-3 gap-5 md:gap-8">
-          {services.map((s, i) => {
-            const isHovered = hoveredCard === i;
-            const symbols = getSymbols(s.symbolType);
-            const gradientClass = getGradientClass(s.gradientKey);
-            
-            return (
-              <motion.article
-                key={s._id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ 
-                  duration: 0.4, 
-                  delay: isLowEndDevice ? 0 : i * 0.08,
-                }}
-                whileHover={!isMobile ? { y: -8 } : {}}
-                onHoverStart={() => !isMobile && setHoveredCard(i)}
-                onHoverEnd={() => !isMobile && setHoveredCard(null)}
-                className="relative group cursor-pointer"
+        {/* Filter Tabs - Dynamic Service Title Filter */}
+        {titleFilters.length > 1 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-wrap gap-2 md:gap-3 mb-8 md:mb-12 pb-2 overflow-x-auto"
+          >
+            <button
+              onClick={() => setActiveFilter("all")}
+              className={`px-4 md:px-6 py-2 md:py-2.5 rounded-full text-sm md:text-base font-medium transition-all duration-300 whitespace-nowrap ${
+                activeFilter === "all"
+                  ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
+                  : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+              }`}
+            >
+              All Services
+            </button>
+            {titleFilters.map((filter) => (
+              <button
+                key={filter.key}
+                onClick={() => setActiveFilter(filter.key)}
+                className={`px-4 md:px-6 py-2 md:py-2.5 rounded-full text-sm md:text-base font-medium transition-all duration-300 whitespace-nowrap ${
+                  activeFilter === filter.key
+                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
+                    : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                }`}
               >
-                {!isMobile && (
-                  <div className={`absolute -inset-0.5 bg-gradient-to-r from-red-500 to-purple-500 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl ${isHovered ? 'opacity-30' : ''}`} />
-                )}
+                {filter.label.length > 30 ? filter.label.substring(0, 25) + "..." : filter.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+
+        {/* Services Grid */}
+        {filteredServices.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No services available in this category.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
+              {filteredServices.slice(0, 6).map((s, i) => {
+                const isHovered = hoveredCard === i;
+                const symbols = getSymbols(s.symbolType);
+                const gradientClass = getGradientClass(s.gradientKey);
+                const discountPercent = s.discount || calculateDiscount(s.mrpPrice, s.price);
+                const sellingPrice = formatPrice(s.price);
+                const mrpPrice = s.mrpPrice ? formatPrice(s.mrpPrice) : null;
+                const hasDiscount = discountPercent > 0 && mrpPrice && mrpPrice !== sellingPrice;
                 
-                <div className={`relative bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-orange-100 bg-gradient-to-br ${gradientClass}`}>
-                  {/* Image Section */}
-                  <div className="relative h-44 md:h-52 overflow-hidden">
-                    <img
-                      src={s.image}
-                      alt={s.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                    
-                    <div className="absolute left-3 md:left-4 top-3 md:top-4 bg-white/90 backdrop-blur px-2 md:px-3 py-1 rounded-lg md:rounded-xl text-[10px] md:text-xs font-semibold shadow-lg">
-                      ✨ Expert Session
-                    </div>
-
-                    <div className="absolute right-3 md:right-4 bottom-3 md:bottom-4 bg-white/90 backdrop-blur rounded-full p-1.5 md:p-2 shadow-lg">
-                      <div className={s.iconColor}>
-                        {getIcon(s.icon)}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Content Section */}
-                  <div className="p-4 md:p-6 space-y-3 md:space-y-4">
-                    <h4 className={`text-base md:text-xl font-semibold text-gray-900 transition-colors duration-300 ${isHovered && !isMobile ? 'text-red-600' : ''}`}>
-                      {s.title}
-                    </h4>
-                    
-                    <p className="text-gray-600 text-xs md:text-sm leading-relaxed">
-                      {s.description}
-                    </p>
-
-                    {/* Benefits List */}
-                    <div className="space-y-1">
-                      {s.benefits?.slice(0, 3).map((benefit) => (
-                        <div
-                          key={benefit}
-                          className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs text-gray-500"
-                        >
-                          <HiOutlineSparkles className="w-2 h-2 md:w-3 md:h-3 text-red-500" />
-                          <span>{benefit}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Divider */}
-                    <div className="h-px bg-gradient-to-r from-transparent via-orange-200 to-transparent" />
-
-                    {/* Duration & Price Section */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-gray-500">
-                        <HiOutlineClock className="w-3 h-3 md:w-4 md:h-4 text-red-500" />
-                        <span>{s.duration}</span>
-                      </div>
-
-                      <div className="text-right">
-                        <div className="text-[10px] md:text-xs text-gray-400">Starting from</div>
-                        <div className="text-lg md:text-2xl font-bold text-gray-900">
-                          {s.price}
-                          <span className="text-xs md:text-sm font-normal text-gray-500">/session</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons - Only Book Now */}
-                    <div className="flex gap-2 md:gap-3 mt-3 md:mt-4">
-                      <button
-                        onClick={() => handleBookNow(s)}
-                        className="flex-1 px-2 md:px-4 py-1.5 md:py-2.5 rounded-lg md:rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 text-[10px] md:text-sm"
-                      >
-                        Book Now
-                      </button>
-                    </div>
-
-                    {/* Symbols - Only show on desktop hover */}
-                    {!isMobile && symbols.length > 0 && (
-                      <AnimatePresence>
-                        {isHovered && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            transition={{ duration: 0.2 }}
-                            className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-orange-100"
-                          >
-                            <div className="flex items-center justify-center gap-0.5 md:gap-1 flex-wrap">
-                              {symbols.slice(0, 12).map((symbol, idx) => (
-                                <span
-                                  key={`${s.symbolType}-${idx}`}
-                                  className={`text-[8px] md:text-xs ${
-                                    s.symbolType === 'zodiac' 
-                                      ? 'text-purple-400' 
-                                      : s.symbolType === 'numbers'
-                                      ? 'text-blue-400 font-mono'
-                                      : 'text-green-400'
-                                  } transition-colors`}
-                                >
-                                  {symbol}
-                                </span>
-                              ))}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                return (
+                  <motion.article
+                    key={s._id}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ 
+                      duration: 0.4, 
+                      delay: isLowEndDevice ? 0 : i * 0.08,
+                    }}
+                    whileHover={!isMobile ? { y: -8 } : {}}
+                    onHoverStart={() => !isMobile && setHoveredCard(i)}
+                    onHoverEnd={() => !isMobile && setHoveredCard(null)}
+                    className="relative group cursor-pointer"
+                  >
+                    {!isMobile && (
+                      <div className={`absolute -inset-0.5 bg-gradient-to-r from-red-500 to-purple-500 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl ${isHovered ? 'opacity-30' : ''}`} />
                     )}
-                  </div>
-                </div>
-              </motion.article>
-            );
-          })}
-        </div>
+                    
+                    <div className={`relative bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-orange-100 bg-gradient-to-br ${gradientClass}`}>
+                      {/* Image Section */}
+                      <div className="relative h-44 md:h-52 overflow-hidden">
+                        <img
+                          src={s.image}
+                          alt={s.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                        
+                        <div className="absolute left-3 md:left-4 top-3 md:top-4 bg-white/90 backdrop-blur px-2 md:px-3 py-1 rounded-lg md:rounded-xl text-[10px] md:text-xs font-semibold shadow-lg">
+                          ✨ {s.titleKey?.charAt(0).toUpperCase() + s.titleKey?.slice(1) || "Expert"} Session
+                        </div>
+
+                        {/* Discount Badge on Image */}
+                        {hasDiscount && (
+                          <div className="absolute right-3 md:right-4 top-3 md:top-4 bg-red-500 text-white px-2 md:px-3 py-1 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold shadow-lg z-10">
+                            🔥 {discountPercent}% OFF
+                          </div>
+                        )}
+
+                        <div className="absolute right-3 md:right-4 bottom-3 md:bottom-4 bg-white/90 backdrop-blur rounded-full p-1.5 md:p-2 shadow-lg">
+                          <div className={s.iconColor}>
+                            {getIcon(s.icon)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Content Section */}
+                      <div className="p-4 md:p-6 space-y-3 md:space-y-4">
+                        {/* Category Badge */}
+                        {s.category && (
+                          <div className="flex items-center gap-1.5">
+                            <HiOutlineTag className="w-3 h-3 text-purple-500" />
+                            <span className="text-[10px] md:text-xs font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+                              {getCategoryDisplayName(s.category)}
+                            </span>
+                          </div>
+                        )}
+
+                        <h4 className={`text-base md:text-xl font-semibold text-gray-900 transition-colors duration-300 ${isHovered && !isMobile ? 'text-red-600' : ''}`}>
+                          {s.title}
+                        </h4>
+                        
+                        <p className="text-gray-600 text-xs md:text-sm leading-relaxed line-clamp-2">
+                          {s.description}
+                        </p>
+
+                        {/* Benefits List */}
+                        <div className="space-y-1">
+                          {s.benefits?.slice(0, 3).map((benefit) => (
+                            <div
+                              key={benefit}
+                              className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs text-gray-500"
+                            >
+                              <HiOutlineSparkles className="w-2 h-2 md:w-3 md:h-3 text-red-500 flex-shrink-0" />
+                              <span className="truncate">{benefit}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Divider */}
+                        <div className="h-px bg-gradient-to-r from-transparent via-orange-200 to-transparent" />
+
+                        {/* Duration & Price Section */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-gray-500">
+                            <HiOutlineClock className="w-3 h-3 md:w-4 md:h-4 text-red-500" />
+                            <span>{s.duration}</span>
+                          </div>
+
+                          <div className="text-right">
+                            {/* MRP Price with Strikethrough */}
+                            {hasDiscount && mrpPrice && (
+                              <div className="text-[10px] md:text-xs text-gray-400 line-through">
+                                {mrpPrice}
+                              </div>
+                            )}
+                            {/* Selling Price */}
+                            <div className="flex items-center gap-1">
+                              <span className="text-lg md:text-2xl font-bold text-gray-900">
+                                {sellingPrice}
+                              </span>
+                              <span className="text-xs md:text-sm font-normal text-gray-500">/session</span>
+                            </div>
+                            {/* Save Amount Text */}
+                            {hasDiscount && (
+                              <div className="text-[10px] text-green-600 font-medium mt-0.5">
+                                Save {discountPercent}%
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 md:gap-3 mt-3 md:mt-4">
+                          <button
+                            onClick={() => handleBookNow(s)}
+                            className="flex-1 px-2 md:px-4 py-1.5 md:py-2.5 rounded-lg md:rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 text-[10px] md:text-sm"
+                          >
+                            Book Now
+                          </button>
+                        </div>
+
+                        {/* Symbols - Only show on desktop hover */}
+                        {!isMobile && symbols.length > 0 && (
+                          <AnimatePresence>
+                            {isHovered && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10 }}
+                                transition={{ duration: 0.2 }}
+                                className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-orange-100"
+                              >
+                                <div className="flex items-center justify-center gap-0.5 md:gap-1 flex-wrap">
+                                  {symbols.slice(0, 12).map((symbol, idx) => (
+                                    <span
+                                      key={`${s.symbolType}-${idx}`}
+                                      className={`text-[8px] md:text-xs ${
+                                        s.symbolType === 'zodiac' 
+                                          ? 'text-purple-400' 
+                                          : s.symbolType === 'numbers'
+                                          ? 'text-blue-400 font-mono'
+                                          : 'text-green-400'
+                                      } transition-colors`}
+                                    >
+                                      {symbol}
+                                    </span>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        )}
+                      </div>
+                    </div>
+                  </motion.article>
+                );
+              })}
+            </div>
+
+            {/* View All Services Button - Show when 3 or more services */}
+            {services.length >= 3 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+                className="text-center mt-12"
+              >
+                <button
+                  onClick={handleViewAllServices}
+                  className="inline-flex items-center gap-2 px-6 md:px-8 py-2.5 md:py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 text-sm md:text-base"
+                >
+                  View All Services
+                  <HiOutlineChevronRight className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
+                <p className="text-xs text-gray-500 mt-2">
+                  Showing {Math.min(6, filteredServices.length)} of {filteredServices.length} services
+                </p>
+              </motion.div>
+            )}
+          </>
+        )}
 
         {/* Decorative Floating Elements */}
         {!isMobile && services.length > 0 && (
@@ -413,6 +623,12 @@ const Services = () => {
         .animate-twinkle { animation: twinkle ease-in-out infinite; will-change: opacity, transform; }
         .animate-float-slow { animation: float-slow 20s ease-in-out infinite; will-change: transform; }
         .animate-float-reverse { animation: float-reverse 25s ease-in-out infinite; will-change: transform; }
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
       `}</style>
     </section>
   );
