@@ -11,9 +11,10 @@ import {
   HiOutlineSparkles,
   HiOutlineUsers,
   HiOutlineStar,
+  HiOutlineTag,
 } from "react-icons/hi";
 import { FaCheck, FaChevronDown, FaRupeeSign, FaStar, FaSpinner } from "react-icons/fa";
-import { GiCrystalBall, GiSolarSystem, GiSevenPointedStar, GiSunbeams } from "react-icons/gi";
+import { GiCrystalBall, GiSolarSystem, GiSevenPointedStar, GiSunbeams, GiMagicSwirl } from "react-icons/gi";
 import BookConsultationButton from "../components/common/BookConsultationButton";
 import ServiceBookingModal from "../components/common/ServiceBookingModal";
 import PlanPaymentModal from "../components/common/PlanPaymentModal";
@@ -29,25 +30,47 @@ const iconMap = {
   GiSolarSystem: GiSolarSystem,
   GiSevenPointedStar: GiSevenPointedStar,
   GiSunbeams: GiSunbeams,
+  GiMagicSwirl: GiMagicSwirl,
+  GiVibratingShield: GiCrystalBall,
+  GiStarsStack: GiSevenPointedStar,
 };
 
 const getIcon = (iconName) => {
   const Icon = iconMap[iconName] || GiCrystalBall;
-  return <Icon className="w-6 h-6 md:w-8 md:h-8" />;
+  return <Icon className="w-5 h-5 md:w-6 md:h-6" />;
 };
 
 const getGradient = (gradientKey) => {
   const gradients = {
-    purple: "from-red-500/10 to-rose-500/10",
-    blue: "from-red-500/10 to-rose-500/10",
-    green: "from-red-500/10 to-rose-500/10",
-    orange: "from-red-500/10 to-rose-500/10",
+    purple: "from-purple-500/10 to-pink-500/10",
+    blue: "from-blue-500/10 to-cyan-500/10",
+    green: "from-green-500/10 to-emerald-500/10",
+    orange: "from-orange-500/10 to-amber-500/10",
     red: "from-red-500/10 to-rose-500/10",
-    indigo: "from-red-500/10 to-rose-500/10",
-    teal: "from-red-500/10 to-rose-500/10",
-    yellow: "from-red-500/10 to-rose-500/10",
+    indigo: "from-indigo-500/10 to-purple-500/10",
+    teal: "from-teal-500/10 to-cyan-500/10",
+    yellow: "from-yellow-500/10 to-orange-500/10",
   };
   return gradients[gradientKey] || gradients.red;
+};
+
+// Helper function to get category display name
+const getCategoryDisplayName = (categoryValue) => {
+  const categoryMap = {
+    career_counselling: "Career Counselling",
+    relationship_counselling: "Relationship Counselling",
+    all_over_guidance: "All Over Guidance",
+    home_vastu_1bhk: "Home Vastu (1BHK)",
+    home_vastu_2bhk: "Home Vastu (2BHK)",
+    home_vastu_other: "Home Vastu (Other)",
+    plot_vastu: "Plot Vastu",
+    factory_vastu: "Factory Vastu",
+    name_numerology: "Name Numerology",
+    marriage_compatibility: "Marriage Compatibility",
+    vehicle_number_selection: "Vehicle Number Selection",
+    counselling: "Counselling",
+  };
+  return categoryMap[categoryValue] || categoryValue || "General";
 };
 
 /* ---------- HERO ---------- */
@@ -93,7 +116,7 @@ const ServiceCard = ({ service, onBookNow }) => {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       whileHover={{ y: -8 }}
-      className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-red-100"
+      className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-red-100 h-full flex flex-col"
     >
       {/* Image Section */}
       <div className={`relative h-48 overflow-hidden bg-gradient-to-br ${gradientClass}`}>
@@ -101,8 +124,11 @@ const ServiceCard = ({ service, onBookNow }) => {
           src={service.image}
           alt={service.title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          onError={(e) => {
+            e.target.src = "https://via.placeholder.com/400x300?text=Service";
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-red-900/50 via-red-800/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
         
         {/* Icon Badge */}
         <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur rounded-full p-2 shadow-lg">
@@ -113,21 +139,36 @@ const ServiceCard = ({ service, onBookNow }) => {
         
         {/* Discount Badge */}
         {discountPercent > 0 && (
-          <div className="absolute top-3 right-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+          <div className="absolute top-3 right-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold shadow-lg">
             {discountPercent}% OFF
           </div>
         )}
+
+        {/* Service Type Badge */}
+        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-[10px] font-semibold shadow-lg">
+          ✨ {service.titleKey?.charAt(0).toUpperCase() + service.titleKey?.slice(1) || "Expert"}
+        </div>
       </div>
 
       {/* Content Section */}
-      <div className="p-5">
-        <h3 className="text-lg font-bold text-gray-800 mb-1 group-hover:text-red-600 transition">
+      <div className="p-5 flex-1 flex flex-col">
+        {/* Category Badge */}
+        {service.category && (
+          <div className="flex items-center gap-1.5 mb-2">
+            <HiOutlineTag className="w-3 h-3 text-purple-500" />
+            <span className="text-[10px] font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+              {getCategoryDisplayName(service.category)}
+            </span>
+          </div>
+        )}
+
+        <h3 className="text-lg font-bold text-gray-800 mb-1 group-hover:text-red-600 transition line-clamp-2">
           {service.title}
         </h3>
         
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
           <HiOutlineClock className="w-3 h-3" />
-          <span>{service.duration}</span>
+          <span>{service.duration || "45-60 min"}</span>
         </div>
         
         <p className="text-gray-600 text-sm mb-3 line-clamp-2">
@@ -138,7 +179,7 @@ const ServiceCard = ({ service, onBookNow }) => {
         <div className="flex flex-wrap gap-1 mb-3">
           {service.benefits?.slice(0, 2).map((benefit, idx) => (
             <span key={idx} className="text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded-full">
-              {benefit}
+              {benefit.length > 20 ? benefit.substring(0, 18) + "..." : benefit}
             </span>
           ))}
           {service.benefits?.length > 2 && (
@@ -149,7 +190,7 @@ const ServiceCard = ({ service, onBookNow }) => {
         </div>
 
         {/* Price and Button */}
-        <div className="flex items-center justify-between mt-2 pt-2 border-t border-red-100">
+        <div className="flex items-center justify-between mt-auto pt-3 border-t border-red-100">
           <div>
             {discountPercent > 0 && (
               <span className="text-xs text-gray-400 line-through block">
@@ -172,28 +213,28 @@ const ServiceCard = ({ service, onBookNow }) => {
   );
 };
 
-/* ---------- SERVICES GRID SECTION ---------- */
+/* ---------- SERVICES GRID SECTION (Dynamic with Title Key Filter) ---------- */
 const ServicesGrid = ({ onBookNow }) => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedFilter, setSelectedFilter] = useState("all");
   const [filteredServices, setFilteredServices] = useState([]);
   const [categories, setCategories] = useState([{ id: "all", name: "All Services", icon: "✨" }]);
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchServices();
   }, []);
 
   useEffect(() => {
-    if (selectedCategory === "all") {
+    if (selectedFilter === "all") {
       setFilteredServices(services);
     } else {
-      const filtered = services.filter(s => s.type === selectedCategory);
+      const filtered = services.filter(s => s.titleKey === selectedFilter);
       setFilteredServices(filtered);
     }
-  }, [selectedCategory, services]);
+  }, [selectedFilter, services]);
 
   const fetchServices = async () => {
     try {
@@ -203,13 +244,14 @@ const ServicesGrid = ({ onBookNow }) => {
         setServices(response.data.services);
         setFilteredServices(response.data.services);
         
-        const uniqueTypes = [...new Set(response.data.services.map(s => s.type).filter(Boolean))];
+        // Get unique title keys for filters
+        const uniqueKeys = [...new Set(response.data.services.map(s => s.titleKey).filter(Boolean))];
         const categoryList = [
           { id: "all", name: "All Services", icon: "✨" },
-          ...uniqueTypes.map(type => ({
-            id: type,
-            name: type.charAt(0).toUpperCase() + type.slice(1),
-            icon: getCategoryIcon(type)
+          ...uniqueKeys.map(key => ({
+            id: key,
+            name: key.charAt(0).toUpperCase() + key.slice(1),
+            icon: getTitleIcon(key)
           }))
         ];
         setCategories(categoryList);
@@ -226,18 +268,14 @@ const ServicesGrid = ({ onBookNow }) => {
     }
   };
 
-  const getCategoryIcon = (type) => {
+  const getTitleIcon = (key) => {
     const icons = {
-      astrology: "🔮",
+      palmistry: "🔮",
       numerology: "🔢",
       vastu: "🏠",
       yoga: "🧘",
-      tarot: "🃏",
-      meditation: "🧠",
-      reiki: "🌟",
-      palmistry: "✋"
     };
-    return icons[type] || "✨";
+    return icons[key] || "✨";
   };
 
   if (loading) {
@@ -267,14 +305,14 @@ const ServicesGrid = ({ onBookNow }) => {
           </p>
         </div>
 
-        {/* Category Filters */}
+        {/* Category Filters - Dynamic based on titleKey */}
         <div className="flex flex-wrap justify-center gap-3 mb-10">
           {categories.map((cat) => (
             <button
               key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
+              onClick={() => setSelectedFilter(cat.id)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                selectedCategory === cat.id
+                selectedFilter === cat.id
                   ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md"
                   : "bg-white text-gray-600 hover:bg-red-50 hover:text-red-600 border border-gray-200"
               }`}
@@ -288,6 +326,7 @@ const ServicesGrid = ({ onBookNow }) => {
         {/* Services Grid */}
         {filteredServices.length === 0 ? (
           <div className="text-center py-12">
+            <div className="text-6xl mb-4">🔮</div>
             <p className="text-gray-500">No services available in this category.</p>
           </div>
         ) : (
@@ -441,7 +480,7 @@ const PlansSection = ({ onChoosePlan }) => {
                   plan.isPopular 
                     ? "shadow-2xl ring-2 ring-red-400 ring-offset-2 ring-offset-white" 
                     : "shadow-lg hover:shadow-xl"
-                } bg-white`}
+                } bg-white h-full flex flex-col`}
               >
                 {plan.isPopular && (
                   <div className="absolute top-0 right-0 z-10">
@@ -463,12 +502,12 @@ const PlansSection = ({ onChoosePlan }) => {
                   <div className="mb-4">
                     <div className="flex items-baseline gap-2 flex-wrap">
                       <span className="text-4xl font-extrabold text-gray-900">
-                        ₹{displayPrice.toLocaleString()}
+                        ₹{displayPrice?.toLocaleString()}
                       </span>
                       {discountPercent > 0 && (
                         <>
                           <span className="text-sm text-gray-400 line-through">
-                            ₹{displayMrp.toLocaleString()}
+                            ₹{displayMrp?.toLocaleString()}
                           </span>
                           <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
                             Save {discountPercent}%
@@ -726,6 +765,15 @@ const ServicesPage = () => {
           onSuccess={handlePaymentSuccess}
         />
       )}
+
+      <style jsx>{`
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
     </main>
   );
 };
