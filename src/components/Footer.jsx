@@ -38,7 +38,7 @@ const Footer = () => {
                 <HiMail className="text-amber-400" /> contact@cosmicwellness.com
               </div>
               <div className="flex items-center gap-2 mt-2 justify-center md:justify-start">
-                <HiPhone className="text-amber-400" /> +91 99107 55649
+                <HiPhone className="text-amber-400" /> +91 91751 96579
               </div>
             </div>
           </div>
@@ -62,73 +62,34 @@ const Footer = () => {
             {/* Social Media Icons with Handles */}
             <div className="space-y-3">
               <a 
-                href="https://instagram.com/cosmicwellness" 
+                href="https://www.instagram.com/astroplanets_destiny/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 text-gray-300 hover:text-pink-400 transition group"
               >
                 <FaInstagram className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-sm">@cosmic_wellness</span>
+                <span className="text-sm">@astroplanets_destiny</span>
               </a>
               
               <a 
-                href="https://facebook.com/cosmicwellness" 
+                href="https://www.facebook.com/profile.php?id=61570959330438" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 text-gray-300 hover:text-blue-400 transition group"
               >
                 <FaFacebook className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-sm">/cosmicwellness</span>
+                <span className="text-sm">astroplanets</span>
               </a>
               
-              <a 
-                href="https://twitter.com/cosmicwellness" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 text-gray-300 hover:text-blue-300 transition group"
-              >
-                <FaTwitter className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-sm">@cosmic_tweets</span>
-              </a>
               
               <a 
-                href="https://youtube.com/cosmicwellness" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 text-gray-300 hover:text-red-500 transition group"
-              >
-                <FaYoutube className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-sm">Cosmic Wellness</span>
-              </a>
-              
-              <a 
-                href="https://linkedin.com/company/cosmicwellness" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 text-gray-300 hover:text-blue-500 transition group"
-              >
-                <FaLinkedin className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-sm">Cosmic Wellness</span>
-              </a>
-              
-              <a 
-                href="https://pinterest.com/cosmicwellness" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 text-gray-300 hover:text-red-400 transition group"
-              >
-                <FaPinterest className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-sm">@cosmic_pins</span>
-              </a>
-              
-              <a 
-                href="https://wa.me/919910755649" 
+                href="https://wa.me/9175196579" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 text-gray-300 hover:text-green-400 transition group"
               >
                 <FaWhatsapp className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-sm">+91 99107 55649</span>
+                <span className="text-sm">+91 91751 96579</span>
               </a>
             </div>
           </div>
