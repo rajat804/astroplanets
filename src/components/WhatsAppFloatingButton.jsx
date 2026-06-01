@@ -3,7 +3,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import { motion } from "framer-motion";
 
 const WhatsAppFloatingButton = () => {
-  const phoneNumber = "919910755649";
+  const phoneNumber = "9175196579";
 
   const message =
     "Hello! I would like to know more about your astrology, yoga, and ritual tools services.";
