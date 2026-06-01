@@ -107,27 +107,27 @@ const ContactPage = () => {
     {
       icon: <Facebook className="w-6 h-6" />,
       name: "Facebook",
-      url: "https://facebook.com/astroplanets",
+      url: "https://www.facebook.com/profile.php?id=61570959330438",
       color: "hover:bg-blue-600"
     },
     {
       icon: <Instagram className="w-6 h-6" />,
       name: "Instagram",
-      url: "https://instagram.com/astroplanets",
+      url: "https://www.instagram.com/astroplanets_destiny/",
       color: "hover:bg-gradient-to-r hover:from-pink-500 hover:to-purple-600"
     },
-    {
-      icon: <Twitter className="w-6 h-6" />,
-      name: "Twitter",
-      url: "https://twitter.com/astroplanets",
-      color: "hover:bg-sky-500"
-    },
-    {
-      icon: <Linkedin className="w-6 h-6" />,
-      name: "LinkedIn",
-      url: "https://linkedin.com/company/astroplanets",
-      color: "hover:bg-blue-700"
-    },
+    // {
+    //   icon: <Twitter className="w-6 h-6" />,
+    //   name: "Twitter",
+    //   url: "https://twitter.com/astroplanets",
+    //   color: "hover:bg-sky-500"
+    // },
+    // {
+    //   icon: <Linkedin className="w-6 h-6" />,
+    //   name: "LinkedIn",
+    //   url: "https://linkedin.com/company/astroplanets",
+    //   color: "hover:bg-blue-700"
+    // },
   ];
 
   return (
