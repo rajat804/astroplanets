@@ -10,8 +10,43 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState("");
 
+  // Service Title Options
+  const serviceTitleOptions = [
+    { value: "palmistry", label: "Palmistry Online Consultation" },
+    { value: "vastu", label: "Vastu Online Consultation" },
+    { value: "numerology", label: "Numerology Online Consultation" },
+    { value: "yoga", label: "Yoga Online Consultation" },
+  ];
+
+  // Category Options with descriptions
+  const categoryOptions = {
+    palmistry: [
+      { value: "career_counselling", label: "Career Counselling", description: "Get guidance on career path, job changes, promotions, and professional growth based on your palm lines." },
+      { value: "relationship_counselling", label: "Relationship Counselling", description: "Understand relationship dynamics, compatibility, and solutions for love, marriage, and family matters." },
+      { value: "all_over_guidance", label: "All Over Guidance", description: "Complete palmistry analysis covering career, relationships, health, wealth, and life predictions." },
+    ],
+    vastu: [
+      { value: "home_vastu_1bhk", label: "Home Vastu (1BHK)", description: "Vastu analysis and remedies for 1BHK apartments/homes to enhance positive energy flow." },
+      { value: "home_vastu_2bhk", label: "Home Vastu (2BHK)", description: "Complete Vastu consultation for 2BHK homes including room placements, directions, and remedies." },
+      { value: "home_vastu_other", label: "Home Vastu (Other)", description: "Custom Vastu solutions for 3BHK, 4BHK, villas, and other residential properties." },
+      { value: "plot_vastu", label: "Plot Vastu", description: "Vastu guidance for plot selection, shape analysis, direction planning, and construction advice." },
+      { value: "factory_vastu", label: "Factory Vastu", description: "Industrial Vastu for factories, warehouses, and manufacturing units to improve productivity." },
+    ],
+    numerology: [
+      { value: "name_numerology", label: "Name Numerology", description: "Analyze your name numbers for success, compatibility, and life path corrections." },
+      { value: "marriage_compatibility", label: "Marriage Compatibility", description: "Numerology-based compatibility check for marriage, partnerships, and relationships." },
+      { value: "vehicle_number_selection", label: "Vehicle Number Selection", description: "Select lucky vehicle numbers for safety, success, and positive journeys." },
+    ],
+    yoga: [
+      { value: "counselling", label: "Counselling", description: "Personalized yoga counselling for mental peace, stress relief, and holistic wellness." },
+    ],
+  };
+
   const [formData, setFormData] = useState({
     title: "",
+    titleKey: "",
+    category: "",
+    categoryDescription: "", // Auto-filled from selected category
     description: "",
     duration: "",
     price: "",
@@ -28,6 +63,7 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
   });
 
   const [autoDiscount, setAutoDiscount] = useState(0);
+  const [availableCategories, setAvailableCategories] = useState([]);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -51,14 +87,14 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
   ];
 
   const gradientOptions = [
-    { value: "purple", label: "Purple/Pink", gradient: "from-purple-500/10 to-pink-500/10" },
-    { value: "blue", label: "Blue/Cyan", gradient: "from-blue-500/10 to-cyan-500/10" },
-    { value: "green", label: "Green/Emerald", gradient: "from-green-500/10 to-emerald-500/10" },
-    { value: "orange", label: "Orange/Amber", gradient: "from-orange-500/10 to-amber-500/10" },
-    { value: "red", label: "Red/Rose", gradient: "from-red-500/10 to-rose-500/10" },
-    { value: "indigo", label: "Indigo/Purple", gradient: "from-indigo-500/10 to-purple-500/10" },
-    { value: "teal", label: "Teal/Cyan", gradient: "from-teal-500/10 to-cyan-500/10" },
-    { value: "yellow", label: "Yellow/Orange", gradient: "from-yellow-500/10 to-orange-500/10" },
+    { value: "purple", label: "Purple/Pink" },
+    { value: "blue", label: "Blue/Cyan" },
+    { value: "green", label: "Green/Emerald" },
+    { value: "orange", label: "Orange/Amber" },
+    { value: "red", label: "Red/Rose" },
+    { value: "indigo", label: "Indigo/Purple" },
+    { value: "teal", label: "Teal/Cyan" },
+    { value: "yellow", label: "Yellow/Orange" },
   ];
 
   const symbolTypeOptions = [
@@ -70,7 +106,36 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
     { value: "none", label: "None" },
   ];
 
-  // Calculate discount automatically when mrpPrice or price changes
+  // Update categories when title changes
+  useEffect(() => {
+    if (formData.titleKey && categoryOptions[formData.titleKey]) {
+      setAvailableCategories(categoryOptions[formData.titleKey]);
+    } else {
+      setAvailableCategories([]);
+    }
+  }, [formData.titleKey]);
+
+  // Update category description when category changes
+  useEffect(() => {
+    if (formData.titleKey && formData.category) {
+      const selectedCategory = categoryOptions[formData.titleKey]?.find(
+        cat => cat.value === formData.category
+      );
+      if (selectedCategory) {
+        setFormData(prev => ({
+          ...prev,
+          categoryDescription: selectedCategory.description
+        }));
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        categoryDescription: ""
+      }));
+    }
+  }, [formData.titleKey, formData.category]);
+
+  // Calculate discount automatically
   useEffect(() => {
     const calculateDiscount = () => {
       const mrp = parseFloat(formData.mrpPrice?.replace(/[^0-9.-]+/g, "") || 0);
@@ -91,6 +156,9 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
     if (editingService) {
       setFormData({
         title: editingService.title || "",
+        titleKey: editingService.titleKey || "",
+        category: editingService.category || "",
+        categoryDescription: editingService.categoryDescription || "",
         description: editingService.description || "",
         duration: editingService.duration || "",
         price: editingService.price || "",
@@ -107,26 +175,56 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
       });
       setImagePreview(editingService.image || "");
     } else {
-      setFormData({
-        title: "",
-        description: "",
-        duration: "",
-        price: "",
-        mrpPrice: "",
-        image: "",
-        icon: "GiCrystalBall",
-        iconColor: "text-purple-500",
-        gradientKey: "purple",
-        benefits: [""],
-        symbolType: "zodiac",
-        isActive: true,
-        featured: false,
-        order: 0,
-      });
-      setImagePreview("");
+      resetForm();
     }
     setImageFile(null);
   }, [editingService]);
+
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      titleKey: "",
+      category: "",
+      categoryDescription: "",
+      description: "",
+      duration: "",
+      price: "",
+      mrpPrice: "",
+      image: "",
+      icon: "GiCrystalBall",
+      iconColor: "text-purple-500",
+      gradientKey: "purple",
+      benefits: [""],
+      symbolType: "zodiac",
+      isActive: true,
+      featured: false,
+      order: 0,
+    });
+    setImagePreview("");
+    setImageFile(null);
+    setAvailableCategories([]);
+  };
+
+  const handleTitleChange = (e) => {
+    const selectedKey = e.target.value;
+    const selectedTitle = serviceTitleOptions.find(opt => opt.value === selectedKey);
+    
+    setFormData({
+      ...formData,
+      titleKey: selectedKey,
+      title: selectedTitle ? selectedTitle.label : "",
+      category: "", // Reset category when title changes
+      categoryDescription: ""
+    });
+  };
+
+  const handleCategoryChange = (e) => {
+    const selectedCategory = e.target.value;
+    setFormData({
+      ...formData,
+      category: selectedCategory
+    });
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -174,6 +272,23 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
 
   const handleSubmit = async () => {
     try {
+      if (!formData.titleKey) {
+        toast.error("Please select a service title");
+        return;
+      }
+      if (!formData.category) {
+        toast.error("Please select a category");
+        return;
+      }
+      if (!formData.description || !formData.description.trim()) {
+        toast.error("Please enter service description");
+        return;
+      }
+      if (!formData.price || !formData.price.trim()) {
+        toast.error("Please enter service price");
+        return;
+      }
+      
       setUploading(true);
 
       let imageUrl = formData.image;
@@ -195,14 +310,19 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
         }
       }
 
-      if (!formData.title || !formData.price || !imageUrl || !formData.description) {
-        toast.error("Please fill all required fields (Title, Price, Image, Description)");
+      if (!imageUrl) {
+        toast.error("Please upload a service image");
         setUploading(false);
         return;
       }
 
       const cleanedData = {
         ...formData,
+        title: formData.title,
+        titleKey: formData.titleKey,
+        category: formData.category,
+        categoryDescription: formData.categoryDescription,
+        description: formData.description.trim(),
         image: imageUrl,
         discount: autoDiscount,
         benefits: formData.benefits.filter((item) => item && item.trim() !== ""),
@@ -216,19 +336,20 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
         if (typeof onUpdate === 'function') {
           await onUpdate(editingService._id, cleanedData);
         } else {
-          console.error("onUpdate is not a function");
           toast.error("Update function not available");
+          return;
         }
       } else {
         if (typeof onCreate === 'function') {
           await onCreate(cleanedData);
         } else {
-          console.error("onCreate is not a function");
           toast.error("Create function not available");
+          return;
         }
       }
 
       onClose();
+      resetForm();
     } catch (error) {
       console.error("Submit error:", error);
       toast.error(error.response?.data?.message || "Something went wrong");
@@ -258,69 +379,82 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
           <h4 className="text-xl font-bold text-gray-800">
             {editingService ? "Edit Service" : "Add New Service"}
           </h4>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg">
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg transition">
             <HiOutlineX className="w-5 h-5" />
           </button>
         </div>
 
         <div className="space-y-6">
-          {/* Basic Information */}
+          {/* Service Title & Category Dropdowns */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">
-              Basic Information
+              Service Details
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Service Title *</label>
-                <input
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  placeholder="e.g., One-on-one Natal Chart Reading"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows="3"
-                  placeholder="Detailed description of the service..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Duration *</label>
-                <input
-                  name="duration"
-                  value={formData.duration}
-                  onChange={handleChange}
-                  placeholder="e.g., 60 min"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Symbol Type</label>
                 <select
-                  name="symbolType"
-                  value={formData.symbolType}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl"
+                  value={formData.titleKey}
+                  onChange={handleTitleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
-                  {symbolTypeOptions.map(opt => (
+                  <option value="">Select Service Title</option>
+                  {serviceTitleOptions.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                <select
+                  value={formData.category}
+                  onChange={handleCategoryChange}
+                  disabled={!formData.titleKey}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="">Select Category</option>
+                  {availableCategories.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                {!formData.titleKey && (
+                  <p className="text-xs text-amber-600 mt-1">Please select a service title first</p>
+                )}
+              </div>
             </div>
+
+            {/* Category Description Box */}
+            {formData.categoryDescription && (
+              <div className="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                <div className="flex items-start gap-2">
+                  <span className="text-blue-500 text-lg">ℹ️</span>
+                  <div>
+                    <p className="text-sm font-medium text-blue-800">About this service:</p>
+                    <p className="text-sm text-blue-700">{formData.categoryDescription}</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Pricing with Auto Discount */}
+          {/* Main Description */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+              Service Description *
+            </h3>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows="4"
+              placeholder="Write a detailed description of what this service offers, what customers can expect, and how it will benefit them..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+            <p className="text-xs text-gray-400 mt-1">This will be shown on the service page</p>
+          </div>
+
+          {/* Pricing */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">
               Pricing
@@ -333,9 +467,8 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
                   value={formData.mrpPrice}
                   onChange={handleChange}
                   placeholder="₹49,999"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
-                <p className="text-xs text-gray-400 mt-1">Original price before discount</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Selling Price *</label>
@@ -344,24 +477,33 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
                   value={formData.price}
                   onChange={handleChange}
                   placeholder="₹24,999"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
-                <p className="text-xs text-gray-400 mt-1">Final price after discount</p>
               </div>
             </div>
             
-            {/* Auto Discount Display */}
             {autoDiscount > 0 && (
               <div className="mt-3 p-3 bg-green-50 rounded-xl border border-green-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-green-700">Auto Discount Applied:</span>
+                  <span className="text-sm font-medium text-green-700">Discount Applied:</span>
                   <span className="text-lg font-bold text-green-600">{autoDiscount}% OFF</span>
-                </div>
-                <div className="mt-1 text-xs text-green-600">
-                  You save ₹{(parseFloat(formData.mrpPrice?.replace(/[^0-9.-]+/g, "") || 0) - parseFloat(formData.price?.replace(/[^0-9.-]+/g, "") || 0)).toLocaleString()}
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Duration */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+              Duration
+            </h3>
+            <input
+              name="duration"
+              value={formData.duration}
+              onChange={handleChange}
+              placeholder="e.g., 60 minutes"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
           </div>
 
           {/* Visual Settings */}
@@ -376,7 +518,7 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
                   name="icon"
                   value={formData.icon}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   {iconOptions.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
@@ -389,7 +531,7 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
                   name="iconColor"
                   value={formData.iconColor}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   {iconColorOptions.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -397,12 +539,12 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gradient Color</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Gradient</label>
                 <select
                   name="gradientKey"
                   value={formData.gradientKey}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   {gradientOptions.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -415,13 +557,13 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
           {/* Image Upload */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">
-              Service Image
+              Service Image *
             </h3>
             <input
               type="file"
               accept="image/*"
               onChange={handleImageSelect}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
             {(imagePreview || formData.image) && (
               <div className="relative w-40 h-40 mt-4">
@@ -452,16 +594,18 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
                   type="text"
                   value={item}
                   onChange={(e) => handleArrayItemChange("benefits", index, e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-xl"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder={`Benefit ${index + 1}`}
                 />
-                <button
-                  type="button"
-                  onClick={() => removeArrayItem("benefits", index)}
-                  className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
-                >
-                  <HiOutlineTrash className="w-5 h-5" />
-                </button>
+                {formData.benefits.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeArrayItem("benefits", index)}
+                    className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
+                  >
+                    <HiOutlineTrash className="w-5 h-5" />
+                  </button>
+                )}
               </div>
             ))}
             <button
@@ -485,9 +629,9 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
                   name="isActive"
                   checked={formData.isActive}
                   onChange={handleChange}
-                  className="w-4 h-4"
+                  className="w-4 h-4 rounded border-gray-300 focus:ring-purple-500"
                 />
-                <span className="text-sm text-gray-700">Active (Visible on website)</span>
+                <span className="text-sm text-gray-700">Active</span>
               </label>
               <label className="flex items-center gap-2">
                 <input
@@ -495,19 +639,46 @@ const ServiceFormModal = ({ isOpen, onClose, editingService, onCreate, onUpdate 
                   name="featured"
                   checked={formData.featured}
                   onChange={handleChange}
-                  className="w-4 h-4"
+                  className="w-4 h-4 rounded border-gray-300 focus:ring-purple-500"
                 />
                 <span className="text-sm text-gray-700">Featured</span>
               </label>
             </div>
           </div>
 
+          {/* Symbol Type */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+              Symbol Type
+            </h3>
+            <select
+              name="symbolType"
+              value={formData.symbolType}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              {symbolTypeOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Buttons */}
           <div className="flex gap-3 pt-4 border-t border-gray-200">
-            <button onClick={onClose} className="flex-1 px-4 py-2 border border-gray-300 rounded-xl text-gray-600 hover:bg-gray-50 transition">
+            <button 
+              onClick={() => {
+                onClose();
+                resetForm();
+              }} 
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-xl text-gray-600 hover:bg-gray-50 transition"
+            >
               Cancel
             </button>
-            <button onClick={handleSubmit} disabled={uploading} className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition disabled:opacity-50">
+            <button 
+              onClick={handleSubmit} 
+              disabled={uploading} 
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition disabled:opacity-50"
+            >
               {uploading ? "Saving..." : (editingService ? "Update Service" : "Create Service")}
             </button>
           </div>
