@@ -173,7 +173,7 @@ export default function AdminLogin() {
                     setEmail(e.target.value);
                     if (err) setErr('');
                   }}
-                  placeholder="admin@astroplanet.com"
+                  placeholder="Enter email id"
                   required
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-orange-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
                   disabled={loading}
@@ -261,12 +261,7 @@ export default function AdminLogin() {
                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                 <span>Default Admin Credentials:</span>
               </div>
-              <div className="mt-2 p-3 bg-orange-50 rounded-lg">
-                <code className="text-xs text-gray-700">
-                  Email: admin@astroplanet.com<br />
-                  Password: ashtro#admin@123
-                </code>
-              </div>
+              
             </div>
 
             {/* Back to Home */}
