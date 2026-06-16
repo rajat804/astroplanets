@@ -13,11 +13,12 @@ import {
   Linkedin,
   CheckCircle,
   AlertCircle,
-  Star
+  Star,
 } from "lucide-react";
 
-import SocialMediaSection from "../components/SocialMediaSection";
+// import SocialMediaSection from "../components/SocialMediaSection";
 import BookConsultationButton from "../components/common/BookConsultationButton";
+import { FaYoutube } from "react-icons/fa";
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -116,12 +117,12 @@ const ContactPage = () => {
       url: "https://www.instagram.com/astroplanets_destiny/",
       color: "hover:bg-gradient-to-r hover:from-pink-500 hover:to-purple-600"
     },
-    // {
-    //   icon: <Twitter className="w-6 h-6" />,
-    //   name: "Twitter",
-    //   url: "https://twitter.com/astroplanets",
-    //   color: "hover:bg-sky-500"
-    // },
+    {
+      icon: <FaYoutube className="w-6 h-6" />,
+      name: "Youtube",
+      url: "https://youtube.com/astroplanets",
+      color: "hover:bg-red-800"
+    },
     // {
     //   icon: <Linkedin className="w-6 h-6" />,
     //   name: "LinkedIn",
@@ -350,7 +351,7 @@ const ContactPage = () => {
         </div>
       </section>
 
-      <SocialMediaSection />
+      {/* <SocialMediaSection /> */}
 
       {/* Let's Connect Section with Social Media */}
       <section className="py-20 px-6 text-center bg-gradient-to-r from-red-600 to-red-700 text-white">
