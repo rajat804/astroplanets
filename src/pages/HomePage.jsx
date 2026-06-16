@@ -10,6 +10,8 @@ import Testimonials from "../components/home/Testimonials";
 import FAQ from "../components/home/FAQ";
 import BlogPreview from "../components/home/BlogPreview";
 import VastuCalendar from "../components/VastuCalendar";
+import SocialContentDisplay from "../components/home/SocialContentDisplay";
+import AstrologyPage from "./Kundli";
 // import SectionDivider from "../components/SectionDivider";
 import PlanetSigns from "../components/home/PlanetSigns";
 
@@ -21,6 +23,7 @@ export default function HomePage() {
 
       {/* Planet Signs Section - Add this right after Hero */}
       <PlanetSigns />
+      <AstrologyPage />
       <Stats />
       <div className="h-4 bg-gradient-to-b from-white/0 to-white"></div>
       <VastuCalendar />
@@ -31,6 +34,7 @@ export default function HomePage() {
       <Testimonials />
       <FAQ />
       <BlogPreview />
+      <SocialContentDisplay />
     </div>
   );
 }
