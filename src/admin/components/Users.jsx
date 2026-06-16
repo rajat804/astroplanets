@@ -1,3 +1,5 @@
+// src/admin/components/Users.jsx
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,39 +12,63 @@ const Users = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [meetLink, setMeetLink] = useState("");
+  const [stats, setStats] = useState({
+    total: 0,
+    uniqueStudents: 0,
+    totalRevenue: 0,
+    meetLinksSet: 0
+  });
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-  // FETCH COURSE PURCHASES (Success Payments)
+  // FETCH COURSE PURCHASES (Admin Endpoint - No Token)
   const fetchCoursePurchases = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/coursepayment/success-users`);
+      const response = await axios.get(`${API_URL}/coursepayment/admin/success-users`);
+      
+      console.log("Admin Course Purchases Response:", response.data);
+      
       if (response.data.success) {
         setCourseUsers(response.data.users);
+        if (response.data.stats) {
+          setStats(response.data.stats);
+        }
+      } else {
+        toast.error(response.data.message || 'Failed to fetch course purchases');
       }
     } catch (error) {
       console.log("FETCH COURSE USERS ERROR =>", error);
+      toast.error("Failed to fetch course purchases");
     } finally {
       setLoading(false);
     }
   };
 
-  // UPDATE COURSE MEET LINK
+  // UPDATE COURSE MEET LINK (Admin Endpoint - No Token)
   const updateCourseMeetLink = async () => {
+    if (!meetLink.trim()) {
+      alert("Please enter a valid Meet link");
+      return;
+    }
+
     try {
       const response = await axios.put(
-        `${API_URL}/coursepayment/update-meet-link/${selectedItem._id}`,
-        { meetLink }
+        `${API_URL}/coursepayment/admin/update-meet-link/${selectedItem._id}`,
+        { meetLink: meetLink.trim() }
       );
+      
       if (response.data.success) {
-        alert("Meet link updated successfully");
+        alert("Meet link updated successfully!");
         setShowModal(false);
-        fetchCoursePurchases();
+        setMeetLink("");
+        fetchCoursePurchases(); // Refresh the list
+      } else {
+        alert(response.data.message || "Failed to update meet link");
       }
     } catch (error) {
       console.log("UPDATE COURSE LINK ERROR =>", error);
-      alert("Failed to update meet link");
+      alert(error.response?.data?.message || "Failed to update meet link");
     }
   };
 
@@ -55,32 +81,32 @@ const Users = () => {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-          Course Purchases
+          Course Purchases Management
         </h1>
-        <p className="text-gray-500 mt-1">Manage all course enrollments and meet links</p>
+        <p className="text-gray-500 mt-1">Manage all course enrollments and meet links for students</p>
       </div>
 
-      {/* Stats */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-xl p-4 shadow-lg border border-purple-100">
-          <p className="text-2xl font-bold text-gray-800">{courseUsers.length}</p>
+          <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
           <p className="text-sm text-gray-500">Total Enrollments</p>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-lg border border-green-100">
           <p className="text-2xl font-bold text-green-600">
-            {courseUsers.reduce((sum, u) => sum + (u.amount || 0), 0).toLocaleString()}
+            ₹{stats.totalRevenue?.toLocaleString() || 0}
           </p>
           <p className="text-sm text-gray-500">Total Revenue</p>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-lg border border-blue-100">
           <p className="text-2xl font-bold text-blue-600">
-            {new Set(courseUsers.map(u => u.userEmail)).size}
+            {stats.uniqueStudents || 0}
           </p>
           <p className="text-sm text-gray-500">Unique Students</p>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-lg border border-yellow-100">
           <p className="text-2xl font-bold text-yellow-600">
-            {courseUsers.filter(u => u.meetLink).length}
+            {stats.meetLinksSet || 0}
           </p>
           <p className="text-sm text-gray-500">Meet Links Set</p>
         </div>
@@ -96,7 +122,7 @@ const Users = () => {
           <table className="w-full">
             <thead className="bg-gradient-to-r from-purple-50 to-pink-50">
               <tr className="text-left text-sm text-gray-600">
-                <th className="px-6 py-4">User</th>
+                <th className="px-6 py-4">Student</th>
                 <th className="px-6 py-4">Email</th>
                 <th className="px-6 py-4">Course</th>
                 <th className="px-6 py-4">Purchased On</th>
@@ -109,8 +135,11 @@ const Users = () => {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
-                    <div className="flex justify-center"><div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div></div>
+                  <td colSpan="8" className="px-6 py-12 text-center">
+                    <div className="flex justify-center">
+                      <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <p className="mt-2 text-gray-500">Loading enrollments...</p>
                   </td>
                 </tr>
               ) : courseUsers.length === 0 ? (
@@ -125,21 +154,40 @@ const Users = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                          {u.userName?.charAt(0)?.toUpperCase() || "U"}
+                          {u.userName?.charAt(0)?.toUpperCase() || "S"}
                         </div>
-                        <span className="font-medium text-gray-800">{u.userName}</span>
+                        <div>
+                          <span className="font-medium text-gray-800">{u.userName || "Student"}</span>
+                          {u.userPhone && (
+                            <p className="text-xs text-gray-400 flex items-center gap-1">
+                              <HiOutlinePhone className="w-3 h-3" /> {u.userPhone}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                     </td>
-                    <td className="px-6 py-4 text-gray-600">{u.userEmail}</td>
+                    </td>
                     <td className="px-6 py-4">
-                      <span className="font-medium text-gray-800">{u.courseId?.title || "No Course"}</span>
-                      <p className="text-xs text-gray-400">{u.courseId?.level || ""}</p>
+                      <div className="flex items-center gap-1">
+                        <HiOutlineMail className="w-3 h-3 text-gray-400" />
+                        <span className="text-gray-600">{u.userEmail}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <span className="font-medium text-gray-800">{u.courseId?.title || "Course"}</span>
+                        {u.courseId?.level && (
+                          <p className="text-xs text-purple-500">{u.courseId.level}</p>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-gray-600">
-                      {new Date(u.createdAt).toLocaleDateString()}
+                      <div className="flex items-center gap-1">
+                        <HiOutlineCalendar className="w-3 h-3" />
+                        {new Date(u.createdAt).toLocaleDateString()}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-semibold text-green-600">₹{u.amount || "2,499"}</span>
+                      <span className="font-semibold text-green-600">₹{u.amount || "0"}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="flex items-center gap-1 text-green-600 text-sm">
@@ -205,12 +253,12 @@ const Users = () => {
                       Update Google Meet Link
                     </h2>
                     <p className="text-sm text-white/80 mt-1">
-                      Course Enrollment - {selectedItem.userName}
+                      Course: {selectedItem.courseId?.title || "Course"}
                     </p>
                   </div>
                   <button
                     onClick={() => setShowModal(false)}
-                    className="p-1 hover:bg-white/20 rounded-lg transition"
+                    className="p-1 hover:bg-white/20 rounded-lg transition text-xl"
                   >
                     ✕
                   </button>
@@ -218,33 +266,44 @@ const Users = () => {
               </div>
 
               <div className="p-6">
+                {/* Student Info */}
                 <div className="mb-4 p-3 bg-gray-50 rounded-xl">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                      {selectedItem.userName?.charAt(0)?.toUpperCase() || "U"}
+                      {selectedItem.userName?.charAt(0)?.toUpperCase() || "S"}
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-800">{selectedItem.userName}</p>
+                      <p className="font-semibold text-gray-800">{selectedItem.userName || "Student"}</p>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <HiOutlineMail className="w-3 h-3" />
                         <span>{selectedItem.userEmail}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
-                    <HiOutlinePhone className="w-3 h-3" />
-                    <span>{selectedItem.userPhone || "Not provided"}</span>
-                  </div>
+                  {selectedItem.userPhone && (
+                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
+                      <HiOutlinePhone className="w-3 h-3" />
+                      <span>{selectedItem.userPhone}</span>
+                    </div>
+                  )}
                 </div>
 
+                {/* Course Details */}
                 <div className="mb-4 p-3 bg-purple-50 rounded-xl">
                   <p className="text-sm font-semibold text-purple-700 mb-1">Course Details</p>
-                  <p className="font-medium text-gray-800">{selectedItem.courseId?.title || "No Course"}</p>
-                  <p className="text-sm text-green-600 font-semibold mt-1">
+                  <p className="font-medium text-gray-800">{selectedItem.courseId?.title || "Course"}</p>
+                  {selectedItem.courseId?.level && (
+                    <p className="text-xs text-purple-500 mt-1">Level: {selectedItem.courseId.level}</p>
+                  )}
+                  <p className="text-sm text-green-600 font-semibold mt-2">
                     Amount Paid: ₹{selectedItem.amount}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Purchased: {new Date(selectedItem.createdAt).toLocaleDateString()}
                   </p>
                 </div>
 
+                {/* Meet Link Input */}
                 <div className="mb-5">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Google Meet Link
@@ -261,6 +320,7 @@ const Users = () => {
                   </p>
                 </div>
 
+                {/* Buttons */}
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => setShowModal(false)}
@@ -286,7 +346,6 @@ const Users = () => {
 };
 
 export default Users;
-
 
 
 
