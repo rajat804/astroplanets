@@ -190,9 +190,15 @@ export const adminLogout = () => {
 };
 
 // ==================== ADMIN DASHBOARD APIs ====================
-export const getAdminDashboardStats = async () => {
+export const getAdminDashboardStats = async (year, month) => {
   try {
-    const response = await api.get('/admindashboard/overview-stats');
+    let url = '/admindashboard/overview-stats';
+    const params = new URLSearchParams();
+    if (year) params.append('year', year);
+    if (month) params.append('month', month);
+    if (params.toString()) url += `?${params.toString()}`;
+    
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
@@ -265,6 +271,16 @@ export const getProductStats = async () => {
 // ==================== IMAGE UPLOAD APIs ====================
 export const uploadImage = async (formData) => {
   const response = await api.post('/upload/single', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
+// Upload document (Word file) - ADD THIS NEW FUNCTION
+export const uploadDocument = async (formData) => {
+  const response = await api.post('/upload/document', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -406,47 +422,75 @@ export const getBookingStats = async () => {
   return response.data;
 };
 
-// Social Content APIs
-export const getAllSocialContent = async (type = '', page = 1, limit = 12) => {
-  const params = new URLSearchParams();
-  if (type) params.append('type', type);
-  params.append('page', page);
-  params.append('limit', limit);
-  
-  const response = await api.get(`/social-content?${params.toString()}`);
+// ==================== SOCIAL CONTENT APIs ====================
+// Get all social content (Admin)
+export const getAllSocialContent = async () => {
+  const response = await api.get('/social-content');
   return response.data;
 };
 
+// Get active social content (Public)
+export const getActiveSocialContent = async () => {
+  const response = await api.get('/social-content/active');
+  return response.data;
+};
+
+// Get social content by type (Public)
 export const getSocialContentByType = async (type, page = 1, limit = 12) => {
   const response = await api.get(`/social-content/type/${type}?page=${page}&limit=${limit}`);
   return response.data;
 };
 
+// Get social content by ID
+export const getSocialContentById = async (id) => {
+  const response = await api.get(`/social-content/${id}`);
+  return response.data;
+};
+
+// Create social content (Admin)
 export const createSocialContent = async (data) => {
-  const response = await api.post('/social-content/admin', data);
+  const response = await api.post('/social-content', data);
   return response.data;
 };
 
+// Upload file for social content (Admin)
+export const uploadSocialContentFile = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  const response = await api.post('/social-content/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
+// Update social content (Admin)
 export const updateSocialContent = async (id, data) => {
-  const response = await api.put(`/social-content/admin/${id}`, data);
+  const response = await api.put(`/social-content/${id}`, data);
   return response.data;
 };
 
+// Delete social content (Admin)
 export const deleteSocialContent = async (id) => {
-  const response = await api.delete(`/social-content/admin/${id}`);
+  const response = await api.delete(`/social-content/${id}`);
   return response.data;
 };
 
+// Increment view count (Public)
 export const incrementContentViews = async (id) => {
   const response = await api.put(`/social-content/${id}/view`);
   return response.data;
 };
 
+// Increment like count (Public)
 export const incrementContentLikes = async (id) => {
   const response = await api.put(`/social-content/${id}/like`);
   return response.data;
 };
 
+// ==================== BLOG APIs ====================
 // Blog APIs (Public)
 export const getAllBlogs = async (tag = '', page = 1, limit = 6) => {
   const params = new URLSearchParams();
@@ -499,7 +543,7 @@ export const toggleBlogPublish = async (id) => {
   return response.data;
 };
 
-// Coupon APIs
+// ==================== COUPON APIs ====================
 export const getActiveCoupons = async () => {
   const response = await api.get('/coupons/active');
   return response.data;
