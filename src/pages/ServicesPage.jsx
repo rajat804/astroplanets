@@ -129,14 +129,14 @@ const ServiceCard = ({ service, onBookNow }) => {
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
-        
+
         {/* Icon Badge */}
         <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur rounded-full p-2 shadow-lg">
           <div className={service.iconColor || "text-red-500"}>
             {getIcon(service.icon)}
           </div>
         </div>
-        
+
         {/* Discount Badge */}
         {discountPercent > 0 && (
           <div className="absolute top-3 right-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold shadow-lg">
@@ -165,12 +165,12 @@ const ServiceCard = ({ service, onBookNow }) => {
         <h3 className="text-lg font-bold text-gray-800 mb-1 group-hover:text-red-600 transition line-clamp-2">
           {service.title}
         </h3>
-        
+
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
           <HiOutlineClock className="w-3 h-3" />
           <span>{service.duration || "45-60 min"}</span>
         </div>
-        
+
         <p className="text-gray-600 text-sm mb-3 line-clamp-2">
           {service.description}
         </p>
@@ -243,7 +243,7 @@ const ServicesGrid = ({ onBookNow }) => {
       if (response.data.success && Array.isArray(response.data.services)) {
         setServices(response.data.services);
         setFilteredServices(response.data.services);
-        
+
         // Get unique title keys for filters
         const uniqueKeys = [...new Set(response.data.services.map(s => s.titleKey).filter(Boolean))];
         const categoryList = [
@@ -311,11 +311,10 @@ const ServicesGrid = ({ onBookNow }) => {
             <button
               key={cat.id}
               onClick={() => setSelectedFilter(cat.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                selectedFilter === cat.id
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${selectedFilter === cat.id
                   ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md"
                   : "bg-white text-gray-600 hover:bg-red-50 hover:text-red-600 border border-gray-200"
-              }`}
+                }`}
             >
               <span className="mr-1">{cat.icon}</span>
               {cat.name}
@@ -362,7 +361,7 @@ const PlansSection = ({ onChoosePlan }) => {
       setLoading(true);
       setError(null);
       const response = await axios.get(`${API_URL}/plans`);
-      
+
       if (response.data.success && response.data.plans) {
         setPlans(response.data.plans);
       } else {
@@ -468,7 +467,7 @@ const PlansSection = ({ onChoosePlan }) => {
             const discountPercent = calculateDiscount(plan.mrpPrice, plan.sellingPrice);
             const displayPrice = plan.sellingPrice || plan.price;
             const displayMrp = plan.mrpPrice || plan.originalPrice || displayPrice;
-            
+
             return (
               <motion.div
                 key={plan._id}
@@ -476,11 +475,10 @@ const PlansSection = ({ onChoosePlan }) => {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
                 whileHover={{ y: -6 }}
-                className={`relative rounded-2xl overflow-hidden transition-all duration-300 ${
-                  plan.isPopular 
-                    ? "shadow-2xl ring-2 ring-red-400 ring-offset-2 ring-offset-white" 
+                className={`relative rounded-2xl overflow-hidden transition-all duration-300 ${plan.isPopular
+                    ? "shadow-2xl ring-2 ring-red-400 ring-offset-2 ring-offset-white"
                     : "shadow-lg hover:shadow-xl"
-                } bg-white h-full flex flex-col`}
+                  } bg-white h-full flex flex-col`}
               >
                 {plan.isPopular && (
                   <div className="absolute top-0 right-0 z-10">
@@ -531,11 +529,7 @@ const PlansSection = ({ onChoosePlan }) => {
 
                   <button
                     onClick={() => onChoosePlan(plan)}
-                    className={`w-full py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-[1.02] ${
-                      plan.isPopular
-                        ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg hover:shadow-xl"
-                        : "bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-600 border border-gray-200"
-                    }`}
+                    className="w-full py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-[1.02] bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg hover:shadow-xl"
                   >
                     Choose Plan
                   </button>
@@ -670,9 +664,8 @@ const FAQ = () => {
               >
                 {f.q}
                 <FaChevronDown
-                  className={`transition text-red-500 ${
-                    open === i ? "rotate-180" : "rotate-0"
-                  }`}
+                  className={`transition text-red-500 ${open === i ? "rotate-180" : "rotate-0"
+                    }`}
                 />
               </button>
               <AnimatePresence>
