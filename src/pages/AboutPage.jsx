@@ -40,7 +40,10 @@ const AboutPage = () => {
       const response = await axios.get(`${API_URL}/experts`);
       
       if (response.data.success) {
-        setExperts(response.data.experts);
+        const filteredExperts = response.data.experts.filter(
+        (expert) => expert._id !== "6a0ee095e6d6573232510efb"
+      );
+        setExperts(filteredExperts);
       } else {
         setError("Failed to fetch experts");
       }
