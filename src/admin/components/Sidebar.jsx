@@ -1,7 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiOutlineMenu, HiOutlineLogout } from "react-icons/hi";
-import { FaChartLine, FaBoxOpen, FaBook } from "react-icons/fa";
+import { FaChartLine, FaBoxOpen, FaBook, FaStar } from "react-icons/fa";
 import {
   HiOutlineUserCircle,
   HiOutlineCalendar,
@@ -20,6 +20,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, tab, setTab, logout }) => {
   { key: "plan", label: "Plan Management", icon: <Layers /> },
   { key: "services", label: "Services", icon: <FaBook /> },
   { key: "products", label: "Products", icon: <FaBoxOpen /> },
+  { key: "rashi", label: "Rashi", icon: <FaStar /> },
   { key: "expert", label: "Add Experts", icon: <FaBook /> },
   { key: "course", label: "Add Course", icon: <FaBoxOpen /> },
   { key: "coupons", label: "Coupons", icon: <HiOutlineTicket /> },
