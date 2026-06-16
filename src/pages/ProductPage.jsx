@@ -181,121 +181,59 @@ export default function ShopPage() {
 
   return (
     <div className="min-h-screen bg-offWhite text-gray-800">
-      {/* Shop By Category Section */}
-      <section className="py-16 text-center bg-white">
-        <h2 className="tracking-widest text-sm text-red-600 mb-10 font-semibold">Shop By Category</h2>
-        <div className="flex justify-center gap-12 flex-wrap max-w-6xl mx-auto px-6">
-          {SHOP_CATEGORIES.map((cat) => (
-            <div 
-              key={cat.id} 
-              className="w-28 text-center group cursor-pointer"
-              onClick={() => handleCategoryChange(cat.id)}
-            >
-              <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-3 border-2 border-red-200 group-hover:border-red-500 transition">
-                <img
-                  src={cat.image}
-                  alt={cat.label}
-                  className="w-full h-full object-cover group-hover:scale-110 transition"
-                />
-              </div>
-              <p className="text-xs leading-snug text-gray-700">{cat.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Category Strip */}
-      <div className="bg-gradient-to-r from-red-500 to-red-600 text-white py-3 text-sm font-medium flex justify-center gap-6 flex-wrap overflow-x-auto">
-        {["Top Sellers", "New", "Numerology", "Zodiac", "Planetary", "Citrine", "Rudraksha"].map(
-          (t) => (
-            <span key={t} className="cursor-pointer hover:text-orange-200 transition whitespace-nowrap">
-              {t}
-            </span>
-          )
-        )}
-      </div>
-
-      {/* Trending Section */}
-      <section className="py-20 text-center bg-orange-50/30">
-        <h2 className="text-xl mb-10 text-gray-800">
-          2026 The Most <span className="text-red-600">TRENDING</span>
-        </h2>
-        <div className="flex justify-center gap-12 flex-wrap max-w-6xl mx-auto px-6">
-          {TRENDING.map((t) => (
-            <div key={t.title} className="w-80 group cursor-pointer">
-              <span className="text-xs bg-red-600 text-white px-3 py-1 inline-block mb-2 rounded-full">
-                {t.tag}
-              </span>
-              <div className="h-96 overflow-hidden rounded-2xl shadow-lg">
-                <img
-                  src={t.image}
-                  alt={t.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
-                />
-              </div>
-              <p className="mt-3 text-sm font-semibold text-gray-800">{t.title}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Main Shop Section with Left Sidebar Categories */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
-        {/* Search Bar */}
-        <div className="mb-8">
-          <div className="relative max-w-md mx-auto">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+      {/* Search Bar - TOP of the page */}
+      <div className="bg-white border-b border-orange-100 sticky top-0 z-30 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="relative max-w-2xl mx-auto">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Search products by name, category or type..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-orange-200 bg-white focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
+              className="w-full pl-12 pr-12 py-3 rounded-xl border border-orange-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent focus:bg-white transition"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2"
               >
-                <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                <X className="w-5 h-5 text-gray-400 hover:text-gray-600" />
               </button>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Mobile Category & Filter Toggle Buttons */}
-        <div className="lg:hidden mb-6 flex gap-3">
-          <button
-            onClick={() => setShowMobileCategories(!showMobileCategories)}
-            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-xl font-semibold"
-          >
-            <Grid3x3 size={18} />
-            {showMobileCategories ? "Close Categories" : "Categories"}
-            <ChevronDown size={18} className={`transform transition ${showMobileCategories ? "rotate-180" : ""}`} />
-          </button>
+
+      {/* Main Shop Section with Filters on Left */}
+      <section className="max-w-7xl mx-auto px-6 py-16">
+        {/* Mobile Filter Toggle Button */}
+        <div className="lg:hidden mb-6">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex-1 flex items-center justify-center gap-2 bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-xl font-semibold"
           >
             <Filter size={18} />
-            Filters
+            {showFilters ? "Hide Filters" : "Show Filters"}
             <ChevronDown size={18} className={`transform transition ${showFilters ? "rotate-180" : ""}`} />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_280px] gap-8">
-          {/* LEFT SIDE - Categories (like Courses page) */}
-          <aside className={`space-y-6 ${showMobileCategories ? "block" : "hidden lg:block"}`}>
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
+          {/* LEFT SIDE - Filters */}
+          <aside className={`space-y-6 ${showFilters ? "block" : "hidden lg:block"}`}>
+            {/* Categories Section */}
             <div className="bg-white rounded-2xl shadow-md border border-orange-100 overflow-hidden sticky top-24">
               <div className="p-5 bg-gradient-to-r from-red-50 to-orange-50 border-b border-orange-100">
                 <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2">
                   <Grid3x3 size={18} className="text-red-500" />
-                  Product Categories
+                  Categories
                 </h3>
                 <p className="text-xs text-gray-500 mt-1">Browse by category</p>
               </div>
               
-              <div className="p-3 max-h-[500px] overflow-y-auto">
+              <div className="p-3 max-h-[400px] overflow-y-auto">
                 {sidebarCategories.map((category) => (
                   <button
                     key={category.id}
@@ -323,10 +261,88 @@ export default function ShopPage() {
                 ))}
               </div>
             </div>
+
+            {/* Filters Section */}
+            <div className="bg-white rounded-2xl p-6 shadow-md border border-orange-100 sticky top-24">
+              <h3 className="font-semibold text-lg mb-4 text-gray-800 border-b border-orange-100 pb-2 flex items-center gap-2">
+                <Filter size={18} className="text-red-500" />
+                Filters
+              </h3>
+
+              <div className="space-y-6">
+                <div>
+                  <h4 className="font-semibold mb-3 text-gray-700">Availability</h4>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={inStock} 
+                      onChange={() => setInStock(!inStock)}
+                      className="w-4 h-4 text-red-500 rounded border-orange-300 focus:ring-red-500"
+                    /> 
+                    <span className="text-gray-600">In Stock Only</span>
+                  </label>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-3 text-gray-700">Price Range</h4>
+                  <input
+                    type="range"
+                    min="0"
+                    max="2799"
+                    step="100"
+                    value={price}
+                    onChange={(e) => setPrice(Number(e.target.value))}
+                    className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-red-500"
+                  />
+                  <div className="flex justify-between mt-2 text-xs text-gray-500">
+                    <span>₹0</span>
+                    <span>₹{price}</span>
+                    <span>₹2799</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-3 text-gray-700">Product Type</h4>
+                  {["Rudraksha", "Mala", "Necklace", "Bracelet", "108 Mala", "Rare"].map((t) => (
+                    <label key={t} className="flex items-center gap-2 mb-2 cursor-pointer">
+                      <input
+                        checked={types.includes(t)}
+                        onChange={() => toggle(t, types, setTypes)}
+                        type="checkbox"
+                        className="w-4 h-4 text-red-500 rounded border-orange-300 focus:ring-red-500"
+                      /> 
+                      <span className="text-gray-600">{t}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-3 text-gray-700">Gemstones</h4>
+                  {["Clear Quartz", "Hematite", "Rudraksha", "Citrine"].map((g) => (
+                    <label key={g} className="flex items-center gap-2 mb-2 cursor-pointer">
+                      <input
+                        checked={gems.includes(g)}
+                        onChange={() => toggle(g, gems, setGems)}
+                        type="checkbox"
+                        className="w-4 h-4 text-red-500 rounded border-orange-300 focus:ring-red-500"
+                      /> 
+                      <span className="text-gray-600">{g}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <button 
+                  onClick={clearAllFilters}
+                  className="w-full mt-4 py-2 border border-red-300 text-red-500 rounded-lg hover:bg-red-50 transition font-medium"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            </div>
           </aside>
 
-          {/* CENTER - Products Grid */}
-          <div className="lg:col-span-1">
+          {/* RIGHT SIDE/CENTER - Products Grid */}
+          <div>
             {/* Active Filters Display */}
             {(selectedCategory !== "all" || types.length > 0 || gems.length > 0 || inStock || price < 2799 || searchQuery) && (
               <div className="mb-6 flex flex-wrap items-center gap-2">
@@ -461,86 +477,6 @@ export default function ShopPage() {
               </div>
             )}
           </div>
-
-          {/* RIGHT SIDE - Filters */}
-          <aside className={`space-y-8 text-sm ${showFilters ? "block" : "hidden lg:block"}`}>
-            <div className="bg-white rounded-2xl p-6 shadow-md border border-orange-100 sticky top-24">
-              <h3 className="font-semibold text-lg mb-4 text-gray-800 border-b border-orange-100 pb-2 flex items-center gap-2">
-                <Filter size={18} className="text-red-500" />
-                Filters
-              </h3>
-
-              <div className="space-y-6">
-                <div>
-                  <h4 className="font-semibold mb-3 text-gray-700">Availability</h4>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={inStock} 
-                      onChange={() => setInStock(!inStock)}
-                      className="w-4 h-4 text-red-500 rounded border-orange-300 focus:ring-red-500"
-                    /> 
-                    <span className="text-gray-600">In Stock Only</span>
-                  </label>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold mb-3 text-gray-700">Product Type</h4>
-                  {["Rudraksha", "Mala", "Necklace", "Bracelet", "108 Mala", "Rare"].map((t) => (
-                    <label key={t} className="flex items-center gap-2 mb-2 cursor-pointer">
-                      <input
-                        checked={types.includes(t)}
-                        onChange={() => toggle(t, types, setTypes)}
-                        type="checkbox"
-                        className="w-4 h-4 text-red-500 rounded border-orange-300 focus:ring-red-500"
-                      /> 
-                      <span className="text-gray-600">{t}</span>
-                    </label>
-                  ))}
-                </div>
-
-                <div>
-                  <h4 className="font-semibold mb-3 text-gray-700">Price Range</h4>
-                  <input
-                    type="range"
-                    min="0"
-                    max="2799"
-                    step="100"
-                    value={price}
-                    onChange={(e) => setPrice(Number(e.target.value))}
-                    className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-red-500"
-                  />
-                  <div className="flex justify-between mt-2 text-xs text-gray-500">
-                    <span>₹0</span>
-                    <span>₹{price}</span>
-                    <span>₹2799</span>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold mb-3 text-gray-700">Gemstones</h4>
-                  {["Clear Quartz", "Hematite", "Rudraksha", "Citrine"].map((g) => (
-                    <label key={g} className="flex items-center gap-2 mb-2 cursor-pointer">
-                      <input
-                        checked={gems.includes(g)}
-                        onChange={() => toggle(g, gems, setGems)}
-                        type="checkbox"
-                        className="w-4 h-4 text-red-500 rounded border-orange-300 focus:ring-red-500"
-                      /> 
-                      <span className="text-gray-600">{g}</span>
-                    </label>
-                  ))}
-                </div>
-
-                <button 
-                  onClick={clearAllFilters}
-                  className="w-full mt-4 py-2 border border-red-300 text-red-500 rounded-lg hover:bg-red-50 transition font-medium"
-                >
-                  Clear All Filters
-                </button>
-              </div>
-            </div>
-          </aside>
         </div>
 
         {/* Overlay for mobile filters */}
