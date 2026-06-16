@@ -1,4 +1,5 @@
 // src/pages/CoursesPage.jsx
+
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
@@ -28,6 +29,8 @@ import {
   FaWhatsapp,
   FaUsers,
   FaPercent,
+  FaCalendarAlt,
+  FaClock,
 } from "react-icons/fa";
 import { GiCrystalBall, GiYinYang, GiHouse } from "react-icons/gi";
 import { useAuth } from "../context/AuthContext";
@@ -55,32 +58,15 @@ const CTA = ({ children, className = "", onClick, disabled, ...rest }) => (
 
 /* ---------- Helper Functions for Price Calculation ---------- */
 const calculatePriceDetails = (course) => {
-  // Get selling price (already discounted price from backend)
   const sellingPrice = parseFloat(course.price?.replace(/[^0-9.-]+/g, "") || 0);
-  
-  // Get MRP if available
   const mrp = course.mrpPrice ? parseFloat(course.mrpPrice.replace(/[^0-9.-]+/g, "")) : sellingPrice;
-  
-  // Calculate discount percentage
   const discountPercent = mrp > sellingPrice ? Math.round(((mrp - sellingPrice) / mrp) * 100) : 0;
-  
-  // Get GST percentage
   const gstPercent = course.gstPercentage || 18;
-  
-  // Calculate GST amount
   const gstAmount = (sellingPrice * gstPercent) / 100;
-  
-  // Get extra discount if any
   const extraDiscountPercent = course.extraDiscount || 0;
   const extraDiscountAmount = (sellingPrice * extraDiscountPercent) / 100;
-  
-  // Calculate final price after extra discount
   const priceAfterExtraDiscount = sellingPrice - extraDiscountAmount;
-  
-  // Calculate total price including GST
   const totalPrice = priceAfterExtraDiscount + gstAmount;
-  
-  // Calculate you save amount
   const youSave = mrp - priceAfterExtraDiscount;
   
   return {
@@ -97,13 +83,25 @@ const calculatePriceDetails = (course) => {
   };
 };
 
-/* ---------- PAYMENT MODAL COMPONENT ---------- */
+/* ---------- PAYMENT MODAL COMPONENT WITH SCHEDULE FIELDS ---------- */
 const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [paymentStep, setPaymentStep] = useState("details");
+  const [scheduleData, setScheduleData] = useState({
+    preferredDate: "",
+    preferredTime: "",
+    duration: "60",
+  });
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
   const priceDetails = calculatePriceDetails(course);
+
+  // Get tomorrow's date for min date
+  const getTomorrowDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  };
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -119,6 +117,16 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
     if (!isAuthenticated || !user) {
       toast.error("Please login to continue");
       onClose();
+      return;
+    }
+
+    // ✅ Validate schedule fields
+    if (!scheduleData.preferredDate) {
+      toast.error("Please select a preferred date for the course");
+      return;
+    }
+    if (!scheduleData.preferredTime) {
+      toast.error("Please select a preferred time for the course");
       return;
     }
 
@@ -143,12 +151,17 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
         return;
       }
 
+      // ✅ Include schedule data in order creation
       const orderResponse = await axios.post(`${API_URL}/coursepayment/create-order`, {
         courseId: course._id,
         userId: userId,
         userEmail: user.email,
-        userName: user.fullName,
+        userName: user.fullName || user.name || "User",
+        userPhone: user.phone || "",
         amount: priceDetails.totalPrice,
+        preferredDate: scheduleData.preferredDate,
+        preferredTime: scheduleData.preferredTime,
+        duration: scheduleData.duration,
       });
 
       if (!orderResponse.data.success) {
@@ -169,12 +182,16 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
         order_id: orderId,
         handler: async (response) => {
           try {
+            // ✅ Include schedule data in verification
             const verifyResponse = await axios.post(`${API_URL}/coursepayment/verify-payment`, {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               courseId: course._id,
               userId: userId,
+              preferredDate: scheduleData.preferredDate,
+              preferredTime: scheduleData.preferredTime,
+              duration: scheduleData.duration,
             });
 
             if (verifyResponse.data.success) {
@@ -195,13 +212,15 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
           }
         },
         prefill: {
-          name: user.fullName || "",
+          name: user.fullName || user.name || "",
           email: user.email || "",
           contact: user.phone || "",
         },
         notes: {
           courseId: course._id,
           courseTitle: course.title,
+          preferredDate: scheduleData.preferredDate,
+          preferredTime: scheduleData.preferredTime,
         },
         theme: {
           color: "#dc2626",
@@ -255,6 +274,11 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
             <p className="text-gray-600 mb-4">
               You have successfully enrolled in <strong>{course.title}</strong>
             </p>
+            <div className="bg-gray-50 rounded-xl p-3 mb-4 text-sm text-gray-600">
+              <p><strong>📅 Date:</strong> {new Date(scheduleData.preferredDate).toLocaleDateString()}</p>
+              <p><strong>⏰ Time:</strong> {scheduleData.preferredTime}</p>
+              <p><strong>⏱️ Duration:</strong> {scheduleData.duration} minutes</p>
+            </div>
             <button
               onClick={onClose}
               className="w-full py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition"
@@ -280,10 +304,10 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
           initial={{ scale: 0.9, y: 50 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.9, y: 50 }}
-          className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl"
+          className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="bg-gradient-to-r from-red-500 to-red-600 p-5 text-white">
+          <div className="bg-gradient-to-r from-red-500 to-red-600 p-5 text-white sticky top-0 z-10">
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="text-xl font-bold">Complete Payment</h3>
@@ -297,6 +321,56 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
 
           <div className="p-5 border-b border-gray-100">
             <h4 className="font-semibold text-gray-800 mb-2 line-clamp-1">{course.title}</h4>
+            <p className="text-xs text-gray-500">Select your preferred schedule</p>
+          </div>
+
+          {/* ✅ SCHEDULE SELECTION */}
+          <div className="p-5 border-b border-gray-100">
+            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <FaCalendarAlt className="text-red-500" /> Schedule Preference
+            </h4>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Preferred Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  min={getTomorrowDate()}
+                  value={scheduleData.preferredDate}
+                  onChange={(e) => setScheduleData({ ...scheduleData, preferredDate: e.target.value })}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                />
+                <p className="text-xs text-gray-400 mt-1">Please select a date at least 1 day in advance</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Preferred Time <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="time"
+                  value={scheduleData.preferredTime}
+                  onChange={(e) => setScheduleData({ ...scheduleData, preferredTime: e.target.value })}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Duration <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={scheduleData.duration}
+                  onChange={(e) => setScheduleData({ ...scheduleData, duration: e.target.value })}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                >
+                  <option value="30">30 minutes</option>
+                  <option value="45">45 minutes</option>
+                  <option value="60">1 hour</option>
+                  <option value="90">1.5 hours</option>
+                  <option value="120">2 hours</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div className="p-5 border-b border-gray-100">
@@ -343,7 +417,7 @@ const CoursePaymentModal = ({ isOpen, onClose, course, user, isAuthenticated, on
 
             <button
               onClick={handlePayment}
-              disabled={loading}
+              disabled={loading || !scheduleData.preferredDate || !scheduleData.preferredTime}
               className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
@@ -673,7 +747,7 @@ const CourseCard = ({ course, onViewDetails }) => {
   );
 };
 
-/* ---------- COURSE DETAILS MODAL WITH DISCOUNT TABLE ---------- */
+/* ---------- COURSE DETAILS MODAL ---------- */
 const CourseDetailsModal = ({ course, onClose, user, isAuthenticated }) => {
   const navigate = useNavigate();
   const [showPayment, setShowPayment] = useState(false);
