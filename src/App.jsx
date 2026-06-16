@@ -27,6 +27,7 @@ import BlogDetailPage from "./pages/BlogDetailPage";
 import Profile from "./user/Profile";
 import VastuCalendar from "./components/VastuCalendar";
 import WhatsAppFloatingButton from "./components/WhatsAppFloatingButton";
+import RashiDetail from "./pages/RashiDetail";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -76,7 +77,7 @@ const AppRoutes = () => {
       <Route path="/shop" element={<ShopPage />} />
       <Route path="/blog" element={<BlogPage />} />
       <Route path="/blog/:slug" element={<BlogDetailPage />} />
-
+      <Route path="/rashifal/:slug" element={<RashiDetail />} />
       {/* user route */}
       <Route path="/profile" element={<Profile />} />
  
