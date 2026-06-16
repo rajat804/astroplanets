@@ -3,15 +3,15 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { 
-  HiOutlineClock, 
+import {
+  HiOutlineClock,
   HiOutlineSparkles,
   HiOutlineTag,
   HiOutlineChevronRight,
 } from "react-icons/hi";
-import { 
-  GiCrystalBall, 
-  GiMagicSwirl, 
+import {
+  GiCrystalBall,
+  GiMagicSwirl,
   GiVibratingShield,
   GiStarsStack,
 } from "react-icons/gi";
@@ -67,7 +67,7 @@ const Services = () => {
   const calculateDiscount = (mrpPrice, sellingPrice) => {
     const mrp = extractNumericPrice(mrpPrice);
     const selling = extractNumericPrice(sellingPrice);
-    
+
     if (mrp > 0 && selling > 0 && mrp > selling) {
       return Math.round(((mrp - selling) / mrp) * 100);
     }
@@ -213,7 +213,7 @@ const Services = () => {
       const isSlow = navigator.deviceMemory ? navigator.deviceMemory < 4 : false;
       setIsLowEndDevice(mobile && isSlow);
     };
-    
+
     checkDevice();
     window.addEventListener('resize', checkDevice);
     return () => window.removeEventListener('resize', checkDevice);
@@ -258,7 +258,7 @@ const Services = () => {
   };
 
   const getSymbols = (type) => {
-    switch(type) {
+    switch (type) {
       case 'zodiac':
         return ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"];
       case 'numbers':
@@ -351,11 +351,10 @@ const Services = () => {
           >
             <button
               onClick={() => setActiveFilter("all")}
-              className={`px-4 md:px-6 py-2 md:py-2.5 rounded-full text-sm md:text-base font-medium transition-all duration-300 whitespace-nowrap ${
-                activeFilter === "all"
+              className={`px-4 md:px-6 py-2 md:py-2.5 rounded-full text-sm md:text-base font-medium transition-all duration-300 whitespace-nowrap ${activeFilter === "all"
                   ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
                   : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-              }`}
+                }`}
             >
               All Services
             </button>
@@ -363,11 +362,10 @@ const Services = () => {
               <button
                 key={filter.key}
                 onClick={() => setActiveFilter(filter.key)}
-                className={`px-4 md:px-6 py-2 md:py-2.5 rounded-full text-sm md:text-base font-medium transition-all duration-300 whitespace-nowrap ${
-                  activeFilter === filter.key
+                className={`px-4 md:px-6 py-2 md:py-2.5 rounded-full text-sm md:text-base font-medium transition-all duration-300 whitespace-nowrap ${activeFilter === filter.key
                     ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
                     : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-                }`}
+                  }`}
               >
                 {filter.label.length > 30 ? filter.label.substring(0, 25) + "..." : filter.label}
               </button>
@@ -391,15 +389,15 @@ const Services = () => {
                 const sellingPrice = formatPrice(s.price);
                 const mrpPrice = s.mrpPrice ? formatPrice(s.mrpPrice) : null;
                 const hasDiscount = discountPercent > 0 && mrpPrice && mrpPrice !== sellingPrice;
-                
+
                 return (
                   <motion.article
                     key={s._id}
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.2 }}
-                    transition={{ 
-                      duration: 0.4, 
+                    transition={{
+                      duration: 0.4,
                       delay: isLowEndDevice ? 0 : i * 0.08,
                     }}
                     whileHover={!isMobile ? { y: -8 } : {}}
@@ -410,7 +408,7 @@ const Services = () => {
                     {!isMobile && (
                       <div className={`absolute -inset-0.5 bg-gradient-to-r from-red-500 to-purple-500 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl ${isHovered ? 'opacity-30' : ''}`} />
                     )}
-                    
+
                     <div className={`relative bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-orange-100 bg-gradient-to-br ${gradientClass}`}>
                       {/* Image Section */}
                       <div className="relative h-44 md:h-52 overflow-hidden">
@@ -421,7 +419,7 @@ const Services = () => {
                           loading="lazy"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                        
+
                         <div className="absolute left-3 md:left-4 top-3 md:top-4 bg-white/90 backdrop-blur px-2 md:px-3 py-1 rounded-lg md:rounded-xl text-[10px] md:text-xs font-semibold shadow-lg">
                           ✨ {s.titleKey?.charAt(0).toUpperCase() + s.titleKey?.slice(1) || "Expert"} Session
                         </div>
@@ -455,7 +453,7 @@ const Services = () => {
                         <h4 className={`text-base md:text-xl font-semibold text-gray-900 transition-colors duration-300 ${isHovered && !isMobile ? 'text-red-600' : ''}`}>
                           {s.title}
                         </h4>
-                        
+
                         <p className="text-gray-600 text-xs md:text-sm leading-relaxed line-clamp-2">
                           {s.description}
                         </p>
@@ -510,7 +508,10 @@ const Services = () => {
                         <div className="flex gap-2 md:gap-3 mt-3 md:mt-4">
                           <button
                             onClick={() => handleBookNow(s)}
-                            className="flex-1 px-2 md:px-4 py-1.5 md:py-2.5 rounded-lg md:rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 text-[10px] md:text-sm"
+                            className="flex-1 px-2 md:px-4 py-1.5 md:py-2.5 rounded-lg md:rounded-xl 
+    bg-gradient-to-r from-red-500 to-red-600 
+    hover:from-red-600 hover:to-red-700 
+    text-white font-semibold transition-all duration-300 text-[10px] md:text-sm shadow-md"
                           >
                             Book Now
                           </button>
@@ -531,13 +532,12 @@ const Services = () => {
                                   {symbols.slice(0, 12).map((symbol, idx) => (
                                     <span
                                       key={`${s.symbolType}-${idx}`}
-                                      className={`text-[8px] md:text-xs ${
-                                        s.symbolType === 'zodiac' 
-                                          ? 'text-purple-400' 
+                                      className={`text-[8px] md:text-xs ${s.symbolType === 'zodiac'
+                                          ? 'text-purple-400'
                                           : s.symbolType === 'numbers'
-                                          ? 'text-blue-400 font-mono'
-                                          : 'text-green-400'
-                                      } transition-colors`}
+                                            ? 'text-blue-400 font-mono'
+                                            : 'text-green-400'
+                                        } transition-colors`}
                                     >
                                       {symbol}
                                     </span>
