@@ -1,9 +1,9 @@
 // components/Navbar.jsx
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  HiOutlineMenu, 
-  HiOutlineX, 
+import {
+  HiOutlineMenu,
+  HiOutlineX,
   HiOutlineShoppingCart,
   HiOutlineUser,
   HiOutlineLogout,
@@ -81,10 +81,10 @@ const Navbar = () => {
           <div className="flex justify-between items-center py-4 md:py-5">
             {/* Logo - Larger size */}
             <Link to="/" className="flex items-center flex-shrink-0">
-              <img 
-                src={assets.logo} 
-                className="h-14 sm:h-16 md:h-20 lg:h-24 w-auto object-contain drop-shadow-lg" 
-                alt="Logo" 
+              <img
+                src={assets.logo}
+                className="h-14 sm:h-16 md:h-20 lg:h-24 w-auto object-contain drop-shadow-lg"
+                alt="Logo"
               />
             </Link>
 
@@ -105,7 +105,7 @@ const Navbar = () => {
             {/* Right side */}
             <div className="flex items-center gap-3 md:gap-4">
               {/* Cart Button */}
-              <button 
+              <button
                 onClick={() => setCartDrawerOpen(true)}
                 className="hidden sm:block p-2 rounded-md hover:bg-white/10 transition relative"
               >
@@ -123,13 +123,13 @@ const Navbar = () => {
                   <div className="relative user-menu">
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold px-5 py-2.5 rounded-lg shadow-md hover:bg-white/20 transition text-sm md:text-base"
+                      className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 border border-red-500 text-white font-semibold px-5 py-2.5 rounded-lg shadow-md hover:from-red-700 hover:to-red-800 transition text-sm md:text-base"
                     >
                       <HiOutlineUserCircle className="w-5 h-5 md:w-6 md:h-6" />
                       <span className="hidden sm:inline">{getUserDisplayName()}</span>
                       <HiOutlineChevronDown className={`w-4 h-4 md:w-5 md:h-5 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
-                    
+
                     {/* User Dropdown Menu */}
                     <AnimatePresence>
                       {userMenuOpen && (
@@ -137,34 +137,41 @@ const Navbar = () => {
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
-                          className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden z-50"
+                          className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-red-200 overflow-hidden z-50"
                         >
-                          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-                            <p className="text-sm font-semibold text-gray-800 truncate">{user?.fullName}</p>
-                            <p className="text-xs text-gray-500 mt-1 truncate">{user?.email}</p>
+                          {/* ✅ FULL RED THEME HEADER */}
+                          <div className="px-4 py-3 border-b border-red-200 bg-gradient-to-r from-red-600 to-red-700">
+                            <p className="text-sm font-semibold text-white truncate">{user?.fullName}</p>
+                            <p className="text-xs text-red-100 mt-1 truncate">{user?.email}</p>
                           </div>
+
                           <div className="py-1">
+                            {/* ✅ RED THEME HOVER - My Profile */}
                             <Link
                               to="/profile"
                               onClick={() => setUserMenuOpen(false)}
-                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-green-50 hover:text-green-600 transition"
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition"
                             >
-                              <HiOutlineUser className="w-4 h-4" />
+                              <HiOutlineUser className="w-4 h-4 text-red-500" />
                               My Profile
                             </Link>
+
+                            {/* ✅ RED THEME HOVER - My Bookings */}
                             <Link
                               to="/my-bookings"
                               onClick={() => setUserMenuOpen(false)}
-                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-green-50 hover:text-green-600 transition"
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition"
                             >
-                              <HiOutlineShoppingCart className="w-4 h-4" />
+                              <HiOutlineShoppingCart className="w-4 h-4 text-red-500" />
                               My Bookings
                             </Link>
+
+                            {/* ✅ RED THEME - Logout */}
                             <button
                               onClick={handleLogout}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition border-t border-gray-100 mt-1"
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition border-t border-red-100 mt-1 font-semibold"
                             >
-                              <HiOutlineLogout className="w-4 h-4" />
+                              <HiOutlineLogout className="w-4 h-4 text-red-500" />
                               Logout
                             </button>
                           </div>
@@ -214,7 +221,7 @@ const Navbar = () => {
                     {link.name}
                   </Link>
                 ))}
-                
+
                 {/* Cart in mobile menu */}
                 <button
                   onClick={() => {
@@ -230,7 +237,7 @@ const Navbar = () => {
                     </span>
                   )}
                 </button>
-                
+
                 {/* User Info in Mobile Menu */}
                 {isAuthenticated && user && (
                   <div className="pt-3 pb-2 border-t border-green-700/30 mt-2">
@@ -259,7 +266,7 @@ const Navbar = () => {
                     </Link>
                   </div>
                 )}
-                
+
                 <div className="pt-3">
                   {isAuthenticated ? (
                     <button
@@ -278,7 +285,7 @@ const Navbar = () => {
           )}
         </AnimatePresence>
       </header>
-      
+
       <CartDrawer isOpen={cartDrawerOpen} onClose={() => setCartDrawerOpen(false)} />
     </>
   );
