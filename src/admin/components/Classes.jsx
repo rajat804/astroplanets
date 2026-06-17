@@ -10,13 +10,14 @@ import {
   FaCalendarCheck, FaUserTie, FaBookOpen, FaChartLine,
   FaSpinner, FaArrowLeft, FaArrowRight, FaUser,
   FaPhone, FaEnvelope, FaRupeeSign, FaInfoCircle,
-  FaCalendarDay, FaCalendarWeek, FaSync, FaClock as FaClockIcon
+  FaCalendarDay, FaCalendarWeek, FaSync, FaClock as FaClockIcon,
+  FaCalendar
 } from "react-icons/fa";
 import { HiOutlineSearch } from "react-icons/hi";
 import { toast, Toaster } from "react-hot-toast";
 
 const Schedule = () => {
-  const [activeTab, setActiveTab] = useState("today");
+  const [activeTab, setActiveTab] = useState("dateview");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -65,21 +66,56 @@ const Schedule = () => {
       
       if (isNaN(classDate.getTime())) return 'scheduled';
       
-      // If payment is cancelled
       if (paymentStatus === 'cancelled') return 'cancelled';
-      
-      // If payment is completed/success
       if (paymentStatus === 'completed' || paymentStatus === 'success') return 'completed';
       
-      // Calculate difference in days
       const diffDays = (classDate - now) / (1000 * 60 * 60 * 24);
       
       if (diffDays > 1) return 'upcoming';
       if (diffDays >= -1 && diffDays <= 1) return 'ongoing';
       return 'completed';
     } catch (error) {
-      console.error("Date parse error:", error);
       return 'scheduled';
+    }
+  };
+
+  // ==================== ✅ FIXED: Convert any date to YYYY-MM-DD ====================
+  const toDateString = (dateValue) => {
+    if (!dateValue) return null;
+    
+    try {
+      let d;
+      
+      if (typeof dateValue === 'string') {
+        if (dateValue.includes('-') && dateValue.length === 10) {
+          d = new Date(dateValue + 'T00:00:00');
+        } else if (dateValue.includes('T')) {
+          d = new Date(dateValue);
+        } else {
+          d = new Date(dateValue);
+        }
+      } else if (dateValue instanceof Date) {
+        d = dateValue;
+      } else if (typeof dateValue === 'number') {
+        d = new Date(dateValue);
+      } else {
+        d = new Date(dateValue);
+      }
+      
+      if (isNaN(d.getTime())) {
+        console.warn("Invalid date:", dateValue);
+        return null;
+      }
+      
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}`;
+      
+    } catch (error) {
+      console.error("Date conversion error:", error, dateValue);
+      return null;
     }
   };
 
@@ -160,31 +196,16 @@ const Schedule = () => {
     }
   };
 
-  // ==================== ✅ UPDATED: FETCH COURSE PURCHASES ====================
   const fetchCoursePurchases = async () => {
     try {
-      console.log("🟢 Fetching course purchases...");
       const response = await axios.get(`${API_URL}/coursepayment/admin/success-users`);
-      console.log("📥 Course response:", response.data);
-      
       if (response.data.success) {
         const users = response.data.users || [];
-        console.log(`📊 Raw course data: ${users.length} items`);
-        
         const formatted = users.map((u) => {
-          // ✅ USE FIELDS FROM DATABASE
           const preferredDate = u.preferredDate || u.createdAt;
           const preferredTime = u.preferredTime || "12:00 PM";
           const classStatus = u.classStatus || getClassStatusFromDate(preferredDate, u.status);
           const duration = u.duration || "60";
-          
-          console.log(`📘 Course: ${u.courseId?.title || 'Course'}`, {
-            preferredDate: preferredDate,
-            preferredTime: preferredTime,
-            classStatus: classStatus,
-            meetLink: u.meetLink
-          });
-          
           return {
             ...u,
             _type: 'course',
@@ -202,20 +223,11 @@ const Schedule = () => {
             courseId: u.courseId || {}
           };
         });
-        
         setCoursePurchases(formatted);
         console.log("✅ Courses loaded:", formatted.length);
-        if (formatted.length > 0) {
-          console.log("📊 Course data sample:", formatted[0]);
-        }
-      } else {
-        console.warn("⚠️ Course API returned success: false");
-        setCoursePurchases([]);
       }
     } catch (error) {
-      console.error("❌ Fetch courses error:", error);
-      toast.error("Failed to fetch course purchases");
-      setCoursePurchases([]);
+      console.error("Fetch courses error:", error);
     }
   };
 
@@ -466,68 +478,90 @@ const Schedule = () => {
     );
   };
 
-  // ==================== ✅ UPDATED: FILTERS & STATS ====================
+  // ==================== ✅ FIXED: FILTERS & STATS ====================
 
   const applyFilters = () => {
     const all = [...sessionRequests, ...serviceBookings, ...planSubscriptions, ...coursePurchases];
     console.log("📊 Total bookings:", all.length);
-    console.log("📊 Booking types:", {
-      sessions: sessionRequests.length,
-      services: serviceBookings.length,
-      plans: planSubscriptions.length,
-      courses: coursePurchases.length
-    });
-    
-    if (coursePurchases.length > 0) {
-      console.log("📊 Sample course:", coursePurchases[0]);
-    }
     
     setAllBookings(all);
 
-    // ✅ Filter by date
+    // ✅ Helper function to get date string
+    const getDateString = (dateValue) => {
+      if (!dateValue) return null;
+      try {
+        let d;
+        if (typeof dateValue === 'string') {
+          if (dateValue.includes('-') && dateValue.length === 10) {
+            d = new Date(dateValue + 'T00:00:00');
+          } else {
+            d = new Date(dateValue);
+          }
+        } else {
+          d = new Date(dateValue);
+        }
+        if (isNaN(d.getTime())) return null;
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      } catch {
+        return null;
+      }
+    };
+
+    // ✅ DATE VIEW TAB - Show ANY date selected
     let filtered = all.filter(item => {
       const itemDate = item.preferredDate || item.createdAt;
       if (!itemDate) return false;
-      try {
-        const dateStr = new Date(itemDate).toISOString().split('T')[0];
-        return dateStr === selectedDate;
-      } catch {
-        return false;
-      }
+      const dateStr = getDateString(itemDate);
+      return dateStr === selectedDate;
     });
 
     console.log(`📅 Date filter (${selectedDate}): ${filtered.length} items`);
 
-    // ✅ Filter by tab using classStatus
+    // ✅ TODAY TAB - Show only today's data
     const today = new Date().toISOString().split('T')[0];
     
     if (activeTab === 'today') {
-      filtered = filtered.filter(item => {
+      filtered = all.filter(item => {
         const itemDate = item.preferredDate || item.createdAt;
-        return itemDate && new Date(itemDate).toISOString().split('T')[0] === today;
+        if (!itemDate) return false;
+        const dateStr = getDateString(itemDate);
+        return dateStr === today;
       });
       console.log(`📅 Today filter: ${filtered.length} items`);
-    } else if (activeTab === 'upcoming') {
-      // ✅ UPCOMING: Show only future dates (tomorrow and beyond)
-      filtered = filtered.filter(item => {
+    } 
+    // ✅ DATE VIEW TAB - Show selected date data
+    else if (activeTab === 'dateview') {
+      filtered = all.filter(item => {
+        const itemDate = item.preferredDate || item.createdAt;
+        if (!itemDate) return false;
+        const dateStr = getDateString(itemDate);
+        return dateStr === selectedDate;
+      });
+      console.log(`📅 Date View filter (${selectedDate}): ${filtered.length} items`);
+    } 
+    else if (activeTab === 'upcoming') {
+      filtered = all.filter(item => {
         const classStatus = item.classStatus || '';
         const itemDate = item.preferredDate || item.createdAt;
         if (!itemDate) return false;
+        const dateObj = new Date(itemDate);
+        if (isNaN(dateObj.getTime())) return false;
         const now = new Date();
-        const classDate = new Date(itemDate);
-        const diffDays = (classDate - now) / (1000 * 60 * 60 * 24);
-        // ✅ Show if class status is upcoming/scheduled AND date is in future (diffDays > 0)
+        const diffDays = (dateObj - now) / (1000 * 60 * 60 * 24);
         return (classStatus === 'upcoming' || classStatus === 'scheduled') && diffDays > 0;
       });
       console.log(`📅 Upcoming filter: ${filtered.length} items`);
     } else if (activeTab === 'ongoing') {
-      filtered = filtered.filter(item => {
+      filtered = all.filter(item => {
         const classStatus = item.classStatus || '';
         return classStatus === 'ongoing';
       });
       console.log(`📅 Ongoing filter: ${filtered.length} items`);
     } else if (activeTab === 'completed') {
-      filtered = filtered.filter(item => {
+      filtered = all.filter(item => {
         const classStatus = item.classStatus || '';
         return classStatus === 'completed' || classStatus === 'cancelled';
       });
@@ -543,7 +577,6 @@ const Schedule = () => {
         const title = (item.displayTitle || item.title || item.planName || item.serviceTitle || '').toLowerCase();
         return userName.includes(term) || userEmail.includes(term) || title.includes(term);
       });
-      console.log(`🔍 Search filter: ${filtered.length} items`);
     }
 
     setFilteredBookings(filtered);
@@ -552,7 +585,9 @@ const Schedule = () => {
     const todayStr = new Date().toISOString().split('T')[0];
     const todayItems = all.filter(item => {
       const itemDate = item.preferredDate || item.createdAt;
-      return itemDate && new Date(itemDate).toISOString().split('T')[0] === todayStr;
+      if (!itemDate) return false;
+      const dateStr = getDateString(itemDate);
+      return dateStr === todayStr;
     });
 
     const totalRevenue = all.reduce((sum, item) => sum + (item.amount || 0), 0);
@@ -563,14 +598,14 @@ const Schedule = () => {
       todayPlans: todayItems.filter(i => i._type === 'plan').length,
       todayCourses: todayItems.filter(i => i._type === 'course').length,
       totalToday: todayItems.length,
-      // ✅ Upcoming count: future dates only
       upcomingCount: all.filter(i => {
         const classStatus = i.classStatus || '';
         const itemDate = i.preferredDate || i.createdAt;
         if (!itemDate) return false;
+        const dateObj = new Date(itemDate);
+        if (isNaN(dateObj.getTime())) return false;
         const now = new Date();
-        const classDate = new Date(itemDate);
-        const diffDays = (classDate - now) / (1000 * 60 * 60 * 24);
+        const diffDays = (dateObj - now) / (1000 * 60 * 60 * 24);
         return (classStatus === 'upcoming' || classStatus === 'scheduled') && diffDays > 0;
       }).length,
       ongoingCount: all.filter(i => {
@@ -645,8 +680,9 @@ const Schedule = () => {
     }
   }, [activeTab, selectedDate, searchTerm, sessionRequests, serviceBookings, planSubscriptions, coursePurchases, dataLoaded]);
 
-  // TABS with Class Status
+  // ✅ TABS with Date View Tab
   const tabs = [
+    { id: "dateview", label: "📅 Date View", icon: <FaCalendar className="text-sm" /> },
     { id: "today", label: "Today", icon: <FaCalendarDay className="text-sm" /> },
     { id: "upcoming", label: "Upcoming", icon: <FaCalendarWeek className="text-sm" />, count: stats.upcomingCount },
     { id: "ongoing", label: "Ongoing", icon: <FaClockIcon className="text-sm" />, count: stats.ongoingCount },
@@ -763,7 +799,8 @@ const Schedule = () => {
             <FaCalendarAlt className="text-6xl text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 text-lg font-medium">No bookings found</p>
             <p className="text-gray-400 text-sm mt-1">
-              {activeTab === 'today' ? 'No bookings scheduled for today' :
+              {activeTab === 'dateview' ? `No bookings found for ${new Date(selectedDate).toLocaleDateString()}` :
+               activeTab === 'today' ? 'No bookings scheduled for today' :
                activeTab === 'upcoming' ? 'No upcoming bookings found' :
                activeTab === 'ongoing' ? 'No ongoing bookings found' :
                'No completed bookings found'}
