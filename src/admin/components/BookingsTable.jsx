@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiOutlineEye, HiOutlineTrash, HiOutlineVideoCamera } from "react-icons/hi";
-import { FaSync, FaVideo, FaEdit, FaCheckCircle, FaCrown, FaCalendarAlt, FaClock, FaStar, FaMoon, FaSun, FaChartLine, FaTrash } from "react-icons/fa";
+import { FaSync, FaVideo, FaEdit, FaCheckCircle, FaLink, FaCrown, FaCalendarAlt, FaClock, FaStar, FaMoon, FaSun, FaChartLine, FaTrash, FaCalendar, FaClock as FaClockIcon, FaSave, FaTimes } from "react-icons/fa";
 import { HiOutlineCalendar, HiOutlineClock, HiOutlineMail, HiOutlinePhone, HiOutlineUsers, HiOutlineSearch } from "react-icons/hi";
 import { GiCrystalBall } from "react-icons/gi";
 import { toast, Toaster } from "react-hot-toast";
@@ -18,21 +18,25 @@ const Bookings = () => {
   const [savedKundlis, setSavedKundlis] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showStatusModal, setShowStatusModal] = useState(false);
-  const [showPlanStatusModal, setShowPlanStatusModal] = useState(false);
   const [showMeetLinkModal, setShowMeetLinkModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showKundliModal, setShowKundliModal] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
   const [selectedPlanUser, setSelectedPlanUser] = useState(null);
   const [selectedKundli, setSelectedKundli] = useState(null);
-  const [newStatus, setNewStatus] = useState("");
-  const [newPlanStatus, setNewPlanStatus] = useState("");
+  const [selectedScheduleItem, setSelectedScheduleItem] = useState(null);
+  const [scheduleType, setScheduleType] = useState("");
   const [meetLink, setMeetLink] = useState("");
-  const [updatingStatus, setUpdatingStatus] = useState(false);
-  const [updatingPlanStatus, setUpdatingPlanStatus] = useState(false);
   const [expandedBooking, setExpandedBooking] = useState(null);
-  const [expandedTab, setExpandedTab] = useState("details");
+  
+  // Schedule Form Data
+  const [scheduleFormData, setScheduleFormData] = useState({
+    meetLink: "",
+    date: "",
+    time: "",
+    duration: "60",
+    classStatus: ""
+  });
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -74,13 +78,17 @@ const Bookings = () => {
 
   const stats = calculateStats();
 
-  // FETCH SESSION REQUESTS
+  // ==================== FETCH SESSION REQUESTS ====================
   const fetchSessionRequests = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/expert-bookings/all`);
       if (response.data.success) {
-        setSessionRequests(response.data.bookings);
+        const bookings = response.data.bookings.map(b => ({
+          ...b,
+          classStatus: b.classStatus || getClassStatusFromDate(b.preferredDate, b.status)
+        }));
+        setSessionRequests(bookings);
       }
     } catch (error) {
       console.log("FETCH SESSION REQUESTS ERROR =>", error);
@@ -90,13 +98,17 @@ const Bookings = () => {
     }
   };
 
-  // FETCH SERVICE BOOKINGS
+  // ==================== FETCH SERVICE BOOKINGS ====================
   const fetchServiceBookings = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/servicebookings/all`);
       if (response.data.success) {
-        setServiceBookings(response.data.bookings);
+        const bookings = response.data.bookings.map(b => ({
+          ...b,
+          classStatus: b.classStatus || getClassStatusFromDate(b.preferredDate, b.status)
+        }));
+        setServiceBookings(bookings);
       }
     } catch (error) {
       console.log("FETCH SERVICE BOOKINGS ERROR =>", error);
@@ -106,7 +118,7 @@ const Bookings = () => {
     }
   };
 
-  // FETCH PLAN SUBSCRIPTIONS
+  // ==================== FETCH PLAN SUBSCRIPTIONS ====================
   const fetchPlanSubscriptions = async () => {
     try {
       setLoading(true);
@@ -115,8 +127,12 @@ const Bookings = () => {
       console.log("Plan subscriptions response:", response.data);
 
       if (response.data.success) {
-        setPlanSubscriptions(response.data.subscriptions);
-        console.log(`Loaded ${response.data.subscriptions.length} plan subscriptions`);
+        const subscriptions = response.data.subscriptions.map(s => ({
+          ...s,
+          classStatus: s.classStatus || getClassStatusFromDate(s.preferredDate, s.status)
+        }));
+        setPlanSubscriptions(subscriptions);
+        console.log(`Loaded ${subscriptions.length} plan subscriptions`);
       } else {
         setPlanSubscriptions([]);
       }
@@ -129,12 +145,10 @@ const Bookings = () => {
     }
   };
 
-  // FETCH SAVED KUNDLIS - ADMIN VERSION (NO TOKEN NEEDED)
+  // ==================== FETCH SAVED KUNDLIS ====================
   const fetchSavedKundlis = async () => {
     try {
       setLoading(true);
-      
-      // Admin endpoint - no token required
       const response = await axios.get(`${API_URL}/astrology/admin/all-kundlis`);
 
       console.log("Admin Kundlis response:", response.data);
@@ -156,7 +170,123 @@ const Bookings = () => {
     }
   };
 
-  // DELETE SAVED KUNDLI - ADMIN VERSION
+  // ==================== HELPER: Get Class Status from Date ====================
+  const getClassStatusFromDate = (preferredDate, paymentStatus) => {
+    if (!preferredDate) return 'scheduled';
+    
+    try {
+      const now = new Date();
+      const classDate = new Date(preferredDate);
+      
+      if (isNaN(classDate.getTime())) return 'scheduled';
+      
+      if (paymentStatus === 'cancelled') return 'cancelled';
+      if (paymentStatus === 'completed' || paymentStatus === 'success') return 'completed';
+      
+      const diffDays = (classDate - now) / (1000 * 60 * 60 * 24);
+      
+      if (diffDays > 1) return 'upcoming';
+      if (diffDays >= -1 && diffDays <= 1) return 'ongoing';
+      return 'completed';
+    } catch (error) {
+      return 'scheduled';
+    }
+  };
+
+  // ==================== IS MEET LINK ACTIVE ====================
+  const isMeetLinkActive = (date, time) => {
+    if (!date || !time) return false;
+    try {
+      let scheduledDateTime;
+      if (typeof date === 'string') {
+        let dateStr = date;
+        if (date.includes('T')) {
+          dateStr = date.split('T')[0];
+        }
+        const dateParts = dateStr.split('-');
+        if (dateParts.length === 3) {
+          scheduledDateTime = new Date(
+            parseInt(dateParts[0]),
+            parseInt(dateParts[1]) - 1,
+            parseInt(dateParts[2])
+          );
+        } else {
+          scheduledDateTime = new Date(date);
+        }
+      } else {
+        scheduledDateTime = new Date(date);
+      }
+      
+      if (time && scheduledDateTime) {
+        const timeStr = time.trim();
+        let hours = 0, minutes = 0;
+        const ampmMatch = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+        if (ampmMatch) {
+          hours = parseInt(ampmMatch[1]);
+          minutes = parseInt(ampmMatch[2]);
+          const ampm = ampmMatch[3].toUpperCase();
+          if (ampm === 'PM' && hours !== 12) hours += 12;
+          if (ampm === 'AM' && hours === 12) hours = 0;
+        } else {
+          const timeMatch = timeStr.match(/(\d+):(\d+)/);
+          if (timeMatch) {
+            hours = parseInt(timeMatch[1]);
+            minutes = parseInt(timeMatch[2]);
+          }
+        }
+        scheduledDateTime.setHours(hours, minutes, 0, 0);
+      }
+      
+      const now = new Date();
+      const diffMinutes = (now - scheduledDateTime) / (1000 * 60);
+      return diffMinutes >= -30 && diffMinutes <= 60;
+    } catch (error) {
+      console.error("Date parse error:", error);
+      return false;
+    }
+  };
+
+  // ==================== GET JOIN BUTTON ====================
+  const getJoinButton = (item) => {
+    const hasMeetLink = item.meetLink && item.meetLink.trim() !== "";
+    if (!hasMeetLink) {
+      return <span className="text-xs text-gray-400">No link set</span>;
+    }
+    
+    const dateField = item.preferredDate || item.date;
+    const timeField = item.preferredTime || item.time;
+    if (!dateField || !timeField) {
+      return <span className="text-xs text-amber-600 flex items-center gap-1">
+        <FaClockIcon className="w-3 h-3" /> No schedule set
+      </span>;
+    }
+    
+    const isActive = isMeetLinkActive(dateField, timeField);
+    if (!isActive) {
+      try {
+        const scheduledDateTime = new Date(dateField);
+        const now = new Date();
+        const diffMinutes = (now - scheduledDateTime) / (1000 * 60);
+        if (diffMinutes > 60) {
+          return <span className="text-xs text-red-500 flex items-center gap-1">
+            <FaTimes className="w-3 h-3" /> Link expired
+          </span>;
+        }
+      } catch (e) {}
+      return <span className="text-xs text-amber-600 flex items-center gap-1">
+        <FaClockIcon className="w-3 h-3" /> Active at scheduled time
+      </span>;
+    }
+    
+    return (
+      <a href={item.meetLink} target="_blank" rel="noopener noreferrer"
+         className="inline-flex items-center gap-1 px-3 py-1 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600 transition">
+        <FaVideo className="w-3 h-3" /> Join Now
+      </a>
+    );
+  };
+
+  // ==================== DELETE SAVED KUNDLI ====================
   const deleteSavedKundli = async (chartId) => {
     if (!window.confirm("Are you sure you want to delete this Kundli chart? This action cannot be undone!")) return;
 
@@ -165,7 +295,7 @@ const Bookings = () => {
 
       if (response.data.success) {
         toast.success("Kundli deleted successfully!");
-        fetchSavedKundlis(); // Refresh the list
+        fetchSavedKundlis();
       } else {
         toast.error(response.data.message || 'Failed to delete kundli');
       }
@@ -175,63 +305,7 @@ const Bookings = () => {
     }
   };
 
-  // UPDATE SESSION REQUEST STATUS
-  const updateSessionStatus = async () => {
-    if (!newStatus) {
-      toast.error("Please select a status");
-      return;
-    }
-
-    setUpdatingStatus(true);
-    try {
-      const response = await axios.put(
-        `${API_URL}/expert-bookings/${selectedRequest._id}/status`,
-        { status: newStatus }
-      );
-      if (response.data.success) {
-        toast.success(`Status updated to ${newStatus} successfully!`);
-        setShowStatusModal(false);
-        setSelectedRequest(null);
-        setNewStatus("");
-        fetchSessionRequests();
-      }
-    } catch (error) {
-      console.log("UPDATE STATUS ERROR =>", error);
-      toast.error("Failed to update status");
-    } finally {
-      setUpdatingStatus(false);
-    }
-  };
-
-  // UPDATE PLAN SUBSCRIPTION STATUS
-  const updatePlanStatus = async () => {
-    if (!newPlanStatus) {
-      toast.error("Please select a status");
-      return;
-    }
-
-    setUpdatingPlanStatus(true);
-    try {
-      const response = await axios.put(
-        `${API_URL}/planpayments/update-status/${selectedPlanUser._id}`,
-        { status: newPlanStatus }
-      );
-      if (response.data.success) {
-        toast.success(`Plan status updated to ${newPlanStatus} successfully!`);
-        setShowPlanStatusModal(false);
-        setSelectedPlanUser(null);
-        setNewPlanStatus("");
-        fetchPlanSubscriptions();
-      }
-    } catch (error) {
-      console.log("UPDATE PLAN STATUS ERROR =>", error);
-      toast.error("Failed to update plan status");
-    } finally {
-      setUpdatingPlanStatus(false);
-    }
-  };
-
-  // UPDATE SERVICE MEET LINK
+  // ==================== UPDATE SERVICE MEET LINK ====================
   const updateServiceMeetLink = async () => {
     try {
       const response = await axios.put(
@@ -251,7 +325,7 @@ const Bookings = () => {
     }
   };
 
-  // UPDATE PLAN SUBSCRIPTION MEET LINK
+  // ==================== UPDATE PLAN MEET LINK ====================
   const updatePlanMeetLink = async () => {
     try {
       const response = await axios.put(
@@ -271,7 +345,101 @@ const Bookings = () => {
     }
   };
 
-  // DELETE SESSION REQUEST
+  // ==================== UPDATE SCHEDULE ====================
+  const updateSchedule = async () => {
+    if (!scheduleFormData.meetLink && !scheduleFormData.date && !scheduleFormData.time && !scheduleFormData.classStatus) {
+      toast.error("Please fill at least one field");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const updateData = {};
+      if (scheduleFormData.meetLink) updateData.meetLink = scheduleFormData.meetLink;
+      if (scheduleFormData.date) updateData.preferredDate = scheduleFormData.date;
+      if (scheduleFormData.time) updateData.preferredTime = scheduleFormData.time;
+      if (scheduleFormData.classStatus) updateData.classStatus = scheduleFormData.classStatus;
+
+      let response;
+      const type = scheduleType;
+      const id = selectedScheduleItem?._id;
+      
+      if (type === 'session') {
+        response = await axios.put(
+          `${API_URL}/expert-bookings/admin/update-schedule/${id}`,
+          updateData
+        );
+      } else if (type === 'service') {
+        response = await axios.put(
+          `${API_URL}/servicebookings/admin/update-schedule/${id}`,
+          updateData
+        );
+      } else if (type === 'plan') {
+        response = await axios.put(
+          `${API_URL}/planpayments/admin/update-schedule/${id}`,
+          updateData
+        );
+      }
+
+      if (response?.data?.success) {
+        toast.success("Schedule updated successfully!");
+        setShowScheduleModal(false);
+        resetScheduleForm();
+        if (type === 'session') fetchSessionRequests();
+        else if (type === 'service') fetchServiceBookings();
+        else if (type === 'plan') fetchPlanSubscriptions();
+      } else {
+        toast.error(response?.data?.message || "Failed to update");
+      }
+    } catch (error) {
+      console.error("Update error:", error);
+      toast.error(error.response?.data?.message || "Failed to update schedule");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==================== RESET SCHEDULE FORM ====================
+  const resetScheduleForm = () => {
+    setScheduleFormData({
+      meetLink: "",
+      date: "",
+      time: "",
+      duration: "60",
+      classStatus: ""
+    });
+    setSelectedScheduleItem(null);
+    setScheduleType("");
+  };
+
+  // ==================== OPEN SCHEDULE MODAL ====================
+  const openScheduleModal = (item, type) => {
+    setSelectedScheduleItem(item);
+    setScheduleType(type);
+    
+    let dateStr = "";
+    if (item.preferredDate) {
+      try {
+        const d = new Date(item.preferredDate);
+        if (!isNaN(d.getTime())) {
+          dateStr = d.toISOString().split('T')[0];
+        }
+      } catch (e) {
+        console.error("Date parse error:", e);
+      }
+    }
+    
+    setScheduleFormData({
+      meetLink: item.meetLink || "",
+      date: dateStr,
+      time: item.preferredTime || "",
+      duration: item.duration || "60",
+      classStatus: item.classStatus || "scheduled"
+    });
+    setShowScheduleModal(true);
+  };
+
+  // ==================== DELETE SESSION REQUEST ====================
   const deleteSessionRequest = async (id) => {
     if (!window.confirm("Are you sure you want to delete this session request?")) return;
 
@@ -287,7 +455,7 @@ const Bookings = () => {
     }
   };
 
-  // Get zodiac sign helper
+  // ==================== GET ZODIAC SIGN ====================
   const getZodiacSign = (date, month) => {
     if ((month === 3 && date >= 21) || (month === 4 && date <= 19)) return "Aries ♈";
     if ((month === 4 && date >= 20) || (month === 5 && date <= 20)) return "Taurus ♉";
@@ -301,6 +469,62 @@ const Bookings = () => {
     if ((month === 12 && date >= 22) || (month === 1 && date <= 19)) return "Capricorn ♑";
     if ((month === 1 && date >= 20) || (month === 2 && date <= 18)) return "Aquarius ♒";
     return "Pisces ♓";
+  };
+
+  // ==================== GET CLASS STATUS BADGE ====================
+  const getClassStatusBadge = (classStatus) => {
+    const config = {
+      upcoming: { color: "bg-blue-100 text-blue-700", label: "Upcoming", icon: "📅" },
+      ongoing: { color: "bg-green-100 text-green-700", label: "Ongoing", icon: "🟢" },
+      completed: { color: "bg-gray-100 text-gray-700", label: "Completed", icon: "✅" },
+      cancelled: { color: "bg-red-100 text-red-700", label: "Cancelled", icon: "❌" },
+      scheduled: { color: "bg-yellow-100 text-yellow-700", label: "Scheduled", icon: "⏳" }
+    };
+    const c = config[classStatus] || config.scheduled;
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.color} flex items-center gap-1 w-fit`}>
+        <span>{c.icon}</span>
+        {c.label}
+      </span>
+    );
+  };
+
+  // ==================== GET PAYMENT STATUS BADGE ====================
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      pending: { color: "bg-yellow-100 text-yellow-700", label: "Pending", icon: "⏳" },
+      confirmed: { color: "bg-green-100 text-green-700", label: "Confirmed", icon: "✅" },
+      cancelled: { color: "bg-red-100 text-red-700", label: "Cancelled", icon: "❌" },
+      completed: { color: "bg-blue-100 text-blue-700", label: "Completed", icon: "🎉" },
+      success: { color: "bg-green-100 text-green-700", label: "Success", icon: "✅" },
+      active: { color: "bg-green-100 text-green-700", label: "Active", icon: "✅" },
+      expired: { color: "bg-gray-100 text-gray-700", label: "Expired", icon: "⏰" },
+      inactive: { color: "bg-gray-100 text-gray-700", label: "Inactive", icon: "⏸️" }
+    };
+    const config = statusConfig[status] || statusConfig.pending;
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.color} flex items-center gap-1 w-fit`}>
+        <span>{config.icon}</span>
+        {config.label}
+      </span>
+    );
+  };
+
+  // ==================== GET TYPE BADGE ====================
+  const getTypeBadge = (type) => {
+    const config = {
+      session: { color: "bg-blue-100 text-blue-700", label: "Session", icon: "🎯" },
+      service: { color: "bg-purple-100 text-purple-700", label: "Service", icon: "🔮" },
+      plan: { color: "bg-amber-100 text-amber-700", label: "Plan", icon: "👑" },
+      kundli: { color: "bg-indigo-100 text-indigo-700", label: "Kundli", icon: "⭐" }
+    };
+    const c = config[type] || config.session;
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.color} flex items-center gap-1 w-fit`}>
+        <span>{c.icon}</span>
+        {c.label}
+      </span>
+    );
   };
 
   useEffect(() => {
@@ -322,44 +546,10 @@ const Bookings = () => {
     { id: "plans", label: "Plan Subscriptions", icon: "👑", count: planSubscriptions.filter(p => p.status === 'active').length }
   ];
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      pending: { color: "bg-yellow-100 text-yellow-700", label: "Pending", icon: "⏳" },
-      confirmed: { color: "bg-green-100 text-green-700", label: "Confirmed", icon: "✅" },
-      cancelled: { color: "bg-red-100 text-red-700", label: "Cancelled", icon: "❌" },
-      completed: { color: "bg-blue-100 text-blue-700", label: "Completed", icon: "🎉" },
-      success: { color: "bg-green-100 text-green-700", label: "Success", icon: "✅" },
-      active: { color: "bg-green-100 text-green-700", label: "Active", icon: "✅" },
-      expired: { color: "bg-gray-100 text-gray-700", label: "Expired", icon: "⏰" },
-      inactive: { color: "bg-gray-100 text-gray-700", label: "Inactive", icon: "⏸️" }
-    };
-    const config = statusConfig[status] || statusConfig.pending;
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.color} flex items-center gap-1 w-fit`}>
-        <span>{config.icon}</span>
-        {config.label}
-      </span>
-    );
-  };
-
-  const statusOptions = [
-    { value: "pending", label: "Pending", color: "bg-yellow-500" },
-    { value: "confirmed", label: "Confirmed", color: "bg-green-500" },
-    { value: "cancelled", label: "Cancelled", color: "bg-red-500" },
-    { value: "completed", label: "Completed", color: "bg-blue-500" }
-  ];
-
-  const planStatusOptions = [
-    { value: "active", label: "Active", color: "bg-green-500" },
-    { value: "expired", label: "Expired", color: "bg-gray-500" },
-    { value: "cancelled", label: "Cancelled", color: "bg-red-500" },
-    { value: "inactive", label: "Inactive", color: "bg-gray-500" }
-  ];
-
   const confirmedServiceBookings = serviceBookings.filter(b => b.status === 'confirmed' || b.status === 'success');
   const activePlanSubscriptions = planSubscriptions.filter(p => p.status === 'active');
 
-  // Filter kundlis based on search (now includes user name and email)
+  // Filter kundlis based on search
   const filteredKundlis = savedKundlis.filter(kundli => {
     const kundliData = kundli.kundliData || {};
     const searchLower = searchTerm.toLowerCase();
@@ -410,14 +600,13 @@ const Bookings = () => {
         ))}
       </div>
 
-      {/* ==================== KUNDLI CHARTS TAB (ADMIN VIEW WITH USER INFO) ==================== */}
+      {/* ==================== KUNDLI CHARTS TAB ==================== */}
       {activeTab === "kundlis" && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl shadow-lg border border-purple-100 overflow-hidden"
         >
-          {/* Search Bar */}
           <div className="p-4 border-b border-gray-200">
             <div className="relative">
               <HiOutlineSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -436,6 +625,7 @@ const Bookings = () => {
               <thead className="bg-gradient-to-r from-purple-50 to-pink-50">
                 <tr className="text-left text-sm text-gray-600">
                   <th className="px-6 py-4">#</th>
+                  <th className="px-6 py-4">Type</th>
                   <th className="px-6 py-4">User</th>
                   <th className="px-6 py-4">Birth Details</th>
                   <th className="px-6 py-4">Rashi</th>
@@ -449,14 +639,14 @@ const Bookings = () => {
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
                   <tr>
-                    <td colSpan="9" className="px-6 py-12 text-center">
+                    <td colSpan="10" className="px-6 py-12 text-center">
                       <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
                       <p className="mt-2 text-gray-500">Loading kundlis...</p>
                     </td>
                   </tr>
                 ) : filteredKundlis.length === 0 ? (
                   <tr>
-                    <td colSpan="9" className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan="10" className="px-6 py-12 text-center text-gray-500">
                       {searchTerm ? "No matching kundli charts found" : "No saved kundli charts found"}
                     </td>
                   </tr>
@@ -470,6 +660,7 @@ const Bookings = () => {
                       <React.Fragment key={kundli._id || index}>
                         <tr className="hover:bg-gray-50 transition">
                           <td className="px-6 py-4 text-gray-500">#{index + 1}</td>
+                          <td className="px-6 py-4">{getTypeBadge('kundli')}</td>
                           <td className="px-6 py-4">
                             <div>
                               <div className="font-medium text-gray-800">{kundli.userName || "Unknown User"}</div>
@@ -551,10 +742,9 @@ const Bookings = () => {
                           </td>
                         </tr>
 
-                        {/* Expanded Row for JSON View */}
                         {expandedBooking === kundli._id && (
                           <tr className="bg-purple-50/30">
-                            <td colSpan="9" className="px-6 py-4">
+                            <td colSpan="10" className="px-6 py-4">
                               <div className="bg-gray-900 rounded-lg p-4">
                                 <div className="mb-2 text-white text-xs">
                                   User: {kundli.userName} ({kundli.userEmail})
@@ -576,7 +766,7 @@ const Bookings = () => {
         </motion.div>
       )}
 
-      {/* Session Requests Table */}
+      {/* ==================== SESSIONS TABLE ==================== */}
       {activeTab === "sessions" && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -587,67 +777,82 @@ const Bookings = () => {
             <table className="w-full">
               <thead className="bg-gradient-to-r from-blue-50 to-cyan-50">
                 <tr className="text-left text-sm text-gray-600">
+                  <th className="px-6 py-4">#</th>
+                  <th className="px-6 py-4">Type</th>
                   <th className="px-6 py-4">User</th>
-                  <th className="px-6 py-4">Email</th>
                   <th className="px-6 py-4">Expert</th>
                   <th className="px-6 py-4">Date & Time</th>
-                  <th className="px-6 py-4">Message</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Requested On</th>
+                  <th className="px-6 py-4">Duration</th>
+                  <th className="px-6 py-4">Amount</th>
+                  <th className="px-6 py-4">Payment Status</th>
+                  <th className="px-6 py-4">Class Status</th>
+                  <th className="px-6 py-4">Meet Link</th>
+                  <th className="px-6 py-4">Join</th>
                   <th className="px-6 py-4">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
-                  <tr><td colSpan="8" className="px-6 py-12 text-center"><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div></td></tr>
+                  <tr><td colSpan="12" className="px-6 py-12 text-center"><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div></td></tr>
                 ) : sessionRequests.length === 0 ? (
-                  <tr><td colSpan="8" className="px-6 py-12 text-center text-gray-500">No session requests found</td></tr>
+                  <tr><td colSpan="12" className="px-6 py-12 text-center text-gray-500">No session requests found</td></tr>
                 ) : (
-                  sessionRequests.map((request) => (
+                  sessionRequests.map((request, index) => (
                     <React.Fragment key={request._id}>
                       <tr className="hover:bg-gray-50 transition">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                              {request.userName?.charAt(0)?.toUpperCase() || "U"}
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-800">{request.userName}</span>
-                              <p className="text-xs text-gray-400">{request.userPhone}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-gray-600">{request.userEmail}</td>
+                        <td className="px-6 py-4 text-gray-400 text-sm">#{index + 1}</td>
+                        <td className="px-6 py-4">{getTypeBadge('session')}</td>
                         <td className="px-6 py-4">
                           <div>
-                            <span className="font-medium text-gray-800">{request.expertName}</span>
-                            <p className="text-xs text-gray-400">{request.expertId?.role || "Expert"}</p>
+                            <p className="font-medium text-gray-800 text-sm">{request.userName || "N/A"}</p>
+                            <p className="text-xs text-gray-400 truncate max-w-[120px]">{request.userEmail || "N/A"}</p>
+                            {request.userPhone && (
+                              <p className="text-xs text-gray-400 flex items-center gap-1">
+                                <HiOutlinePhone className="w-2 h-2" /> {request.userPhone}
+                              </p>
+                            )}
                           </div>
                         </td>
+                        <td className="px-6 py-4">{request.expertName || "N/A"}</td>
                         <td className="px-6 py-4">
-                          <div className="flex flex-col gap-1">
-                            <div className="text-xs text-gray-500">{new Date(request.preferredDate).toLocaleDateString()}</div>
-                            <div className="text-xs text-gray-500">{request.preferredTime}</div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-800">{request.preferredDate ? new Date(request.preferredDate).toLocaleDateString() : 'Not set'}</span>
+                            <span className="text-xs text-gray-500 flex items-center gap-1">
+                              <FaClockIcon className="w-2 h-2" /> {request.preferredTime || 'Not set'}
+                            </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <p className="text-sm text-gray-600 max-w-xs truncate" title={request.message}>
-                            {request.message || "No message"}
-                          </p>
-                        </td>
+                        <td className="px-6 py-4">{request.duration || "60"} mins</td>
+                        <td className="px-6 py-4">{request.amount ? `₹${request.amount}` : '-'}</td>
                         <td className="px-6 py-4">{getStatusBadge(request.status)}</td>
-                        <td className="px-6 py-4 text-gray-600">{new Date(request.createdAt).toLocaleDateString()}</td>
+                        <td className="px-6 py-4">{getClassStatusBadge(request.classStatus)}</td>
                         <td className="px-6 py-4">
-                          <div className="flex gap-2">
-                            <button onClick={() => { setSelectedRequest(request); setNewStatus(request.status); setShowStatusModal(true); }} className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition" title="Update Status"><FaSync className="w-4 h-4" /></button>
-                            <button onClick={() => setExpandedBooking(expandedBooking === request._id ? null : request._id)} className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition" title="View Details"><HiOutlineEye className="w-4 h-4" /></button>
-                            <button onClick={() => deleteSessionRequest(request._id)} className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition" title="Delete"><HiOutlineTrash className="w-4 h-4" /></button>
+                          {request.meetLink ? (
+                            <a href={request.meetLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 text-sm flex items-center gap-1">
+                              <FaLink className="w-3 h-3" /> View
+                            </a>
+                          ) : (
+                            <span className="text-gray-400 text-xs">Not set</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">{getJoinButton(request)}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex gap-1 flex-wrap">
+                            <button onClick={() => openScheduleModal(request, 'session')} className="p-2 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition" title="Edit Schedule">
+                              <FaEdit className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => setExpandedBooking(expandedBooking === request._id ? null : request._id)} className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition" title="View Details">
+                              <HiOutlineEye className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => deleteSessionRequest(request._id)} className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition" title="Delete">
+                              <HiOutlineTrash className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
                       {expandedBooking === request._id && (
                         <tr className="bg-blue-50/30">
-                          <td colSpan="8" className="px-6 py-4">
+                          <td colSpan="12" className="px-6 py-4">
                             <div className="space-y-3">
                               <h4 className="font-semibold text-gray-800">Booking Details</h4>
                               <div className="grid grid-cols-2 gap-4">
@@ -660,14 +865,24 @@ const Bookings = () => {
                                 <div>
                                   <p className="text-sm text-gray-500">Session Information</p>
                                   <p className="text-gray-800">Expert: {request.expertName}</p>
-                                  <p className="text-gray-600 text-sm">Date: {new Date(request.preferredDate).toLocaleDateString()}</p>
-                                  <p className="text-gray-600 text-sm">Time: {request.preferredTime}</p>
+                                  <p className="text-gray-600 text-sm">Date: {request.preferredDate ? new Date(request.preferredDate).toLocaleDateString() : 'Not set'}</p>
+                                  <p className="text-gray-600 text-sm">Time: {request.preferredTime || 'Not set'}</p>
+                                  <p className="text-gray-600 text-sm">Duration: {request.duration || '60'} mins</p>
+                                  <p className="text-gray-600 text-sm">Amount: {request.amount ? `₹${request.amount}` : '-'}</p>
                                 </div>
                               </div>
                               {request.message && (
                                 <div>
                                   <p className="text-sm text-gray-500">Message</p>
                                   <p className="text-gray-600">{request.message}</p>
+                                </div>
+                              )}
+                              {request.meetLink && (
+                                <div>
+                                  <p className="text-sm text-gray-500">Meet Link</p>
+                                  <a href={request.meetLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 text-sm">
+                                    {request.meetLink}
+                                  </a>
                                 </div>
                               )}
                             </div>
@@ -683,7 +898,7 @@ const Bookings = () => {
         </motion.div>
       )}
 
-      {/* Service Bookings Table */}
+      {/* ==================== SERVICES TABLE ==================== */}
       {activeTab === "services" && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -694,68 +909,87 @@ const Bookings = () => {
             <table className="w-full">
               <thead className="bg-gradient-to-r from-purple-50 to-pink-50">
                 <tr className="text-left text-sm text-gray-600">
+                  <th className="px-6 py-4">#</th>
+                  <th className="px-6 py-4">Type</th>
                   <th className="px-6 py-4">User</th>
-                  <th className="px-6 py-4">Email</th>
                   <th className="px-6 py-4">Service</th>
                   <th className="px-6 py-4">Date & Time</th>
+                  <th className="px-6 py-4">Duration</th>
                   <th className="px-6 py-4">Amount</th>
+                  <th className="px-6 py-4">Payment Status</th>
+                  <th className="px-6 py-4">Class Status</th>
                   <th className="px-6 py-4">Meet Link</th>
-                  <th className="px-6 py-4">Booked On</th>
+                  <th className="px-6 py-4">Join</th>
                   <th className="px-6 py-4">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
-                  <tr><td colSpan="8" className="px-6 py-12 text-center"><div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div></td></tr>
+                  <tr><td colSpan="12" className="px-6 py-12 text-center"><div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div></td></tr>
                 ) : confirmedServiceBookings.length === 0 ? (
-                  <tr><td colSpan="8" className="px-6 py-12 text-center text-gray-500">No confirmed service bookings found</td></tr>
+                  <tr><td colSpan="12" className="px-6 py-12 text-center text-gray-500">No confirmed service bookings found</td></tr>
                 ) : (
-                  confirmedServiceBookings.map((booking) => (
+                  confirmedServiceBookings.map((booking, index) => (
                     <React.Fragment key={booking._id}>
                       <tr className="hover:bg-gray-50 transition">
+                        <td className="px-6 py-4 text-gray-400 text-sm">#{index + 1}</td>
+                        <td className="px-6 py-4">{getTypeBadge('service')}</td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                              {booking.userName?.charAt(0)?.toUpperCase() || "U"}
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-800">{booking.userName}</span>
-                              <p className="text-xs text-gray-400">{booking.userPhone}</p>
-                            </div>
+                          <div>
+                            <p className="font-medium text-gray-800 text-sm">{booking.userName || "N/A"}</p>
+                            <p className="text-xs text-gray-400 truncate max-w-[120px]">{booking.userEmail || "N/A"}</p>
+                            {booking.userPhone && (
+                              <p className="text-xs text-gray-400 flex items-center gap-1">
+                                <HiOutlinePhone className="w-2 h-2" /> {booking.userPhone}
+                              </p>
+                            )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-gray-600">{booking.userEmail}</td>
                         <td className="px-6 py-4">
-                          <span className="font-medium text-gray-800">{booking.serviceTitle}</span>
-                          <p className="text-xs text-gray-400">{booking.duration || "Consultation"}</p>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-1">
-                            <div className="text-xs">{new Date(booking.preferredDate).toLocaleDateString()}</div>
-                            <div className="text-xs">{booking.preferredTime}</div>
+                          <div>
+                            <p className="font-medium text-gray-800">{booking.serviceTitle || "N/A"}</p>
+                            <p className="text-xs text-gray-400">{booking.serviceTitleKey || "Service"}</p>
                           </div>
                         </td>
-                        <td className="px-6 py-4"><span className="font-semibold text-green-600">₹{booking.amount}</span></td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-800">{booking.preferredDate ? new Date(booking.preferredDate).toLocaleDateString() : 'Not set'}</span>
+                            <span className="text-xs text-gray-500 flex items-center gap-1">
+                              <FaClockIcon className="w-2 h-2" /> {booking.preferredTime || 'Not set'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">{booking.duration || booking.serviceDuration || "60"} mins</td>
+                        <td className="px-6 py-4"><span className="font-semibold text-green-600">₹{booking.amount || 0}</span></td>
+                        <td className="px-6 py-4">{getStatusBadge(booking.status)}</td>
+                        <td className="px-6 py-4">{getClassStatusBadge(booking.classStatus)}</td>
                         <td className="px-6 py-4">
                           {booking.meetLink ? (
-                            <a href={booking.meetLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm">
-                              <FaVideo className="w-3 h-3" /> Join Meeting
+                            <a href={booking.meetLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 text-sm flex items-center gap-1">
+                              <FaLink className="w-3 h-3" /> View
                             </a>
                           ) : (
-                            <span className="text-gray-400 text-sm">Not set</span>
+                            <span className="text-gray-400 text-xs">Not set</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-gray-600">{new Date(booking.createdAt).toLocaleDateString()}</td>
+                        <td className="px-6 py-4">{getJoinButton(booking)}</td>
                         <td className="px-6 py-4">
-                          <div className="flex gap-2">
-                            <button onClick={() => { setSelectedService(booking); setMeetLink(booking.meetLink || ""); setShowMeetLinkModal(true); }} className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition" title="Edit Meet Link"><FaEdit className="w-4 h-4" /></button>
-                            <button onClick={() => setExpandedBooking(expandedBooking === booking._id ? null : booking._id)} className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition" title="View Details"><HiOutlineEye className="w-4 h-4" /></button>
+                          <div className="flex gap-1 flex-wrap">
+                            <button onClick={() => openScheduleModal(booking, 'service')} className="p-2 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition" title="Edit Schedule">
+                              <FaEdit className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => { setSelectedService(booking); setMeetLink(booking.meetLink || ""); setShowMeetLinkModal(true); }} className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition" title="Edit Meet Link">
+                              <FaEdit className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => setExpandedBooking(expandedBooking === booking._id ? null : booking._id)} className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition" title="View Details">
+                              <HiOutlineEye className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
                       {expandedBooking === booking._id && (
                         <tr className="bg-purple-50/30">
-                          <td colSpan="8" className="px-6 py-4">
+                          <td colSpan="12" className="px-6 py-4">
                             <div className="space-y-3">
                               <h4 className="font-semibold text-gray-800">Service Booking Details</h4>
                               <div className="grid grid-cols-2 gap-4">
@@ -769,13 +1003,22 @@ const Bookings = () => {
                                   <p className="text-sm text-gray-500">Service Information</p>
                                   <p className="text-gray-800">Service: {booking.serviceTitle}</p>
                                   <p className="text-gray-600 text-sm">Amount: ₹{booking.amount}</p>
-                                  <p className="text-gray-600 text-sm">Duration: {booking.duration || "Consultation"}</p>
+                                  <p className="text-gray-600 text-sm">Duration: {booking.duration || booking.serviceDuration || "60"} mins</p>
+                                  <p className="text-gray-600 text-sm">Category: {booking.serviceCategory || "N/A"}</p>
                                 </div>
                               </div>
                               {booking.message && (
                                 <div>
                                   <p className="text-sm text-gray-500">Message</p>
                                   <p className="text-gray-600">{booking.message}</p>
+                                </div>
+                              )}
+                              {booking.meetLink && (
+                                <div>
+                                  <p className="text-sm text-gray-500">Meet Link</p>
+                                  <a href={booking.meetLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 text-sm">
+                                    {booking.meetLink}
+                                  </a>
                                 </div>
                               )}
                             </div>
@@ -791,7 +1034,7 @@ const Bookings = () => {
         </motion.div>
       )}
 
-      {/* Plan Subscriptions Table */}
+      {/* ==================== PLANS TABLE ==================== */}
       {activeTab === "plans" && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -802,44 +1045,55 @@ const Bookings = () => {
             <table className="w-full">
               <thead className="bg-gradient-to-r from-amber-50 to-orange-50">
                 <tr className="text-left text-sm text-gray-600">
+                  <th className="px-6 py-4">#</th>
+                  <th className="px-6 py-4">Type</th>
                   <th className="px-6 py-4">User</th>
-                  <th className="px-6 py-4">Email</th>
-                  <th className="px-6 py-4">Phone</th>
                   <th className="px-6 py-4">Plan</th>
+                  <th className="px-6 py-4">Date & Time</th>
                   <th className="px-6 py-4">Amount</th>
                   <th className="px-6 py-4">Duration</th>
-                  <th className="px-6 py-4">Valid Till</th>
                   <th className="px-6 py-4">Sessions</th>
+                  <th className="px-6 py-4">Payment Status</th>
+                  <th className="px-6 py-4">Class Status</th>
                   <th className="px-6 py-4">Meet Link</th>
-                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Join</th>
                   <th className="px-6 py-4">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
-                  <tr><td colSpan="11" className="px-6 py-12 text-center"><div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div></td></tr>
+                  <tr><td colSpan="13" className="px-6 py-12 text-center"><div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div></td></tr>
                 ) : planSubscriptions.length === 0 ? (
-                  <tr><td colSpan="11" className="px-6 py-12 text-center text-gray-500">No plan subscriptions found</td></tr>
+                  <tr><td colSpan="13" className="px-6 py-12 text-center text-gray-500">No plan subscriptions found</td></tr>
                 ) : (
-                  planSubscriptions.map((subscription) => (
+                  planSubscriptions.map((subscription, index) => (
                     <React.Fragment key={subscription._id}>
                       <tr className="hover:bg-gray-50 transition">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                              <FaCrown className="w-4 h-4" />
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-800">{subscription.userName || "User"}</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-gray-600">{subscription.userEmail || "No email"}</td>
-                        <td className="px-6 py-4 text-gray-600">{subscription.userPhone || "No phone"}</td>
+                        <td className="px-6 py-4 text-gray-400 text-sm">#{index + 1}</td>
+                        <td className="px-6 py-4">{getTypeBadge('plan')}</td>
                         <td className="px-6 py-4">
                           <div>
-                            <span className="font-semibold text-amber-600">{subscription.planName}</span>
+                            <p className="font-medium text-gray-800 text-sm">{subscription.userName || "User"}</p>
+                            <p className="text-xs text-gray-400 truncate max-w-[120px]">{subscription.userEmail || "No email"}</p>
+                            {subscription.userPhone && (
+                              <p className="text-xs text-gray-400 flex items-center gap-1">
+                                <HiOutlinePhone className="w-2 h-2" /> {subscription.userPhone}
+                              </p>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="font-semibold text-amber-600">{subscription.planName}</p>
                             <p className="text-xs text-gray-400">{subscription.duration}</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-800">{subscription.preferredDate ? new Date(subscription.preferredDate).toLocaleDateString() : 'Not set'}</span>
+                            <span className="text-xs text-gray-500 flex items-center gap-1">
+                              <FaClockIcon className="w-2 h-2" /> {subscription.preferredTime || 'Not set'}
+                            </span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -850,30 +1104,37 @@ const Bookings = () => {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4">{subscription.durationDays} days</td>
-                        <td className="px-6 py-4">{new Date(subscription.endDate).toLocaleDateString()}</td>
+                        <td className="px-6 py-4">{subscription.durationDays || "N/A"} days</td>
                         <td className="px-6 py-4">{subscription.sessionsIncluded || 0}</td>
+                        <td className="px-6 py-4">{getStatusBadge(subscription.status)}</td>
+                        <td className="px-6 py-4">{getClassStatusBadge(subscription.classStatus)}</td>
                         <td className="px-6 py-4">
                           {subscription.meetLink ? (
-                            <a href={subscription.meetLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm">
-                              <FaVideo className="w-3 h-3" /> Join Meeting
+                            <a href={subscription.meetLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 text-sm flex items-center gap-1">
+                              <FaLink className="w-3 h-3" /> View
                             </a>
                           ) : (
-                            <span className="text-gray-400 text-sm">Not set</span>
+                            <span className="text-gray-400 text-xs">Not set</span>
                           )}
                         </td>
-                        <td className="px-6 py-4">{getStatusBadge(subscription.status)}</td>
+                        <td className="px-6 py-4">{getJoinButton(subscription)}</td>
                         <td className="px-6 py-4">
-                          <div className="flex gap-2">
-                            <button onClick={() => { setSelectedPlanUser(subscription); setNewPlanStatus(subscription.status); setShowPlanStatusModal(true); }} className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition" title="Update Plan Status"><FaSync className="w-4 h-4" /></button>
-                            <button onClick={() => { setSelectedPlanUser(subscription); setMeetLink(subscription.meetLink || ""); setShowMeetLinkModal(true); }} className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition" title="Add/Edit Meeting Link"><HiOutlineVideoCamera className="w-4 h-4" /></button>
-                            <button onClick={() => setExpandedBooking(expandedBooking === subscription._id ? null : subscription._id)} className="p-2 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition" title="View Details"><HiOutlineEye className="w-4 h-4" /></button>
+                          <div className="flex gap-1 flex-wrap">
+                            <button onClick={() => openScheduleModal(subscription, 'plan')} className="p-2 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition" title="Edit Schedule">
+                              <FaEdit className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => { setSelectedPlanUser(subscription); setMeetLink(subscription.meetLink || ""); setShowMeetLinkModal(true); }} className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition" title="Add/Edit Meeting Link">
+                              <HiOutlineVideoCamera className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => setExpandedBooking(expandedBooking === subscription._id ? null : subscription._id)} className="p-2 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition" title="View Details">
+                              <HiOutlineEye className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
                       {expandedBooking === subscription._id && (
                         <tr className="bg-amber-50/30">
-                          <td colSpan="11" className="px-6 py-4">
+                          <td colSpan="13" className="px-6 py-4">
                             <div className="space-y-3">
                               <h4 className="font-semibold text-gray-800">Plan Subscription Details</h4>
                               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -915,6 +1176,14 @@ const Bookings = () => {
                                   <p className="text-gray-600">{subscription.message}</p>
                                 </div>
                               )}
+                              {subscription.meetLink && (
+                                <div>
+                                  <p className="text-sm text-gray-500">Meet Link</p>
+                                  <a href={subscription.meetLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 text-sm">
+                                    {subscription.meetLink}
+                                  </a>
+                                </div>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -928,7 +1197,151 @@ const Bookings = () => {
         </motion.div>
       )}
 
-      {/* Kundli Detail Modal */}
+      {/* ==================== SCHEDULE EDIT MODAL ==================== */}
+      <AnimatePresence>
+        {showScheduleModal && selectedScheduleItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+            onClick={() => setShowScheduleModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 30 }}
+              className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-5 text-white sticky top-0 z-10">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                      <FaEdit className="w-5 h-5" /> Edit Schedule
+                    </h2>
+                    <p className="text-sm text-white/80 mt-1 flex items-center gap-2">
+                      {selectedScheduleItem.userName || "User"} 
+                      {getTypeBadge(scheduleType)}
+                    </p>
+                  </div>
+                  <button onClick={() => setShowScheduleModal(false)} className="p-1 hover:bg-white/20 rounded-lg transition text-2xl">✕</button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {/* Current Info */}
+                <div className="mb-6 grid grid-cols-2 gap-3 p-4 bg-gray-50 rounded-xl">
+                  <div>
+                    <p className="text-xs text-gray-500">User</p>
+                    <p className="font-medium text-gray-800">{selectedScheduleItem.userName || "N/A"}</p>
+                    <p className="text-xs text-gray-400">{selectedScheduleItem.userEmail || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Title</p>
+                    <p className="font-medium text-gray-800">{selectedScheduleItem.planName || selectedScheduleItem.serviceTitle || selectedScheduleItem.expertName || "N/A"}</p>
+                    {selectedScheduleItem.amount > 0 && (
+                      <p className="text-xs text-green-600 font-semibold">₹{selectedScheduleItem.amount}</p>
+                    )}
+                    <p className="text-xs text-gray-400">Payment Status: {getStatusBadge(selectedScheduleItem.status)}</p>
+                    <p className="text-xs text-gray-400">Class Status: {getClassStatusBadge(selectedScheduleItem.classStatus)}</p>
+                  </div>
+                </div>
+
+                {/* Form */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      <FaLink className="inline mr-1" /> Google Meet Link
+                    </label>
+                    <input type="text" value={scheduleFormData.meetLink}
+                      onChange={(e) => setScheduleFormData({ ...scheduleFormData, meetLink: e.target.value })}
+                      placeholder="https://meet.google.com/..."
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                    <p className="text-xs text-gray-400 mt-1">Students can join 30 min before - 1 hour after scheduled time</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        <FaCalendarAlt className="inline mr-1" /> Date
+                      </label>
+                      <input type="date" value={scheduleFormData.date}
+                        onChange={(e) => setScheduleFormData({ ...scheduleFormData, date: e.target.value })}
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        <FaClockIcon className="inline mr-1" /> Time
+                      </label>
+                      <input type="time" value={scheduleFormData.time}
+                        onChange={(e) => setScheduleFormData({ ...scheduleFormData, time: e.target.value })}
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Duration</label>
+                      <select value={scheduleFormData.duration}
+                        onChange={(e) => setScheduleFormData({ ...scheduleFormData, duration: e.target.value })}
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500">
+                        <option value="30">30 minutes</option>
+                        <option value="45">45 minutes</option>
+                        <option value="60">1 hour</option>
+                        <option value="90">1.5 hours</option>
+                        <option value="120">2 hours</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        <FaCheckCircle className="inline mr-1" /> Class Status
+                      </label>
+                      <select value={scheduleFormData.classStatus}
+                        onChange={(e) => setScheduleFormData({ ...scheduleFormData, classStatus: e.target.value })}
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500">
+                        <option value="scheduled">Scheduled</option>
+                        <option value="upcoming">Upcoming</option>
+                        <option value="ongoing">Ongoing</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                      <p className="text-xs text-gray-400 mt-1">This is the class status, not payment status</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Current Schedule Info */}
+                <div className="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                  <p className="text-xs text-blue-700 flex items-center gap-2">
+                    <FaClock className="w-3 h-3" />
+                    <span>Current Schedule: {scheduleFormData.date ? new Date(scheduleFormData.date).toLocaleDateString() : 'Not set'} at {scheduleFormData.time || 'Not set'}</span>
+                  </p>
+                  {scheduleFormData.meetLink && (
+                    <p className="text-xs text-blue-700 mt-1 flex items-center gap-2">
+                      <FaLink className="w-3 h-3" />
+                      <span>Current Link: {scheduleFormData.meetLink}</span>
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+                  <button onClick={() => setShowScheduleModal(false)} className="px-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 transition font-medium">
+                    Cancel
+                  </button>
+                  <button onClick={updateSchedule} disabled={loading}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white transition font-medium flex items-center gap-2 disabled:opacity-50">
+                    <FaSave className="w-4 h-4" />
+                    {loading ? "Saving..." : "Update Schedule"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ==================== KUNDLI DETAIL MODAL ==================== */}
       <AnimatePresence>
         {showKundliModal && selectedKundli && (
           <motion.div
@@ -964,7 +1377,6 @@ const Bookings = () => {
                 </div>
               </div>
               <div className="p-6">
-                {/* Summary Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                   <div className="bg-purple-50 p-3 rounded-xl text-center">
                     <FaMoon className="text-purple-500 mx-auto mb-1" />
@@ -987,8 +1399,6 @@ const Bookings = () => {
                     <p className="font-bold text-sm">{selectedKundli.kundliData?.manglik || "Non-Manglik"}</p>
                   </div>
                 </div>
-
-                {/* Full JSON */}
                 <div className="bg-gray-900 rounded-lg p-4">
                   <h3 className="text-white font-semibold mb-2">Complete Kundli Data</h3>
                   <pre className="text-green-400 text-xs overflow-x-auto max-h-96">
@@ -1001,145 +1411,7 @@ const Bookings = () => {
         )}
       </AnimatePresence>
 
-      {/* Session Status Update Modal */}
-      <AnimatePresence>
-        {showStatusModal && selectedRequest && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowStatusModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 30 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 30 }}
-              className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-5 text-white">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-xl font-bold flex items-center gap-2">
-                      <FaSync className="w-5 h-5" /> Update Session Status
-                    </h2>
-                    <p className="text-sm text-white/80 mt-1">{selectedRequest.userName} - {selectedRequest.expertName}</p>
-                  </div>
-                  <button onClick={() => setShowStatusModal(false)} className="p-1 hover:bg-white/20 rounded-lg transition">✕</button>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="mb-5">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Select Status</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {statusOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => setNewStatus(option.value)}
-                        className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                          newStatus === option.value
-                            ? `${option.color} text-white shadow-md scale-105`
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex justify-end gap-3">
-                  <button onClick={() => setShowStatusModal(false)} className="px-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 transition font-medium">Cancel</button>
-                  <button onClick={updateSessionStatus} disabled={updatingStatus} className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white transition font-medium flex items-center gap-2">
-                    {updatingStatus ? (
-                      <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Updating...</>
-                    ) : (
-                      <><FaSync className="w-4 h-4" /> Update Status</>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Plan Status Update Modal */}
-      <AnimatePresence>
-        {showPlanStatusModal && selectedPlanUser && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowPlanStatusModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 30 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 30 }}
-              className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-5 text-white">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-xl font-bold flex items-center gap-2">
-                      <FaSync className="w-5 h-5" /> Update Plan Status
-                    </h2>
-                    <p className="text-sm text-white/80 mt-1">{selectedPlanUser.planName} - {selectedPlanUser.userName || "User"}</p>
-                  </div>
-                  <button onClick={() => setShowPlanStatusModal(false)} className="p-1 hover:bg-white/20 rounded-lg transition">✕</button>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="mb-4 p-3 bg-gray-50 rounded-xl">
-                  <p className="text-sm font-semibold text-gray-700 mb-2">Current Plan Details:</p>
-                  <div className="space-y-1 text-sm">
-                    <p><span className="font-medium">User:</span> {selectedPlanUser.userName || "User"}</p>
-                    <p><span className="font-medium">Plan:</span> {selectedPlanUser.planName}</p>
-                    <p><span className="font-medium">Amount:</span> ₹{selectedPlanUser.amount}</p>
-                    <p><span className="font-medium">Valid Until:</span> {new Date(selectedPlanUser.endDate).toLocaleDateString()}</p>
-                    <p><span className="font-medium">Current Status:</span> {getStatusBadge(selectedPlanUser.status)}</p>
-                  </div>
-                </div>
-
-                <div className="mb-5">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Select New Status</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {planStatusOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => setNewPlanStatus(option.value)}
-                        className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                          newPlanStatus === option.value
-                            ? `${option.color} text-white shadow-md scale-105`
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-3">
-                  <button onClick={() => setShowPlanStatusModal(false)} className="px-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 transition font-medium">Cancel</button>
-                  <button onClick={updatePlanStatus} disabled={updatingPlanStatus} className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition font-medium flex items-center gap-2">
-                    {updatingPlanStatus ? (
-                      <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Updating...</>
-                    ) : (
-                      <><FaSync className="w-4 h-4" /> Update Status</>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Meet Link Modal */}
+      {/* ==================== MEET LINK MODAL ==================== */}
       <AnimatePresence>
         {showMeetLinkModal && (selectedService || selectedPlanUser) && (
           <motion.div
