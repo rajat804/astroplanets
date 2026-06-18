@@ -37,26 +37,112 @@ const AstrologyPage = () => {
     city: ''
   });
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+ const API_BASE_URL = import.meta.env.VITE_API_URL;
+  const api = axios.create({ 
+    baseURL: API_BASE_URL,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
+  // ✅ FIX: Request interceptor with better token handling
+  api.interceptors.request.use(
+    (config) => {
+      // Get token from multiple sources
+      let token = null;
+      
+      // Try from context first
+      try {
+        if (typeof getToken === 'function') {
+          token = getToken();
+        }
+      } catch (err) {
+        console.log('Error getting token from context:', err);
+      }
+      
+      // If no token from context, try localStorage
+      if (!token) {
+        token = localStorage.getItem('token');
+      }
+      
+      // If still no token, try sessionStorage
+      if (!token) {
+        token = sessionStorage.getItem('token');
+      }
+      
+      console.log('🔑 Token status:', token ? '✅ Present' : '❌ Missing');
+      
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log('✅ Authorization header added');
+      } else {
+        console.log('❌ No token available for request');
+      }
+      
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+
+  // ✅ FIX: Response interceptor for 401 handling
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        console.log('🔴 401 Unauthorized - Clearing session');
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+        
+        // Show error message
+        toast.error('Session expired. Please login again.');
+        
+        // Redirect to login if not already there
+        if (!window.location.pathname.includes('/auth')) {
+          navigate('/auth');
+        }
+      }
+      return Promise.reject(error);
+    }
+  );
+
+  // Remove the duplicate api creation
 
   const getAuthToken = () => {
     try {
       if (typeof getToken === 'function') {
-        return getToken();
+        const token = getToken();
+        if (token) return token;
       }
       return localStorage.getItem('token') || sessionStorage.getItem('token');
     } catch (err) {
-      console.log(err);
+      console.log('Error getting auth token:', err);
       return localStorage.getItem('token') || sessionStorage.getItem('token');
     }
   };
 
-  const api = axios.create({ baseURL: API_BASE_URL });
-  api.interceptors.request.use((config) => {
-    const token = getAuthToken();
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-  });
+
+
+
+  // const getAuthToken = () => {
+  //   try {
+  //     if (typeof getToken === 'function') {
+  //       return getToken();
+  //     }
+  //     return localStorage.getItem('token') || sessionStorage.getItem('token');
+  //   } catch (err) {
+  //     console.log(err);
+  //     return localStorage.getItem('token') || sessionStorage.getItem('token');
+  //   }
+  // };
+
+  // const api = axios.create({ baseURL: API_BASE_URL });
+  // api.interceptors.request.use((config) => {
+  //   const token = getAuthToken();
+  //   if (token) config.headers.Authorization = `Bearer ${token}`;
+  //   return config;
+  // });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -148,7 +234,97 @@ const AstrologyPage = () => {
   };
 
   // Direct Kundli Generation - FREE (No Payment)
-  const generateKundli = async (e) => {
+  // const generateKundli = async (e) => {
+  //   e.preventDefault();
+    
+  //   if (isProcessingRef.current) return;
+    
+  //   const dateNum = parseInt(formData.date);
+  //   const monthNum = parseInt(formData.month);
+  //   const yearNum = parseInt(formData.year);
+  //   const hourNum = parseInt(formData.hour);
+  //   const minuteNum = parseInt(formData.minute);
+  //   const latNum = parseFloat(formData.latitude);
+  //   const lonNum = parseFloat(formData.longitude);
+    
+  //   if (isNaN(dateNum) || dateNum < 1 || dateNum > 31) {
+  //     toast.error('Please enter a valid date (1-31)');
+  //     return;
+  //   }
+  //   if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+  //     toast.error('Please enter a valid month (1-12)');
+  //     return;
+  //   }
+  //   if (isNaN(yearNum) || yearNum < 1900 || yearNum > new Date().getFullYear()) {
+  //     toast.error(`Please enter a valid year (1900-${new Date().getFullYear()})`);
+  //     return;
+  //   }
+  //   if (isNaN(hourNum) || hourNum < 0 || hourNum > 23) {
+  //     toast.error('Please enter a valid hour (0-23)');
+  //     return;
+  //   }
+  //   if (isNaN(minuteNum) || minuteNum < 0 || minuteNum > 59) {
+  //     toast.error('Please enter a valid minute (0-59)');
+  //     return;
+  //   }
+  //   if (isNaN(latNum) || isNaN(lonNum)) {
+  //     toast.error('Please select a location');
+  //     return;
+  //   }
+    
+  //   const token = getAuthToken();
+  //   if (!token && !isAuthenticated) {
+  //     localStorage.setItem('redirect_after_login', '/astrology');
+  //     toast.error('Please login to generate Kundli');
+  //     navigate('/auth');
+  //     return;
+  //   }
+
+  //   const requestData = {
+  //     date: dateNum, month: monthNum, year: yearNum,
+  //     hour: hourNum, minute: minuteNum,
+  //     latitude: latNum, longitude: lonNum,
+  //     timezone: parseFloat(formData.timezone)
+  //   };
+    
+  //   isProcessingRef.current = true;
+  //   setLoading(true);
+    
+  //   try {
+  //     const res = await api.post('/astrology/generate', requestData);
+  //     if (res.data.success) {
+  //       const kundli = res.data.kundli;
+  //       const panchang = res.data.panchang;
+        
+  //       setKundliData(kundli);
+  //       setPanchangData(panchang);
+  //       setActiveView('kundli');
+        
+  //       // Save to user's profile automatically (FREE)
+  //       try {
+  //         await api.post('/astrology/save-purchased-kundli', {
+  //           kundliData: kundli,
+  //           panchangData: panchang,
+  //           birthDetails: requestData
+  //         });
+  //         toast.success('✨ Kundli saved to your profile!');
+  //       } catch (saveErr) {
+  //         console.error('Failed to save kundli:', saveErr);
+  //       }
+        
+  //       toast.success('✨ Kundli Generated Successfully!');
+  //     } else {
+  //       toast.error(res.data.message || 'Failed to generate Kundli');
+  //     }
+  //   } catch (err) {
+  //     console.error('Generation error:', err);
+  //     toast.error('Error generating kundli. Please try again.');
+  //   } finally {
+  //     setLoading(false);
+  //     isProcessingRef.current = false;
+  //   }
+  // };
+   const generateKundli = async (e) => {
     e.preventDefault();
     
     if (isProcessingRef.current) return;
@@ -161,6 +337,7 @@ const AstrologyPage = () => {
     const latNum = parseFloat(formData.latitude);
     const lonNum = parseFloat(formData.longitude);
     
+    // Validation checks
     if (isNaN(dateNum) || dateNum < 1 || dateNum > 31) {
       toast.error('Please enter a valid date (1-31)');
       return;
@@ -186,7 +363,10 @@ const AstrologyPage = () => {
       return;
     }
     
+    // ✅ FIX: Better token check
     const token = getAuthToken();
+    console.log('🔑 Token before API call:', token ? '✅ Present' : '❌ Missing');
+    
     if (!token && !isAuthenticated) {
       localStorage.setItem('redirect_after_login', '/astrology');
       toast.error('Please login to generate Kundli');
@@ -205,7 +385,14 @@ const AstrologyPage = () => {
     setLoading(true);
     
     try {
+      console.log('📤 Sending request to /astrology/generate');
+      console.log('📦 Request data:', requestData);
+      
+      // ✅ The interceptor will automatically add the token
       const res = await api.post('/astrology/generate', requestData);
+      
+      console.log('📥 Response:', res.data);
+      
       if (res.data.success) {
         const kundli = res.data.kundli;
         const panchang = res.data.panchang;
@@ -231,8 +418,17 @@ const AstrologyPage = () => {
         toast.error(res.data.message || 'Failed to generate Kundli');
       }
     } catch (err) {
-      console.error('Generation error:', err);
-      toast.error('Error generating kundli. Please try again.');
+      console.error('❌ Generation error:', err);
+      
+      // Handle specific error types
+      if (err.response?.status === 401) {
+        toast.error('Session expired. Please login again.');
+        navigate('/auth');
+      } else if (err.response?.status === 500) {
+        toast.error('Server error. Please try again later.');
+      } else {
+        toast.error(err.response?.data?.message || 'Error generating kundli. Please try again.');
+      }
     } finally {
       setLoading(false);
       isProcessingRef.current = false;
