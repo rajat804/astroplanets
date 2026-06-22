@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  HiOutlineLockClosed, 
-  HiOutlineMail, 
-  HiOutlineEye, 
+import {
+  HiOutlineLockClosed,
+  HiOutlineMail,
+  HiOutlineEye,
   HiOutlineEyeOff,
   HiOutlineShieldCheck,
   HiOutlineUserGroup,
@@ -20,19 +20,16 @@ export default function AdminLogin() {
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
 
   const onSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     console.log('Admin login attempt with email:', email);
-    
-    // Clear previous error
+
     setErr('');
-    
-    // Validate inputs
+
     if (!email.trim()) {
       setErr('Email is required');
       return;
@@ -41,34 +38,31 @@ export default function AdminLogin() {
       setErr('Password is required');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
-      const response = await adminLogin({ 
-        email: email.trim(), 
-        password: password.trim() 
-      });
-      
-      console.log('Login successful:', response);
-      
+      const response = await adminLogin({ email, password });
+      sessionStorage.setItem('adminToken', response.token);
+      sessionStorage.setItem('admin', JSON.stringify(response.admin));
+
+      // Verify storage immediately
+      console.log(
+        "ADMIN TOKEN AFTER LOGIN:",
+        sessionStorage.getItem("adminToken")
+      );
+console.log("ADMIN TOKEN AFTER LOGIN:", response.token);
+console.log("SESSION TOKEN:", sessionStorage.getItem("adminToken"));
+console.log("SESSION ADMIN:", sessionStorage.getItem("admin"));
+
       toast.success('Admin login successful!');
-      
-      // Small delay to ensure toast is shown
-      setTimeout(() => {
-        navigate('/admin/dashboard');
-      }, 500);
-      
+      // Use window.location for a hard redirect to avoid any state issues
+      navigate('/admin/dashboard');
+
     } catch (error) {
       console.error('Login error details:', error);
-      
-      // Handle different error scenarios
+
       if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.log('Error response data:', error.response.data);
-        console.log('Error response status:', error.response.status);
-        
         if (error.response.status === 401) {
           setErr('Invalid email or password');
         } else if (error.response.status === 404) {
@@ -77,12 +71,8 @@ export default function AdminLogin() {
           setErr(error.response.data?.msg || 'Login failed. Please try again.');
         }
       } else if (error.request) {
-        // The request was made but no response was received
-        console.log('No response received:', error.request);
-        setErr('Cannot connect to server. Please check if backend is running on port 5000');
+        setErr('Cannot connect to server. Please check if backend is running');
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log('Error message:', error.message);
         setErr('An error occurred. Please try again.');
       }
     } finally {
@@ -96,11 +86,6 @@ export default function AdminLogin() {
     { icon: <HiOutlineCog className="w-5 h-5" />, text: "Content Management" },
     { icon: <HiOutlineShieldCheck className="w-5 h-5" />, text: "Secure Access" }
   ];
-
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-offWhite flex items-center justify-center p-6">
@@ -116,7 +101,7 @@ export default function AdminLogin() {
             <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full filter blur-3xl"></div>
             <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-orange-300/20 rounded-full filter blur-3xl"></div>
           </div>
-          
+
           <div className="relative z-10 text-center">
             <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
               <HiOutlineShieldCheck className="w-10 h-10 text-white" />
@@ -127,7 +112,6 @@ export default function AdminLogin() {
             </p>
           </div>
 
-          {/* Features List */}
           <div className="relative z-10 w-full mt-6 space-y-3">
             {adminFeatures.map((feature, idx) => (
               <motion.div
@@ -143,7 +127,6 @@ export default function AdminLogin() {
             ))}
           </div>
 
-          {/* Security Badge */}
           <div className="relative z-10 mt-6 flex items-center gap-2 text-xs text-white/80 bg-white/10 rounded-full px-4 py-2 backdrop-blur-sm">
             <HiOutlineShieldCheck className="w-4 h-4" />
             <span>256-bit SSL Encrypted</span>
@@ -210,19 +193,6 @@ export default function AdminLogin() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-red-500 rounded border-orange-300 focus:ring-red-500"
-                  disabled={loading}
-                />
-                <span className="text-sm text-gray-600">Remember me</span>
-              </label>
-            </div>
-
             <button
               type="submit"
               disabled={loading}
@@ -241,7 +211,6 @@ export default function AdminLogin() {
               )}
             </button>
 
-            {/* Error Message */}
             {err && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -255,16 +224,6 @@ export default function AdminLogin() {
               </motion.div>
             )}
 
-            {/* Admin Credentials Info */}
-            <div className="mt-6 pt-4 border-t border-orange-100">
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                <span>Default Admin Credentials:</span>
-              </div>
-              
-            </div>
-
-            {/* Back to Home */}
             <div className="text-center">
               <button
                 type="button"
@@ -279,7 +238,6 @@ export default function AdminLogin() {
         </div>
       </motion.div>
 
-      {/* Footer Note */}
       <div className="absolute bottom-4 left-0 right-0 text-center">
         <p className="text-xs text-gray-400">
           Protected by advanced security measures | © {new Date().getFullYear()} AstroPlanets Admin
