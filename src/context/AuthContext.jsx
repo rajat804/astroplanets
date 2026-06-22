@@ -12,10 +12,10 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    const loginTime = localStorage.getItem('loginTime');
+    // ✅ Check sessionStorage for existing session
+    const token = sessionStorage.getItem('token');
+    const userData = sessionStorage.getItem('user');
+    const loginTime = sessionStorage.getItem('loginTime');
 
     if (token && userData && loginTime) {
       const now = Date.now();
@@ -27,12 +27,12 @@ export const AuthProvider = ({ children }) => {
         setUser(JSON.parse(userData));
         setRemainingTime(sessionDuration - timeElapsed);
 
-        // Set timer for auto logout
+        // Auto logout timer
         const timer = setTimeout(() => {
           logout();
         }, sessionDuration - timeElapsed);
 
-        // Update remaining time every second
+        // Update remaining time
         const interval = setInterval(() => {
           setRemainingTime((prev) => {
             if (prev <= 1000) {
@@ -54,16 +54,20 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  // ✅ LOGIN - Saves to sessionStorage
   const login = (userData, token) => {
     const now = Date.now();
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('loginTime', now.toString());
+    
+    // Save to sessionStorage
+    sessionStorage.setItem('token', token);
+    sessionStorage.setItem('user', JSON.stringify(userData));
+    sessionStorage.setItem('loginTime', now.toString());
+    
     setIsAuthenticated(true);
     setUser(userData);
     setRemainingTime(3600000);
 
-    // Set auto logout timer
+    // Auto logout timer
     const timer = setTimeout(() => {
       logout();
     }, 3600000);
@@ -85,19 +89,36 @@ export const AuthProvider = ({ children }) => {
     };
   };
 
+  // ✅ LOGOUT - Clears both storages (for safety)
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('loginTime');
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('admin');
-    setIsAuthenticated(false);
-    setUser(null);
-    setRemainingTime(0);
-    toast.success('Logged out successfully');
-    navigate('/auth');
+  sessionStorage.removeItem('token');
+  sessionStorage.removeItem('user');
+  sessionStorage.removeItem('loginTime');
+
+  setIsAuthenticated(false);
+  setUser(null);
+  setRemainingTime(0);
+
+  toast.success('Logged out successfully');
+  navigate('/auth');
+};
+
+  // ✅ Get token from sessionStorage
+  const getToken = () => {
+    return sessionStorage.getItem('token');
   };
 
+  // ✅ Check if admin is logged in
+  const isAdmin = () => {
+    return !!sessionStorage.getItem('adminToken');
+  };
+
+  // ✅ Get admin token
+  const getAdminToken = () => {
+    return sessionStorage.getItem('adminToken');
+  };
+
+  // ✅ Format remaining time
   const formatRemainingTime = () => {
     const minutes = Math.floor(remainingTime / 60000);
     const seconds = Math.floor((remainingTime % 60000) / 1000);
@@ -114,6 +135,9 @@ export const AuthProvider = ({ children }) => {
         formatRemainingTime,
         login,
         logout,
+        getToken,
+        isAdmin,
+        getAdminToken,
       }}
     >
       {children}
