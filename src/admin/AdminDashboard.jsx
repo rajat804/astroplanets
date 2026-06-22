@@ -447,43 +447,149 @@ function AdminDashboard() {
     }
   };
 
-  // Product CRUD
-  const handleCreateProduct = async (productData) => {
-    try {
-      const response = await axios.post(`${API_URL}/products`, productData);
-      setProducts([response.data.product, ...products]);
-      toast.success('Product created successfully');
-      setShowProductModal(false);
-    } catch (error) {
-      console.error('Error creating product:', error);
-      toast.error(error.response?.data?.msg || 'Failed to create product');
+ // ✅ REPLACE handleCreateProduct
+const handleCreateProduct = async (productData) => {
+  try {
+    console.log('📤 Creating product:', productData);
+    
+    const token = localStorage.getItem('adminToken');
+    
+    if (!token) {
+      toast.error('Please login again');
+      return;
     }
-  };
 
-  const handleUpdateProduct = async (id, productData) => {
-    try {
-      const response = await axios.put(`${API_URL}/products/${id}`, productData);
-      setProducts(products.map(p => p._id === id ? response.data.product : p));
-      toast.success('Product updated successfully');
-      setEditingProduct(null);
-      setShowProductModal(false);
-    } catch (error) {
-      console.error('Error updating product:', error);
-      toast.error(error.response?.data?.msg || 'Failed to update product');
-    }
-  };
+    // Clean data - remove empty values
+    const cleanData = {};
+    Object.keys(productData).forEach(key => {
+      if (productData[key] !== undefined && 
+          productData[key] !== null && 
+          productData[key] !== '') {
+        cleanData[key] = productData[key];
+      }
+    });
 
-  const handleDeleteProduct = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) return;
-    try {
-      await axios.delete(`${API_URL}/products/${id}`);
-      setProducts(products.filter(p => p._id !== id));
-      toast.success('Product deleted successfully');
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      toast.error('Failed to delete product');
+    // Ensure required fields
+    if (!cleanData.name || !cleanData.price || !cleanData.type || !cleanData.image) {
+      toast.error('Name, price, type, and image are required');
+      return;
     }
-  };
+
+    console.log('🧹 Clean data:', cleanData);
+
+    const response = await axios.post(
+      `${API_URL}/products`,
+      cleanData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    console.log('✅ Create response:', response.data);
+    toast.success('Product created successfully');
+    
+    // Refresh products list
+    fetchProducts();
+    
+    // Close modal
+    setShowProductModal(false);
+    
+  } catch (error) {
+    console.error('❌ Create error:', error);
+    console.error('Response:', error.response?.data);
+    
+    const errorMsg = error.response?.data?.msg || 
+                     error.response?.data?.error || 
+                     error.message || 
+                     'Failed to create product';
+    toast.error(errorMsg);
+  }
+};
+
+// ✅ REPLACE handleUpdateProduct
+const handleUpdateProduct = async (id, productData) => {
+  try {
+    console.log('📤 Updating product:', id);
+    console.log('📦 Data:', productData);
+
+    const token = localStorage.getItem('adminToken');
+    
+    if (!token) {
+      toast.error('Please login again');
+      return;
+    }
+
+    // Clean data - remove empty values
+    const cleanData = {};
+    Object.keys(productData).forEach(key => {
+      if (productData[key] !== undefined && 
+          productData[key] !== null && 
+          productData[key] !== '') {
+        cleanData[key] = productData[key];
+      }
+    });
+
+    // Ensure required fields
+    if (!cleanData.name || !cleanData.price || !cleanData.type) {
+      toast.error('Name, price, and type are required');
+      return;
+    }
+
+    console.log('🧹 Clean data:', cleanData);
+
+    const response = await axios.put(
+      `${API_URL}/products/${id}`,
+      cleanData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    console.log('✅ Update response:', response.data);
+    toast.success('Product updated successfully');
+    
+    // Refresh products list
+    fetchProducts();
+    
+    // Close modal
+    setEditingProduct(null);
+    setShowProductModal(false);
+    
+  } catch (error) {
+    console.error('❌ Update error:', error);
+    console.error('Response:', error.response?.data);
+    
+    const errorMsg = error.response?.data?.msg || 
+                     error.response?.data?.error || 
+                     error.message || 
+                     'Failed to update product';
+    toast.error(errorMsg);
+  }
+};
+
+// ✅ handleDeleteProduct (unchanged)
+const handleDeleteProduct = async (id) => {
+  if (!window.confirm('Are you sure you want to delete this product?')) return;
+  try {
+    const token = localStorage.getItem('adminToken');
+    await axios.delete(`${API_URL}/products/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setProducts(products.filter(p => p._id !== id));
+    toast.success('Product deleted successfully');
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    toast.error('Failed to delete product');
+  }
+};
 
   const logout = () => {
     localStorage.removeItem("adminToken");
