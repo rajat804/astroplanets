@@ -64,7 +64,7 @@ const Profile = () => {
 
   // Add token to requests
   api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -129,6 +129,10 @@ const Profile = () => {
   // FETCH PLAN SUBSCRIPTIONS
   const fetchMyPlans = async () => {
     try {
+
+      const token = sessionStorage.getItem('token');
+
+    console.log("TOKEN =>", token);
       const userId = user?._id || user?.id;
       if (!userId) return;
 
@@ -136,7 +140,7 @@ const Profile = () => {
         `${API_URL}/planpayments/my-subscriptions`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`
           }
         }
       );
@@ -161,7 +165,7 @@ const Profile = () => {
       setError("");
       console.log('🔍 Fetching purchased kundlis...');
       
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       if (!token) {
         console.log('No token found');
         setError('Please login to view kundlis');
