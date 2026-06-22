@@ -45,7 +45,9 @@ const Profile = () => {
   const [purchasedKundlis, setPurchasedKundlis] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [downloading, setDownloading] = useState(false);
+  
+  // ✅ Download state - tracks which kundli is downloading
+  const [downloadingKundliId, setDownloadingKundliId] = useState(null);
 
   // MODAL
   const [selectedItem, setSelectedItem] = useState(null);
@@ -151,103 +153,140 @@ const Profile = () => {
   };
 
   // ============================================
-  // ✅ FETCH PURCHASED KUNDLIS - FIXED
+  // ✅ FETCH PURCHASED KUNDLIS
   // ============================================
- // src/user/Profile.jsx - Complete fetchPurchasedKundlis
-
-const fetchPurchasedKundlis = async () => {
-  try {
-    setLoading(true);
-    setError("");
-    console.log('🔍 Fetching purchased kundlis...');
-    
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.log('No token found');
-      setError('Please login to view kundlis');
-      setPurchasedKundlis([]);
-      setLoading(false);
-      return;
-    }
-    
-    const res = await api.get('/astrology/my-purchased-kundlis');
-    console.log('📊 API Response:', res.data);
-    
-    if (res.data.success) {
-      const kundlis = res.data.kundlis || [];
-      console.log(`✅ Found ${kundlis.length} kundlis`);
+  const fetchPurchasedKundlis = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      console.log('🔍 Fetching purchased kundlis...');
       
-      const processedKundlis = kundlis.map(k => {
-        const existingKundliData = k.kundliData || {};
-        const existingPanchangData = k.panchangData || {};
-        
-        return {
-          ...k,
-          kundliData: {
-            ascendant_sign: existingKundliData.ascendant_sign || existingKundliData.lagna || 'N/A',
-            ascendant_lord: existingKundliData.ascendant_lord || 'N/A',
-            rashi: existingKundliData.rashi || existingKundliData.sign || 'N/A',
-            nakshatra: existingKundliData.nakshatra || 'N/A',
-            nakshatra_lord: existingKundliData.nakshatra_lord || 'N/A',
-            nakshatra_pada: existingKundliData.nakshatra_pada || 'N/A',
-            manglik: existingKundliData.manglik || 'N/A',
-            yoga: existingKundliData.yoga || 'N/A',
-            tithi: existingKundliData.tithi || 'N/A',
-            karana: existingKundliData.karana || 'N/A',
-            gan: existingKundliData.gan || 'N/A',
-            nadi: existingKundliData.nadi || 'N/A',
-            varna: existingKundliData.varna || 'N/A',
-            vashya: existingKundliData.vashya || 'N/A',
-            yoni: existingKundliData.yoni || 'N/A',
-            planets: existingKundliData.planets || {},
-            dasha: existingKundliData.dasha || {
-              maha_dasha: 'N/A',
-              antar_dasha: 'N/A',
-              end_date: 'N/A'
-            }
-          },
-          panchangData: {
-            sunrise: existingPanchangData.sunrise || 'N/A',
-            sunset: existingPanchangData.sunset || 'N/A',
-            moonrise: existingPanchangData.moonrise || 'N/A',
-            tithi: existingPanchangData.tithi || 'N/A',
-            nakshatra: existingPanchangData.nakshatra || 'N/A',
-            yog: existingPanchangData.yog || existingPanchangData.yoga || 'N/A',
-            karan: existingPanchangData.karan || existingPanchangData.karana || 'N/A'
-          },
-          birthDetails: k.birthDetails || null
-        };
-      });
-      
-      setPurchasedKundlis(processedKundlis);
-      
-      if (processedKundlis.length === 0 && res.data.totalCharts > 0) {
-        toast.error('Old charts need migration. Please contact support.');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('No token found');
+        setError('Please login to view kundlis');
+        setPurchasedKundlis([]);
+        setLoading(false);
+        return;
       }
-    } else {
-      const errorMsg = res.data.message || 'Failed to load kundlis';
-      setError(errorMsg);
-      toast.error(errorMsg);
+      
+      const res = await api.get('/astrology/my-purchased-kundlis');
+      console.log('📊 API Response:', res.data);
+      
+      if (res.data.success) {
+        const kundlis = res.data.kundlis || [];
+        console.log(`✅ Found ${kundlis.length} kundlis`);
+        
+        const processedKundlis = kundlis.map(k => {
+          const existingKundliData = k.kundliData || {};
+          const existingPanchangData = k.panchangData || {};
+          
+          return {
+            ...k,
+            kundliData: {
+              ascendant_sign: existingKundliData.ascendant_sign || existingKundliData.lagna || 'N/A',
+              ascendant_lord: existingKundliData.ascendant_lord || 'N/A',
+              rashi: existingKundliData.rashi || existingKundliData.sign || 'N/A',
+              nakshatra: existingKundliData.nakshatra || 'N/A',
+              nakshatra_lord: existingKundliData.nakshatra_lord || 'N/A',
+              nakshatra_pada: existingKundliData.nakshatra_pada || 'N/A',
+              manglik: existingKundliData.manglik || 'N/A',
+              yoga: existingKundliData.yoga || 'N/A',
+              tithi: existingKundliData.tithi || 'N/A',
+              karana: existingKundliData.karana || 'N/A',
+              gan: existingKundliData.gan || 'N/A',
+              nadi: existingKundliData.nadi || 'N/A',
+              varna: existingKundliData.varna || 'N/A',
+              vashya: existingKundliData.vashya || 'N/A',
+              yoni: existingKundliData.yoni || 'N/A',
+              planets: existingKundliData.planets || {},
+              dasha: existingKundliData.dasha || {
+                maha_dasha: 'N/A',
+                antar_dasha: 'N/A',
+                end_date: 'N/A'
+              }
+            },
+            panchangData: {
+              sunrise: existingPanchangData.sunrise || 'N/A',
+              sunset: existingPanchangData.sunset || 'N/A',
+              moonrise: existingPanchangData.moonrise || 'N/A',
+              tithi: existingPanchangData.tithi || 'N/A',
+              nakshatra: existingPanchangData.nakshatra || 'N/A',
+              yog: existingPanchangData.yog || existingPanchangData.yoga || 'N/A',
+              karan: existingPanchangData.karan || existingPanchangData.karana || 'N/A'
+            },
+            birthDetails: k.birthDetails || null
+          };
+        });
+        
+        setPurchasedKundlis(processedKundlis);
+        
+        if (processedKundlis.length === 0 && res.data.totalCharts > 0) {
+          toast.error('Old charts need migration. Please contact support.');
+        }
+      } else {
+        const errorMsg = res.data.message || 'Failed to load kundlis';
+        setError(errorMsg);
+        toast.error(errorMsg);
+        setPurchasedKundlis([]);
+      }
+    } catch (err) {
+      console.error('Error fetching kundlis:', err);
+      console.error('Error response:', err.response?.data);
+      
+      let errorMessage = 'Failed to load your kundlis';
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
       setPurchasedKundlis([]);
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error('Error fetching kundlis:', err);
-    console.error('Error response:', err.response?.data);
+  };
+
+  // ============================================
+  // ✅ DOWNLOAD PDF WITH ANIMATION
+  // ============================================
+  const downloadPDF = async (kundli) => {
+    const kundliId = kundli._id || 'unknown';
     
-    let errorMessage = 'Failed to load your kundlis';
-    if (err.response?.data?.message) {
-      errorMessage = err.response.data.message;
-    } else if (err.message) {
-      errorMessage = err.message;
+    // ✅ Set downloading state for this specific kundli
+    setDownloadingKundliId(kundliId);
+    
+    try {
+      const res = await api.post('/astrology/download-pdf', {
+        kundliData: kundli.kundliData,
+        panchangData: kundli.panchangData,
+        userDetails: {
+          name: user?.fullName || user?.name || 'User',
+          email: user?.email || '',
+          birthDetails: kundli.birthDetails
+        }
+      }, { responseType: 'blob' });
+      
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `kundli_${Date.now()}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('✅ PDF downloaded successfully!');
+    } catch (err) {
+      console.error('Download error:', err);
+      toast.error('❌ Failed to download PDF');
+    } finally {
+      // ✅ Clear downloading state
+      setDownloadingKundliId(null);
     }
-    
-    setError(errorMessage);
-    toast.error(errorMessage);
-    setPurchasedKundlis([]);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // ============================================
   // ✅ CHECK IF MEET LINK IS ACTIVE
@@ -383,7 +422,6 @@ const fetchPurchasedKundlis = async () => {
       return;
     }
     
-    // ✅ Ensure all data is present
     const processedKundli = {
       ...kundli,
       kundliData: kundli.kundliData || {},
@@ -393,40 +431,6 @@ const fetchPurchasedKundlis = async () => {
     
     setSelectedKundli(processedKundli);
     setShowKundliModal(true);
-  };
-
-  // ============================================
-  // ✅ DOWNLOAD PDF
-  // ============================================
-  const downloadPDF = async (kundli) => {
-    setDownloading(true);
-    try {
-      const res = await api.post('/astrology/download-pdf', {
-        kundliData: kundli.kundliData,
-        panchangData: kundli.panchangData,
-        userDetails: {
-          name: user?.fullName || user?.name || 'User',
-          email: user?.email || '',
-          birthDetails: kundli.birthDetails
-        }
-      }, { responseType: 'blob' });
-      
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `kundli_${Date.now()}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      
-      toast.success('PDF downloaded successfully!');
-    } catch (err) {
-      console.error('Download error:', err);
-      toast.error('Failed to download PDF');
-    } finally {
-      setDownloading(false);
-    }
   };
 
   // ============================================
@@ -542,7 +546,7 @@ const fetchPurchasedKundlis = async () => {
         </div>
 
         {/* ============================================ */}
-        {/* ✅ MY KUNDLIS TAB - FIXED */}
+        {/* ✅ MY KUNDLIS TAB - WITH DOWNLOAD ANIMATION */}
         {/* ============================================ */}
         {activeTab === "kundli" && (
           <>
@@ -582,6 +586,7 @@ const fetchPurchasedKundlis = async () => {
                   const birthDetails = kundli.birthDetails;
                   const zodiac = birthDetails ? getZodiacSign(birthDetails.date, birthDetails.month) : "Unknown";
                   const kundliData = kundli.kundliData || {};
+                  const isDownloading = downloadingKundliId === kundli._id;
                   
                   return (
                     <motion.div
@@ -634,19 +639,64 @@ const fetchPurchasedKundlis = async () => {
                           </div>
                         )}
                         <div className="flex gap-2 mt-3">
+                          {/* View Details Button */}
                           <button
                             onClick={() => viewKundliDetails(kundli)}
-                            className="flex-1 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-semibold flex items-center justify-center gap-1"
+                            className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-semibold flex items-center justify-center gap-1 hover:shadow-lg transition"
                           >
                             <FaInfoCircle size={12} />
                             View Details
                           </button>
+                          
+                          {/* ✅ Download Button with Text + Animation */}
                           <button
                             onClick={() => downloadPDF(kundli)}
-                            disabled={downloading}
-                            className="py-2 px-3 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition"
+                            disabled={isDownloading}
+                            className={`flex-1 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 ${
+                              isDownloading
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-green-500 hover:bg-green-600 text-white hover:shadow-lg'
+                            }`}
                           >
-                            <FaDownload size={14} />
+                            {isDownloading ? (
+                              <>
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                >
+                                  <FaSpinner className="w-4 h-4" />
+                                </motion.div>
+                                Downloading...
+                              </>
+                            ) : (
+                              <>
+                                <FaDownload className="w-4 h-4" />
+                                Download PDF
+                              </>
+                            )}
+                          </button>
+                          
+                          {/* ✅ Download Icon Only - With Animation */}
+                          <button
+                            onClick={() => downloadPDF(kundli)}
+                            disabled={isDownloading}
+                            className={`p-2.5 rounded-xl transition-all duration-300 ${
+                              isDownloading
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                            title="Download PDF"
+                          >
+                            {isDownloading ? (
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              >
+                                <FaSpinner className="w-4 h-4" />
+                              </motion.div>
+                            ) : (
+                              <FaDownload className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
                       </div>
@@ -958,7 +1008,7 @@ const fetchPurchasedKundlis = async () => {
       </div>
 
       {/* ============================================ */}
-      {/* ✅ KUNDLI DETAIL MODAL - COMPLETE */}
+      {/* ✅ KUNDLI DETAIL MODAL - With Download Button */}
       {/* ============================================ */}
       <AnimatePresence>
         {showKundliModal && selectedKundli && (
@@ -1201,11 +1251,29 @@ const fetchPurchasedKundlis = async () => {
                   </button>
                   <button
                     onClick={() => downloadPDF(selectedKundli)}
-                    disabled={downloading}
-                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition"
+                    disabled={downloadingKundliId === selectedKundli._id}
+                    className={`flex-1 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 ${
+                      downloadingKundliId === selectedKundli._id
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:shadow-lg'
+                    }`}
                   >
-                    <FaDownload size={14} />
-                    {downloading ? "Downloading..." : "Download PDF"}
+                    {downloadingKundliId === selectedKundli._id ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        >
+                          <FaSpinner className="w-4 h-4" />
+                        </motion.div>
+                        Downloading...
+                      </>
+                    ) : (
+                      <>
+                        <FaDownload className="w-4 h-4" />
+                        Download PDF
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
