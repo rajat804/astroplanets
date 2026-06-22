@@ -1,56 +1,102 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { HiOutlineShoppingBag, HiOutlineCurrencyRupee, HiOutlineClock, HiOutlineCheckCircle } from 'react-icons/hi';
+import React from "react";
+import { motion } from "framer-motion";
+import { 
+  FaBox, 
+  FaClock, 
+  FaCheckCircle, 
+  FaTimesCircle,
+  FaRupeeSign,
+  FaTruck,
+  FaBoxOpen,
+  FaShoppingBag
+} from "react-icons/fa";
 
-const OrderStatsCards = ({ stats }) => {
+const OrderStatsCards = ({ stats = {} }) => {
   const cards = [
     {
-      title: 'Total Orders',
-      value: stats?.totalOrders || 0,
-      icon: <HiOutlineShoppingBag className="w-6 h-6" />,
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600',
+      id: 'total',
+      label: 'Total Orders',
+      value: stats.totalOrders || 0,
+      icon: FaShoppingBag,
+      color: 'bg-blue-500',
+      bg: 'bg-blue-50'
     },
     {
-      title: 'Total Revenue',
-      value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`,
-      icon: <HiOutlineCurrencyRupee className="w-6 h-6" />,
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-600',
+      id: 'pending',
+      label: 'Pending',
+      value: stats.pendingOrders || 0,
+      icon: FaClock,
+      color: 'bg-yellow-500',
+      bg: 'bg-yellow-50'
     },
     {
-      title: 'Pending',
-      value: stats?.pendingOrders || 0,
-      icon: <HiOutlineClock className="w-6 h-6" />,
-      bgColor: 'bg-yellow-50',
-      textColor: 'text-yellow-600',
+      id: 'confirmed',
+      label: 'Confirmed',
+      value: stats.confirmedOrders || 0,
+      icon: FaCheckCircle,
+      color: 'bg-green-500',
+      bg: 'bg-green-50'
     },
     {
-      title: 'Delivered',
-      value: stats?.deliveredOrders || 0,
-      icon: <HiOutlineCheckCircle className="w-6 h-6" />,
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-600',
+      id: 'processing',
+      label: 'Processing',
+      value: stats.processingOrders || 0,
+      icon: FaBoxOpen,
+      color: 'bg-purple-500',
+      bg: 'bg-purple-50'
     },
+    {
+      id: 'shipped',
+      label: 'Shipped',
+      value: stats.shippedOrders || 0,
+      icon: FaTruck,
+      color: 'bg-indigo-500',
+      bg: 'bg-indigo-50'
+    },
+    {
+      id: 'delivered',
+      label: 'Delivered',
+      value: stats.deliveredOrders || 0,
+      icon: FaCheckCircle,
+      color: 'bg-emerald-500',
+      bg: 'bg-emerald-50'
+    },
+    {
+      id: 'cancelled',
+      label: 'Cancelled',
+      value: stats.cancelledOrders || 0,
+      icon: FaTimesCircle,
+      color: 'bg-red-500',
+      bg: 'bg-red-50'
+    },
+    {
+      id: 'revenue',
+      label: 'Total Revenue',
+      value: `₹${(stats.totalRevenue || 0).toLocaleString()}`,
+      icon: FaRupeeSign,
+      color: 'bg-gradient-to-r from-green-500 to-emerald-500',
+      bg: 'bg-green-50'
+    }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {cards.map((card, index) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {cards.map((card) => (
         <motion.div
-          key={card.title}
+          key={card.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="bg-white rounded-2xl p-6 shadow-lg border border-orange-100 hover:shadow-xl transition"
+          className={`${card.bg} rounded-xl p-4 border border-gray-200`}
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className={`p-3 rounded-xl ${card.bgColor} ${card.textColor}`}>
-              {card.icon}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">{card.label}</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{card.value}</p>
             </div>
-            <span className="text-2xl font-bold text-gray-800">{card.value}</span>
+            <div className={`${card.color} p-3 rounded-lg text-white`}>
+              <card.icon className="w-5 h-5" />
+            </div>
           </div>
-          <h3 className="text-sm font-medium text-gray-600">{card.title}</h3>
         </motion.div>
       ))}
     </div>
