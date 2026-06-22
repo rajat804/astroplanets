@@ -38,7 +38,7 @@ const PlanManagement = () => {
 
   const fetchPlans = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const response = await axios.get(`${API_URL}/plans/admin/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -75,7 +75,7 @@ const PlanManagement = () => {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       let response;
 
       const submitData = {
@@ -117,7 +117,7 @@ const PlanManagement = () => {
 
   const handleDelete = async (planId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       await axios.delete(`${API_URL}/plans/${planId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
