@@ -284,7 +284,7 @@ const AstrologyPage = () => {
   };
 
   const renderForm = () => (
-    <div className="bg-white rounded-2xl p-6 md:p-10 max-w-4xl mx-auto shadow-lg border border-orange-100">
+    <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-10 max-w-4xl mx-auto shadow-lg border border-orange-100">
       <div className="text-center mb-8">
         <div className="text-5xl mb-3">🔮</div>
         <h1 className="text-2xl md:text-4xl font-bold text-gray-800">Generate Your Free Kundli</h1>
@@ -298,7 +298,7 @@ const AstrologyPage = () => {
             <FaCalendarAlt className="text-red-500 text-lg" />
             <h3 className="font-semibold text-gray-700">Date of Birth</h3>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <input type="number" name="date" placeholder="DD" value={formData.date} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
             <input type="number" name="month" placeholder="MM" value={formData.month} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
             <input type="number" name="year" placeholder="YYYY" value={formData.year} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
@@ -311,7 +311,7 @@ const AstrologyPage = () => {
             <FaClock className="text-red-500 text-lg" />
             <h3 className="font-semibold text-gray-700">Time of Birth</h3>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <input type="number" name="hour" placeholder="Hour (0-23)" value={formData.hour} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
             <input type="number" name="minute" placeholder="Minute (0-59)" value={formData.minute} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
             <select name="timezone" value={formData.timezone} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none bg-white">
@@ -338,7 +338,7 @@ const AstrologyPage = () => {
           </div>
 
           {/* Search city */}
-          <div className="flex gap-2 mb-3">
+          <div className="px-3 py-2 text-xs sm:text-sm bg-gray-200 hover:bg-gray-300 rounded-full">
             <input type="text" name="city" placeholder="Enter City Name" value={formData.city} onChange={handleChange} className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" />
             <button type="button" onClick={searchCity} disabled={searchingCity} className="px-4 py-3 bg-emerald-500 text-white rounded-lg flex items-center gap-1 hover:bg-emerald-600 transition disabled:opacity-50">
               <FaSearch /> {searchingCity ? '...' : 'Search'}
@@ -346,7 +346,7 @@ const AstrologyPage = () => {
           </div>
 
           {/* Latitude / Longitude / My Location */}
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             <input type="number" step="any" name="latitude" placeholder="Latitude" value={formData.latitude} onChange={handleChange} className="flex-1 min-w-[100px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
             <input type="number" step="any" name="longitude" placeholder="Longitude" value={formData.longitude} onChange={handleChange} className="flex-1 min-w-[100px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
             <button type="button" onClick={getCurrentLocation} disabled={gettingLocation} className="px-4 py-3 bg-amber-500 text-white rounded-lg flex items-center gap-1 hover:bg-amber-600 transition disabled:opacity-50">
