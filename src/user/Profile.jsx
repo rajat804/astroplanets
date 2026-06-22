@@ -46,7 +46,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   
-  // ✅ Download state - tracks which kundli is downloading
+  // Download state - tracks which kundli is downloading
   const [downloadingKundliId, setDownloadingKundliId] = useState(null);
 
   // MODAL
@@ -153,7 +153,7 @@ const Profile = () => {
   };
 
   // ============================================
-  // ✅ FETCH PURCHASED KUNDLIS
+  // FETCH PURCHASED KUNDLIS
   // ============================================
   const fetchPurchasedKundlis = async () => {
     try {
@@ -250,12 +250,11 @@ const Profile = () => {
   };
 
   // ============================================
-  // ✅ DOWNLOAD PDF WITH ANIMATION
+  // DOWNLOAD PDF WITH ANIMATION
   // ============================================
   const downloadPDF = async (kundli) => {
     const kundliId = kundli._id || 'unknown';
     
-    // ✅ Set downloading state for this specific kundli
     setDownloadingKundliId(kundliId);
     
     try {
@@ -278,18 +277,17 @@ const Profile = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
       
-      toast.success('✅ PDF downloaded successfully!');
+      toast.success('PDF downloaded successfully!');
     } catch (err) {
       console.error('Download error:', err);
-      toast.error('❌ Failed to download PDF');
+      toast.error('Failed to download PDF');
     } finally {
-      // ✅ Clear downloading state
       setDownloadingKundliId(null);
     }
   };
 
   // ============================================
-  // ✅ CHECK IF MEET LINK IS ACTIVE
+  // CHECK IF MEET LINK IS ACTIVE
   // ============================================
   const isMeetLinkActive = (date, time) => {
     if (!date || !time) return false;
@@ -344,7 +342,7 @@ const Profile = () => {
   };
 
   // ============================================
-  // ✅ GET JOIN BUTTON STATUS
+  // GET JOIN BUTTON STATUS
   // ============================================
   const getJoinStatus = (item) => {
     const hasMeetLink = item.meetLink && item.meetLink.trim() !== "";
@@ -412,7 +410,7 @@ const Profile = () => {
   };
 
   // ============================================
-  // ✅ VIEW KUNDLI DETAILS
+  // VIEW KUNDLI DETAILS
   // ============================================
   const viewKundliDetails = (kundli) => {
     console.log('Viewing kundli:', kundli?._id);
@@ -434,7 +432,7 @@ const Profile = () => {
   };
 
   // ============================================
-  // ✅ TABS
+  // TABS
   // ============================================
   const tabs = [
     { id: "kundli", label: "My Kundlis", icon: <FaStar />, count: purchasedKundlis.length },
@@ -444,7 +442,7 @@ const Profile = () => {
   ];
 
   // ============================================
-  // ✅ STATUS BADGE
+  // STATUS BADGE
   // ============================================
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -465,7 +463,7 @@ const Profile = () => {
   };
 
   // ============================================
-  // ✅ ZODIAC SIGN HELPER
+  // ZODIAC SIGN HELPER
   // ============================================
   const getZodiacSign = (date, month) => {
     if ((month === 3 && date >= 21) || (month === 4 && date <= 19)) return "Aries ♈";
@@ -483,7 +481,7 @@ const Profile = () => {
   };
 
   // ============================================
-  // ✅ RENDER
+  // RENDER
   // ============================================
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-50 py-10 px-4">
@@ -546,7 +544,7 @@ const Profile = () => {
         </div>
 
         {/* ============================================ */}
-        {/* ✅ MY KUNDLIS TAB - WITH DOWNLOAD ANIMATION */}
+        {/* MY KUNDLIS TAB - WITH DOWNLOAD ANIMATION */}
         {/* ============================================ */}
         {activeTab === "kundli" && (
           <>
@@ -648,7 +646,7 @@ const Profile = () => {
                             View Details
                           </button>
                           
-                          {/* ✅ Download Button with Text + Animation */}
+                          {/* Download Button with Text + Animation */}
                           <button
                             onClick={() => downloadPDF(kundli)}
                             disabled={isDownloading}
@@ -676,7 +674,7 @@ const Profile = () => {
                             )}
                           </button>
                           
-                          {/* ✅ Download Icon Only - With Animation */}
+                          {/* Download Icon Only - With Animation */}
                           <button
                             onClick={() => downloadPDF(kundli)}
                             disabled={isDownloading}
@@ -709,7 +707,7 @@ const Profile = () => {
         )}
 
         {/* ============================================ */}
-        {/* ✅ MY PLANS TAB */}
+        {/* MY PLANS TAB */}
         {/* ============================================ */}
         {activeTab === "plans" && (
           <>
@@ -814,7 +812,7 @@ const Profile = () => {
         )}
 
         {/* ============================================ */}
-        {/* ✅ MY COURSES TAB */}
+        {/* MY COURSES TAB */}
         {/* ============================================ */}
         {activeTab === "courses" && (
           <>
@@ -915,7 +913,7 @@ const Profile = () => {
         )}
 
         {/* ============================================ */}
-        {/* ✅ MY SERVICES TAB */}
+        {/* MY SERVICES TAB */}
         {/* ============================================ */}
         {activeTab === "services" && (
           <>
@@ -1008,7 +1006,7 @@ const Profile = () => {
       </div>
 
       {/* ============================================ */}
-      {/* ✅ KUNDLI DETAIL MODAL - With Download Button */}
+      {/* KUNDLI DETAIL MODAL - With Download Button */}
       {/* ============================================ */}
       <AnimatePresence>
         {showKundliModal && selectedKundli && (
@@ -1078,7 +1076,7 @@ const Profile = () => {
                   <>
                     {/* Lagna */}
                     <div className="mb-6 p-4 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl text-white text-center">
-                      <h3 className="text-lg font-bold">🌅 Lagna (Ascendant)</h3>
+                      <h3 className="text-lg font-bold">Lagna (Ascendant)</h3>
                       <div className="text-3xl font-bold my-2">
                         {selectedKundli.kundliData.ascendant_sign || selectedKundli.kundliData.lagna || 'Gemini'}
                       </div>
@@ -1087,7 +1085,7 @@ const Profile = () => {
 
                     {/* Rashi & Nakshatra */}
                     <div className="mb-6 p-4 bg-indigo-50 rounded-xl">
-                      <h3 className="text-md font-bold text-indigo-800 mb-3">⭐ Rashi & Nakshatra</h3>
+                      <h3 className="text-md font-bold text-indigo-800 mb-3">Rashi & Nakshatra</h3>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <p className="text-gray-500 text-xs">Rashi (Moon Sign)</p>
@@ -1116,7 +1114,7 @@ const Profile = () => {
                         ? 'bg-red-500' 
                         : 'bg-green-500'
                     }`}>
-                      <h3 className="text-lg font-bold">🔴 Manglik Dosha</h3>
+                      <h3 className="text-lg font-bold">Manglik Dosha</h3>
                       <div className="text-2xl font-bold">
                         {selectedKundli.kundliData.manglik === 'Yes' || selectedKundli.kundliData.manglik === 'Manglik' 
                           ? 'Manglik' 
@@ -1126,7 +1124,7 @@ const Profile = () => {
 
                     {/* Vedic Details */}
                     <div className="mb-6 p-4 bg-orange-50 rounded-xl">
-                      <h3 className="text-md font-bold text-orange-800 mb-3">📖 Vedic Details</h3>
+                      <h3 className="text-md font-bold text-orange-800 mb-3">Vedic Details</h3>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                         <div>
                           <p className="text-gray-500 text-xs">Yoga</p>
@@ -1166,7 +1164,7 @@ const Profile = () => {
                     {/* Planets */}
                     {selectedKundli.kundliData.planets && Object.keys(selectedKundli.kundliData.planets).length > 0 && (
                       <div className="mb-6 p-4 bg-blue-50 rounded-xl">
-                        <h3 className="text-md font-bold text-blue-800 mb-3">🪐 Planetary Positions</h3>
+                        <h3 className="text-md font-bold text-blue-800 mb-3">Planetary Positions</h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                           {Object.entries(selectedKundli.kundliData.planets).map(([planet, info]) => (
                             <div key={planet} className="bg-white rounded-lg p-2 text-center shadow-sm">
@@ -1184,7 +1182,7 @@ const Profile = () => {
                     {/* Dasha */}
                     {selectedKundli.kundliData.dasha && (
                       <div className="mb-6 p-4 bg-yellow-50 rounded-xl">
-                        <h3 className="text-md font-bold text-yellow-800 mb-3">⏳ Current Dasha</h3>
+                        <h3 className="text-md font-bold text-yellow-800 mb-3">Current Dasha</h3>
                         <div className="grid grid-cols-3 gap-3 text-center">
                           <div>
                             <p className="text-gray-500 text-xs">Maha Dasha</p>
@@ -1207,7 +1205,7 @@ const Profile = () => {
                 {/* Panchang */}
                 {selectedKundli.panchangData && (
                   <div className="mb-6 p-4 bg-green-50 rounded-xl">
-                    <h3 className="text-md font-bold text-green-800 mb-3">📅 Panchang Details</h3>
+                    <h3 className="text-md font-bold text-green-800 mb-3">Panchang Details</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                       <div>
                         <p className="text-gray-500 text-xs">Sunrise</p>
@@ -1283,7 +1281,7 @@ const Profile = () => {
       </AnimatePresence>
 
       {/* ============================================ */}
-      {/* ✅ COURSE/SERVICE/PLAN SESSION MODAL */}
+      {/* COURSE/SERVICE/PLAN SESSION MODAL */}
       {/* ============================================ */}
       <AnimatePresence>
         {selectedItem && !showKundliModal && (
