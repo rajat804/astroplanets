@@ -284,72 +284,78 @@ const AstrologyPage = () => {
   };
 
   const renderForm = () => (
-    <div style={styles.formContainer}>
-      <div style={styles.formHeader}>
-        <div style={styles.formIcon}>🔮</div>
-        <h1 style={styles.formTitle}>Generate Your Free Kundli</h1>
-        <p style={styles.formSubtitle}>Discover your cosmic blueprint with accurate Vedic astrology - Absolutely Free!</p>
+    <div className="bg-white rounded-2xl p-6 md:p-10 max-w-4xl mx-auto shadow-lg border border-orange-100">
+      <div className="text-center mb-8">
+        <div className="text-5xl mb-3">🔮</div>
+        <h1 className="text-2xl md:text-4xl font-bold text-gray-800">Generate Your Free Kundli</h1>
+        <p className="text-gray-500 text-sm md:text-base mt-2">Discover your cosmic blueprint with accurate Vedic astrology – Absolutely Free!</p>
       </div>
 
       <form onSubmit={generateKundli}>
-        <div style={styles.section}>
-          <div style={styles.sectionHeader}>
-            <FaCalendarAlt style={styles.sectionIcon} />
-            <h3 style={styles.sectionTitle}>Date of Birth</h3>
+        {/* Date of Birth */}
+        <div className="bg-orange-50 p-4 md:p-5 rounded-xl mb-4 border border-orange-100">
+          <div className="flex items-center gap-2 mb-3">
+            <FaCalendarAlt className="text-red-500 text-lg" />
+            <h3 className="font-semibold text-gray-700">Date of Birth</h3>
           </div>
-          <div style={styles.row}>
-            <input type="number" name="date" placeholder="DD" value={formData.date} onChange={handleChange} style={styles.input} required />
-            <input type="number" name="month" placeholder="MM" value={formData.month} onChange={handleChange} style={styles.input} required />
-            <input type="number" name="year" placeholder="YYYY" value={formData.year} onChange={handleChange} style={styles.input} required />
+          <div className="grid grid-cols-3 gap-2">
+            <input type="number" name="date" placeholder="DD" value={formData.date} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
+            <input type="number" name="month" placeholder="MM" value={formData.month} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
+            <input type="number" name="year" placeholder="YYYY" value={formData.year} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
           </div>
         </div>
 
-        <div style={styles.section}>
-          <div style={styles.sectionHeader}>
-            <FaClock style={styles.sectionIcon} />
-            <h3 style={styles.sectionTitle}>Time of Birth</h3>
+        {/* Time of Birth */}
+        <div className="bg-orange-50 p-4 md:p-5 rounded-xl mb-4 border border-orange-100">
+          <div className="flex items-center gap-2 mb-3">
+            <FaClock className="text-red-500 text-lg" />
+            <h3 className="font-semibold text-gray-700">Time of Birth</h3>
           </div>
-          <div style={styles.row}>
-            <input type="number" name="hour" placeholder="Hour (0-23)" value={formData.hour} onChange={handleChange} style={styles.input} required />
-            <input type="number" name="minute" placeholder="Minute (0-59)" value={formData.minute} onChange={handleChange} style={styles.input} required />
-            <select name="timezone" value={formData.timezone} onChange={handleChange} style={styles.input}>
+          <div className="grid grid-cols-3 gap-2">
+            <input type="number" name="hour" placeholder="Hour (0-23)" value={formData.hour} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
+            <input type="number" name="minute" placeholder="Minute (0-59)" value={formData.minute} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
+            <select name="timezone" value={formData.timezone} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none bg-white">
               <option value="5.5">India (IST) +5:30</option>
               <option value="0">UTC</option>
             </select>
           </div>
         </div>
 
-        <div style={styles.section}>
-          <div style={styles.sectionHeader}>
-            <FaMapMarkerAlt style={styles.sectionIcon} />
-            <h3 style={styles.sectionTitle}>Place of Birth</h3>
+        {/* Place of Birth */}
+        <div className="bg-orange-50 p-4 md:p-5 rounded-xl mb-4 border border-orange-100">
+          <div className="flex items-center gap-2 mb-3">
+            <FaMapMarkerAlt className="text-red-500 text-lg" />
+            <h3 className="font-semibold text-gray-700">Place of Birth</h3>
           </div>
-          
-          <div style={styles.cityChips}>
+
+          {/* City chips */}
+          <div className="flex flex-wrap gap-2 mb-3">
             {popularCities.map((city, i) => (
-              <button key={i} type="button" onClick={() => selectPopularCity(city)} style={styles.cityChip}>
+              <button key={i} type="button" onClick={() => selectPopularCity(city)} className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-full text-sm text-gray-700 transition">
                 {city.name}
               </button>
             ))}
           </div>
 
-          <div style={styles.searchRow}>
-            <input type="text" name="city" placeholder="Enter City Name" value={formData.city} onChange={handleChange} style={styles.inputSearch} />
-            <button type="button" onClick={searchCity} disabled={searchingCity} style={styles.searchBtn}>
+          {/* Search city */}
+          <div className="flex gap-2 mb-3">
+            <input type="text" name="city" placeholder="Enter City Name" value={formData.city} onChange={handleChange} className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" />
+            <button type="button" onClick={searchCity} disabled={searchingCity} className="px-4 py-3 bg-emerald-500 text-white rounded-lg flex items-center gap-1 hover:bg-emerald-600 transition disabled:opacity-50">
               <FaSearch /> {searchingCity ? '...' : 'Search'}
             </button>
           </div>
 
-          <div style={styles.locationRow}>
-            <input type="number" step="any" name="latitude" placeholder="Latitude" value={formData.latitude} onChange={handleChange} style={styles.inputHalf} required />
-            <input type="number" step="any" name="longitude" placeholder="Longitude" value={formData.longitude} onChange={handleChange} style={styles.inputHalf} required />
-            <button type="button" onClick={getCurrentLocation} disabled={gettingLocation} style={styles.locationBtn}>
+          {/* Latitude / Longitude / My Location */}
+          <div className="flex flex-wrap gap-2">
+            <input type="number" step="any" name="latitude" placeholder="Latitude" value={formData.latitude} onChange={handleChange} className="flex-1 min-w-[100px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
+            <input type="number" step="any" name="longitude" placeholder="Longitude" value={formData.longitude} onChange={handleChange} className="flex-1 min-w-[100px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
+            <button type="button" onClick={getCurrentLocation} disabled={gettingLocation} className="px-4 py-3 bg-amber-500 text-white rounded-lg flex items-center gap-1 hover:bg-amber-600 transition disabled:opacity-50">
               <FaLocationArrow /> {gettingLocation ? 'Getting...' : 'My Location'}
             </button>
           </div>
         </div>
 
-        <button type="submit" disabled={loading} style={styles.submitBtn}>
+        <button type="submit" disabled={loading} className="w-full py-4 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold text-lg rounded-xl hover:shadow-lg transition disabled:opacity-50">
           {loading ? '✨ Generating Your Kundli... ✨' : '✨ Generate Your Free Kundli ✨'}
         </button>
       </form>
@@ -360,71 +366,71 @@ const AstrologyPage = () => {
     const data = kundliData || {};
     
     return (
-      <div style={styles.resultContainer}>
-        <div style={styles.resultHeader}>
+      <div className="bg-white rounded-2xl p-6 md:p-10 max-w-4xl mx-auto shadow-lg border border-orange-100">
+        <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
           <div>
-            <h2 style={styles.resultTitle}>📊 Your Kundli</h2>
-            <p style={styles.resultSubtitle}>Detailed astrological analysis</p>
+            <h2 className="text-2xl font-bold text-gray-800">📊 Your Kundli</h2>
+            <p className="text-gray-500 text-sm">Detailed astrological analysis</p>
           </div>
-          <div style={styles.resultActions}>
-            <button onClick={() => setActiveView('panchang')} style={styles.switchBtnPanchang}>
+          <div className="flex gap-2 flex-wrap">
+            <button onClick={() => setActiveView('panchang')} className="px-4 py-2 bg-amber-500 text-white rounded-lg flex items-center gap-1 hover:bg-amber-600 transition">
               <FaMoon /> Panchang
             </button>
-            <button onClick={() => setActiveView('form')} style={styles.backBtn}>
+            <button onClick={() => setActiveView('form')} className="px-4 py-2 bg-gray-500 text-white rounded-lg flex items-center gap-1 hover:bg-gray-600 transition">
               <FaArrowLeft /> New
             </button>
           </div>
         </div>
 
-        <div style={styles.ascendantCard}>
-          <div style={styles.ascendantIcon}>🌅</div>
-          <div style={styles.ascendantLabel}>Lagna (Ascendant)</div>
-          <div style={styles.ascendantValue}>
+        <div className="bg-red-50 p-6 rounded-2xl text-center mb-6 border border-red-200">
+          <div className="text-4xl mb-2">🌅</div>
+          <div className="text-sm text-red-600">Lagna (Ascendant)</div>
+          <div className="text-3xl font-bold text-red-600">
             {getValue(data, ['ascendant_sign', 'lagna', 'ascendant', 'sign'], 'N/A')}
           </div>
         </div>
 
-        <div style={styles.statsGrid}>
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>⭐</div>
-            <div style={styles.statLabel}>Rashi (Moon Sign)</div>
-            <div style={styles.statValue}>{getValue(data, ['sign', 'rashi', 'moon_sign'], 'N/A')}</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="bg-orange-50 p-4 rounded-xl text-center border border-orange-200">
+            <div className="text-3xl mb-1">⭐</div>
+            <div className="text-sm text-gray-600">Rashi (Moon Sign)</div>
+            <div className="text-xl font-bold text-gray-800">{getValue(data, ['sign', 'rashi', 'moon_sign'], 'N/A')}</div>
           </div>
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>🌟</div>
-            <div style={styles.statLabel}>Nakshatra (Birth Star)</div>
-            <div style={styles.statValue}>{getValue(data, ['nakshatra', 'Naksahtra'], 'N/A')}</div>
-            <div style={styles.statSub}>Lord: {getValue(data, ['nakshatra_lord'], 'N/A')} | Pada: {getValue(data, ['nakshatra_pada'], 'N/A')}</div>
+          <div className="bg-orange-50 p-4 rounded-xl text-center border border-orange-200">
+            <div className="text-3xl mb-1">🌟</div>
+            <div className="text-sm text-gray-600">Nakshatra (Birth Star)</div>
+            <div className="text-xl font-bold text-gray-800">{getValue(data, ['nakshatra', 'Naksahtra'], 'N/A')}</div>
+            <div className="text-xs text-gray-500 mt-1">Lord: {getValue(data, ['nakshatra_lord'], 'N/A')} | Pada: {getValue(data, ['nakshatra_pada'], 'N/A')}</div>
           </div>
         </div>
 
-        <div style={{ ...styles.manglikCard, background: getValue(data, ['manglik'], 'No') === 'Yes' ? '#fef2f2' : '#f0fdf4', borderColor: getValue(data, ['manglik'], 'No') === 'Yes' ? '#fecaca' : '#bbf7d0' }}>
-          <div style={{ ...styles.manglikIcon, color: getValue(data, ['manglik'], 'No') === 'Yes' ? '#dc2626' : '#10b981' }}>🔴</div>
+        <div className={`flex items-center gap-3 p-4 rounded-xl mb-4 border ${getValue(data, ['manglik'], 'No') === 'Yes' ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+          <div className={`text-3xl ${getValue(data, ['manglik'], 'No') === 'Yes' ? 'text-red-500' : 'text-green-500'}`}>🔴</div>
           <div>
-            <div style={styles.manglikLabel}>Manglik Dosha</div>
-            <div style={{ ...styles.manglikValue, color: getValue(data, ['manglik'], 'No') === 'Yes' ? '#dc2626' : '#10b981' }}>
+            <div className="text-sm text-gray-600">Manglik Dosha</div>
+            <div className={`text-lg font-bold ${getValue(data, ['manglik'], 'No') === 'Yes' ? 'text-red-600' : 'text-green-600'}`}>
               {getValue(data, ['manglik'], 'Non-Manglik')}
             </div>
           </div>
         </div>
 
-        <h3 style={styles.gridTitle}>📖 Vedic Details</h3>
-        <div style={styles.grid}>
-          <div style={styles.gridItem}><strong>🧘 Yoga:</strong> {getValue(data, ['yoga', 'yog'], 'N/A')}</div>
-          <div style={styles.gridItem}><strong>📖 Tithi:</strong> {getValue(data, ['tithi'], 'N/A')}</div>
-          <div style={styles.gridItem}><strong>🌊 Karana:</strong> {getValue(data, ['karana'], 'N/A')}</div>
-          <div style={styles.gridItem}><strong>👨‍👩‍👧 Gan:</strong> {getValue(data, ['gan'], 'N/A')}</div>
-          <div style={styles.gridItem}><strong>💫 Nadi:</strong> {getValue(data, ['nadi'], 'N/A')}</div>
-          <div style={styles.gridItem}><strong>🎨 Varna:</strong> {getValue(data, ['varna'], 'N/A')}</div>
-          <div style={styles.gridItem}><strong>🤝 Vashya:</strong> {getValue(data, ['vashya'], 'N/A')}</div>
-          <div style={styles.gridItem}><strong>🐘 Yoni:</strong> {getValue(data, ['yoni'], 'N/A')}</div>
-          <div style={styles.gridItem}><strong>👑 Sign Lord:</strong> {getValue(data, ['sign_lord'], 'N/A')}</div>
-          <div style={styles.gridItem}><strong>🌍 Tatva:</strong> {getValue(data, ['tatva'], 'N/A')}</div>
-          <div style={styles.gridItem}><strong>💰 Paya:</strong> {getValue(data, ['paya'], 'N/A')}</div>
-          <div style={styles.gridItem}><strong>🔤 Alphabet:</strong> {getValue(data, ['name_alphabet'], 'N/A')}</div>
+        <h3 className="text-lg font-semibold text-gray-700 mt-6 mb-3">📖 Vedic Details</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="bg-orange-50 p-3 rounded-lg text-sm border border-orange-100"><strong>🧘 Yoga:</strong> {getValue(data, ['yoga', 'yog'], 'N/A')}</div>
+          <div className="bg-orange-50 p-3 rounded-lg text-sm border border-orange-100"><strong>📖 Tithi:</strong> {getValue(data, ['tithi'], 'N/A')}</div>
+          <div className="bg-orange-50 p-3 rounded-lg text-sm border border-orange-100"><strong>🌊 Karana:</strong> {getValue(data, ['karana'], 'N/A')}</div>
+          <div className="bg-orange-50 p-3 rounded-lg text-sm border border-orange-100"><strong>👨‍👩‍👧 Gan:</strong> {getValue(data, ['gan'], 'N/A')}</div>
+          <div className="bg-orange-50 p-3 rounded-lg text-sm border border-orange-100"><strong>💫 Nadi:</strong> {getValue(data, ['nadi'], 'N/A')}</div>
+          <div className="bg-orange-50 p-3 rounded-lg text-sm border border-orange-100"><strong>🎨 Varna:</strong> {getValue(data, ['varna'], 'N/A')}</div>
+          <div className="bg-orange-50 p-3 rounded-lg text-sm border border-orange-100"><strong>🤝 Vashya:</strong> {getValue(data, ['vashya'], 'N/A')}</div>
+          <div className="bg-orange-50 p-3 rounded-lg text-sm border border-orange-100"><strong>🐘 Yoni:</strong> {getValue(data, ['yoni'], 'N/A')}</div>
+          <div className="bg-orange-50 p-3 rounded-lg text-sm border border-orange-100"><strong>👑 Sign Lord:</strong> {getValue(data, ['sign_lord'], 'N/A')}</div>
+          <div className="bg-orange-50 p-3 rounded-lg text-sm border border-orange-100"><strong>🌍 Tatva:</strong> {getValue(data, ['tatva'], 'N/A')}</div>
+          <div className="bg-orange-50 p-3 rounded-lg text-sm border border-orange-100"><strong>💰 Paya:</strong> {getValue(data, ['paya'], 'N/A')}</div>
+          <div className="bg-orange-50 p-3 rounded-lg text-sm border border-orange-100"><strong>🔤 Alphabet:</strong> {getValue(data, ['name_alphabet'], 'N/A')}</div>
         </div>
 
-        <button onClick={downloadPDF} disabled={loading} style={styles.downloadBtn}>
+        <button onClick={downloadPDF} disabled={loading} className="w-full mt-8 py-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition disabled:opacity-50">
           <FaDownload /> {loading ? 'Generating PDF...' : 'Download PDF Report'}
         </button>
       </div>
@@ -435,44 +441,60 @@ const AstrologyPage = () => {
     const data = panchangData || {};
     
     return (
-      <div style={styles.resultContainer}>
-        <div style={styles.resultHeader}>
+      <div className="bg-white rounded-2xl p-6 md:p-10 max-w-4xl mx-auto shadow-lg border border-orange-100">
+        <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
           <div>
-            <h2 style={styles.resultTitle}>📅 Daily Panchang</h2>
-            <p style={styles.resultSubtitle}>Celestial timings for your birth</p>
+            <h2 className="text-2xl font-bold text-gray-800">📅 Daily Panchang</h2>
+            <p className="text-gray-500 text-sm">Celestial timings for your birth</p>
           </div>
-          <div style={styles.resultActions}>
-            <button onClick={() => setActiveView('kundli')} style={styles.switchBtnKundli}>
+          <div className="flex gap-2 flex-wrap">
+            <button onClick={() => setActiveView('kundli')} className="px-4 py-2 bg-emerald-500 text-white rounded-lg flex items-center gap-1 hover:bg-emerald-600 transition">
               <FaStar /> Kundli
             </button>
-            <button onClick={() => setActiveView('form')} style={styles.backBtn}>
+            <button onClick={() => setActiveView('form')} className="px-4 py-2 bg-gray-500 text-white rounded-lg flex items-center gap-1 hover:bg-gray-600 transition">
               <FaArrowLeft /> New
             </button>
           </div>
         </div>
 
-        <div style={styles.sunTimesGrid}>
-          <div style={styles.sunCard}><FaSun style={{ marginRight: '8px' }} /> Sunrise: {getValue(data, ['sunrise'], 'N/A')}</div>
-          <div style={styles.sunCard}><FaSun style={{ marginRight: '8px' }} /> Sunset: {getValue(data, ['sunset'], 'N/A')}</div>
-          <div style={styles.sunCard}><FaMoon style={{ marginRight: '8px' }} /> Moonrise: {getValue(data, ['moonrise'], 'N/A')}</div>
-          <div style={styles.sunCard}><FaMoon style={{ marginRight: '8px' }} /> Moonset: {getValue(data, ['moonset'], 'N/A')}</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="bg-yellow-50 p-3 rounded-xl text-center border border-yellow-200 flex items-center justify-center gap-2 text-sm"><FaSun className="text-yellow-500" /> Sunrise: {getValue(data, ['sunrise'], 'N/A')}</div>
+          <div className="bg-yellow-50 p-3 rounded-xl text-center border border-yellow-200 flex items-center justify-center gap-2 text-sm"><FaSun className="text-yellow-500" /> Sunset: {getValue(data, ['sunset'], 'N/A')}</div>
+          <div className="bg-yellow-50 p-3 rounded-xl text-center border border-yellow-200 flex items-center justify-center gap-2 text-sm"><FaMoon className="text-blue-500" /> Moonrise: {getValue(data, ['moonrise'], 'N/A')}</div>
+          <div className="bg-yellow-50 p-3 rounded-xl text-center border border-yellow-200 flex items-center justify-center gap-2 text-sm"><FaMoon className="text-blue-500" /> Moonset: {getValue(data, ['moonset'], 'N/A')}</div>
         </div>
 
-        <div style={styles.panchangGrid}>
-          <div style={styles.panchangCard}><span style={{ fontSize: '2rem' }}>📖</span><br />Tithi<br /><strong>{getValue(data, ['tithi'], 'N/A')}</strong></div>
-          <div style={styles.panchangCard}><span style={{ fontSize: '2rem' }}>⭐</span><br />Nakshatra<br /><strong>{getValue(data, ['nakshatra'], 'N/A')}</strong></div>
-          <div style={styles.panchangCard}><span style={{ fontSize: '2rem' }}>🧘</span><br />Yoga<br /><strong>{getValue(data, ['yog', 'yoga'], 'N/A')}</strong></div>
-          <div style={styles.panchangCard}><span style={{ fontSize: '2rem' }}>🌊</span><br />Karana<br /><strong>{getValue(data, ['karan', 'karana'], 'N/A')}</strong></div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="bg-green-50 p-4 rounded-xl text-center border border-green-200">
+            <span className="text-3xl">📖</span><br />
+            <span className="text-sm text-gray-600">Tithi</span><br />
+            <strong>{getValue(data, ['tithi'], 'N/A')}</strong>
+          </div>
+          <div className="bg-green-50 p-4 rounded-xl text-center border border-green-200">
+            <span className="text-3xl">⭐</span><br />
+            <span className="text-sm text-gray-600">Nakshatra</span><br />
+            <strong>{getValue(data, ['nakshatra'], 'N/A')}</strong>
+          </div>
+          <div className="bg-green-50 p-4 rounded-xl text-center border border-green-200">
+            <span className="text-3xl">🧘</span><br />
+            <span className="text-sm text-gray-600">Yoga</span><br />
+            <strong>{getValue(data, ['yog', 'yoga'], 'N/A')}</strong>
+          </div>
+          <div className="bg-green-50 p-4 rounded-xl text-center border border-green-200">
+            <span className="text-3xl">🌊</span><br />
+            <span className="text-sm text-gray-600">Karana</span><br />
+            <strong>{getValue(data, ['karan', 'karana'], 'N/A')}</strong>
+          </div>
         </div>
 
-        <h3 style={styles.gridTitle}>⏰ Auspicious & Inauspicious Timings</h3>
-        <div style={styles.muhuratGrid}>
-          <div style={styles.muhuratCardRed}>🔴 Rahu Kaal: {getValue(data, ['rahukaal'], 'N/A')}</div>
-          <div style={styles.muhuratCardYellow}>🟡 Yamaganda: {getValue(data, ['yamaganda'], 'N/A')}</div>
-          <div style={styles.muhuratCardGreen}>🟢 Gulika: {getValue(data, ['gulika'], 'N/A')}</div>
+        <h3 className="text-lg font-semibold text-gray-700 mt-6 mb-3">⏰ Auspicious & Inauspicious Timings</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+          <div className="bg-red-50 p-3 rounded-xl text-center text-red-600 border border-red-200">🔴 Rahu Kaal: {getValue(data, ['rahukaal'], 'N/A')}</div>
+          <div className="bg-yellow-50 p-3 rounded-xl text-center text-yellow-700 border border-yellow-200">🟡 Yamaganda: {getValue(data, ['yamaganda'], 'N/A')}</div>
+          <div className="bg-green-50 p-3 rounded-xl text-center text-green-600 border border-green-200">🟢 Gulika: {getValue(data, ['gulika'], 'N/A')}</div>
         </div>
 
-        <div style={styles.extraInfo}>
+        <div className="flex flex-wrap justify-center gap-4 bg-orange-50 p-4 rounded-xl border border-orange-200">
           <div><strong>🌸 Paksha:</strong> {getValue(data, ['paksha'], 'N/A')}</div>
           <div><strong>🌸 Ritu:</strong> {getValue(data, ['ritu'], 'N/A')}</div>
           <div><strong>☀️ Ayana:</strong> {getValue(data, ['ayana'], 'N/A')}</div>
@@ -482,433 +504,14 @@ const AstrologyPage = () => {
   };
 
   return (
-    <div style={styles.page}>
-      <div style={styles.container}>
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-offWhite py-8 px-4">
+      <div className="max-w-6xl mx-auto">
         {activeView === 'form' && renderForm()}
         {activeView === 'kundli' && kundliData && renderKundli()}
         {activeView === 'panchang' && panchangData && renderPanchang()}
       </div>
     </div>
   );
-};
-
-const styles = {
-  page: {
-    minHeight: '100vh',
-    background: '#faf8f5',
-    padding: '40px 0'
-  },
-  container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '0 20px'
-  },
-  formContainer: {
-    background: '#ffffff',
-    borderRadius: '24px',
-    padding: '40px',
-    maxWidth: '900px',
-    margin: '0 auto',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-    border: '1px solid #e8e4df'
-  },
-  formHeader: {
-    textAlign: 'center',
-    marginBottom: '30px'
-  },
-  formIcon: {
-    fontSize: '3rem',
-    marginBottom: '10px'
-  },
-  formTitle: {
-    fontSize: 'clamp(1.8rem, 5vw, 2.5rem)',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: '10px'
-  },
-  formSubtitle: {
-    color: '#6b7280',
-    fontSize: '1rem'
-  },
-  section: {
-    background: '#faf8f5',
-    padding: '20px',
-    borderRadius: '16px',
-    marginBottom: '20px',
-    border: '1px solid #e8e4df'
-  },
-  sectionHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    marginBottom: '15px'
-  },
-  sectionIcon: {
-    color: '#dc2626',
-    fontSize: '1.2rem'
-  },
-  sectionTitle: {
-    fontSize: '1.1rem',
-    fontWeight: '600',
-    color: '#374151',
-    margin: 0
-  },
-  row: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-    gap: '12px'
-  },
-  input: {
-    padding: '12px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '12px',
-    fontSize: '14px',
-    outline: 'none',
-    background: '#ffffff',
-    transition: 'all 0.3s'
-  },
-  inputSearch: {
-    flex: 1,
-    padding: '12px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '12px',
-    fontSize: '14px',
-    outline: 'none',
-    background: '#ffffff'
-  },
-  inputHalf: {
-    flex: 1,
-    padding: '12px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '12px',
-    fontSize: '14px',
-    outline: 'none',
-    background: '#ffffff'
-  },
-  cityChips: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '8px',
-    marginBottom: '15px'
-  },
-  cityChip: {
-    padding: '6px 14px',
-    background: '#f3f4f6',
-    border: '1px solid #e5e7eb',
-    borderRadius: '20px',
-    cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '500',
-    color: '#4b5563',
-    transition: 'all 0.3s'
-  },
-  searchRow: {
-    display: 'flex',
-    gap: '10px',
-    marginBottom: '15px'
-  },
-  searchBtn: {
-    padding: '12px 20px',
-    background: '#10b981',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontWeight: '500',
-    transition: 'all 0.3s'
-  },
-  locationRow: {
-    display: 'flex',
-    gap: '10px',
-    alignItems: 'center'
-  },
-  locationBtn: {
-    padding: '12px 20px',
-    background: '#f59e0b',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontWeight: '500',
-    whiteSpace: 'nowrap',
-    transition: 'all 0.3s'
-  },
-  submitBtn: {
-    width: '100%',
-    padding: '16px',
-    background: '#dc2626',
-    color: 'white',
-    border: 'none',
-    borderRadius: '16px',
-    fontSize: '1.1rem',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    marginTop: '10px',
-    transition: 'all 0.3s'
-  },
-  resultContainer: {
-    background: '#ffffff',
-    borderRadius: '24px',
-    padding: '40px',
-    margin: '0 auto',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-    border: '1px solid #e8e4df'
-  },
-  resultHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '30px',
-    flexWrap: 'wrap',
-    gap: '15px'
-  },
-  resultTitle: {
-    fontSize: '1.8rem',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: '5px'
-  },
-  resultSubtitle: {
-    color: '#6b7280',
-    fontSize: '0.9rem'
-  },
-  resultActions: {
-    display: 'flex',
-    gap: '10px'
-  },
-  switchBtnPanchang: {
-    padding: '10px 20px',
-    background: '#f59e0b',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontWeight: '500',
-    transition: 'all 0.3s'
-  },
-  switchBtnKundli: {
-    padding: '10px 20px',
-    background: '#10b981',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontWeight: '500',
-    transition: 'all 0.3s'
-  },
-  backBtn: {
-    padding: '10px 20px',
-    background: '#6b7280',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontWeight: '500',
-    transition: 'all 0.3s'
-  },
-  ascendantCard: {
-    background: '#fef2f2',
-    padding: '30px',
-    borderRadius: '20px',
-    textAlign: 'center',
-    marginBottom: '30px',
-    border: '1px solid #fee2e2'
-  },
-  ascendantIcon: {
-    fontSize: '2rem',
-    marginBottom: '10px'
-  },
-  ascendantLabel: {
-    fontSize: '0.9rem',
-    color: '#dc2626',
-    marginBottom: '10px'
-  },
-  ascendantValue: {
-    fontSize: '2.5rem',
-    fontWeight: 'bold',
-    color: '#dc2626'
-  },
-  statsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: '20px',
-    marginBottom: '20px'
-  },
-  statCard: {
-    background: '#faf8f5',
-    padding: '20px',
-    borderRadius: '16px',
-    textAlign: 'center',
-    border: '1px solid #e8e4df'
-  },
-  statIcon: {
-    fontSize: '2rem',
-    marginBottom: '10px'
-  },
-  statLabel: {
-    fontSize: '0.85rem',
-    color: '#6b7280',
-    marginBottom: '8px'
-  },
-  statValue: {
-    fontSize: '1.3rem',
-    fontWeight: 'bold',
-    color: '#374151'
-  },
-  statSub: {
-    fontSize: '0.8rem',
-    color: '#9ca3af',
-    marginTop: '8px'
-  },
-  manglikCard: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '15px',
-    padding: '15px 20px',
-    borderRadius: '16px',
-    marginBottom: '25px',
-    border: '1px solid'
-  },
-  manglikIcon: {
-    fontSize: '1.8rem'
-  },
-  manglikLabel: {
-    fontSize: '0.85rem',
-    color: '#6b7280'
-  },
-  manglikValue: {
-    fontSize: '1.2rem',
-    fontWeight: 'bold'
-  },
-  gridTitle: {
-    fontSize: '1.3rem',
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: '15px',
-    marginTop: '25px'
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-    gap: '12px',
-    marginBottom: '20px'
-  },
-  gridItem: {
-    background: '#faf8f5',
-    padding: '12px',
-    borderRadius: '12px',
-    fontSize: '0.9rem',
-    border: '1px solid #e8e4df'
-  },
-  downloadBtn: {
-    width: '100%',
-    padding: '16px',
-    background: '#dc2626',
-    color: 'white',
-    border: 'none',
-    borderRadius: '16px',
-    fontSize: '1rem',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '10px',
-    marginTop: '30px',
-    transition: 'all 0.3s'
-  },
-  sunTimesGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-    gap: '15px',
-    marginBottom: '25px'
-  },
-  sunCard: {
-    background: '#fefce8',
-    padding: '15px',
-    borderRadius: '16px',
-    textAlign: 'center',
-    fontWeight: '500',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    border: '1px solid #fef3c7'
-  },
-  panchangGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '15px',
-    marginBottom: '25px'
-  },
-  panchangCard: {
-    background: '#f0fdf4',
-    color: '#166534',
-    padding: '20px',
-    borderRadius: '16px',
-    textAlign: 'center',
-    lineHeight: '1.6',
-    border: '1px solid #dcfce7'
-  },
-  muhuratGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '15px',
-    marginBottom: '20px'
-  },
-  muhuratCardRed: {
-    background: '#fef2f2',
-    padding: '15px',
-    borderRadius: '12px',
-    textAlign: 'center',
-    fontWeight: '500',
-    color: '#dc2626',
-    border: '1px solid #fecaca'
-  },
-  muhuratCardYellow: {
-    background: '#fefce8',
-    padding: '15px',
-    borderRadius: '12px',
-    textAlign: 'center',
-    fontWeight: '500',
-    color: '#d97706',
-    border: '1px solid #fde68a'
-  },
-  muhuratCardGreen: {
-    background: '#f0fdf4',
-    padding: '15px',
-    borderRadius: '12px',
-    textAlign: 'center',
-    fontWeight: '500',
-    color: '#10b981',
-    border: '1px solid #bbf7d0'
-  },
-  extraInfo: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '30px',
-    flexWrap: 'wrap',
-    background: '#faf8f5',
-    padding: '15px',
-    borderRadius: '12px',
-    marginTop: '20px',
-    border: '1px solid #e8e4df'
-  }
 };
 
 export default AstrologyPage;
