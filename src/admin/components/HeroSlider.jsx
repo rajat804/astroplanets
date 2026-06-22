@@ -1,3 +1,4 @@
+// HeroSlider.jsx - Updated Full Component
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -15,14 +16,13 @@ const HeroSlider = () => {
   const [preview, setPreview] = useState("");
   const [loading, setLoading] = useState(false);
   const [editId, setEditId] = useState(null);
-const [link, setLink] = useState("");
+  const [link, setLink] = useState("");
+  const [isImageChanged, setIsImageChanged] = useState(false); // Track if image was changed
+
   // GET SLIDES
   const fetchSlides = async () => {
     try {
-      const res = await axios.get(
-        `${API_URL}/hero-slides`
-      );
-
+      const res = await axios.get(`${API_URL}/hero-slides`);
       setSlides(res.data.slides);
     } catch (error) {
       console.log(error);
@@ -37,10 +37,10 @@ const [link, setLink] = useState("");
   const handleImage = (e) => {
     const file = e.target.files[0];
 
-    setImage(file);
-
     if (file) {
+      setImage(file);
       setPreview(URL.createObjectURL(file));
+      setIsImageChanged(true); // Mark that image was changed
     }
   };
 
@@ -48,8 +48,21 @@ const [link, setLink] = useState("");
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!image) {
-      return alert("Select image");
+    // Validation based on mode
+    if (editId) {
+      // UPDATE mode - at least one field should be changed
+      if (!isImageChanged && !link.trim()) {
+        return alert("Please update the link or select a new image");
+      }
+    } else {
+      // CREATE mode - image is required
+      if (!image) {
+        return alert("Please select an image");
+      }
+      
+      if (slides.length >= 10) {
+        return alert("Only 10 slides allowed");
+      }
     }
 
     try {
@@ -57,44 +70,56 @@ const [link, setLink] = useState("");
 
       const formData = new FormData();
 
-      formData.append("image", image);
-      formData.append("link", link);
+      // Only append image if it's changed (for update) or creating new
+      if (image && isImageChanged) {
+        formData.append("image", image);
+      }
+
+      // Always append link if it has value
+      if (link.trim()) {
+        formData.append("link", link);
+      }
 
       // UPDATE
       if (editId) {
         await axios.put(
           `${API_URL}/hero-slides/${editId}`,
-          formData
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
         );
 
-        alert("Slide Updated");
-      }
-
+        alert("Slide Updated Successfully");
+      } 
       // CREATE
       else {
-        if (slides.length >= 10) {
-          return alert(
-            "Only 10 slides allowed"
-          );
-        }
-
         await axios.post(
           `${API_URL}/hero-slides/create`,
-          formData
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
         );
 
-        alert("Slide Uploaded");
+        alert("Slide Uploaded Successfully");
       }
 
+      // Reset form
       setImage(null);
       setPreview("");
       setEditId(null);
       setLink("");
-
+      setIsImageChanged(false);
       fetchSlides();
     } catch (error) {
       console.log(error);
-      alert("Something went wrong");
+      const errorMessage = error.response?.data?.message || "Something went wrong";
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -102,23 +127,15 @@ const [link, setLink] = useState("");
 
   // DELETE
   const handleDelete = async (id) => {
-    if (
-      !window.confirm(
-        "Delete this slide?"
-      )
-    )
-      return;
+    if (!window.confirm("Delete this slide?")) return;
 
     try {
-      await axios.delete(
-        `${API_URL}/hero-slides/${id}`
-      );
-
+      await axios.delete(`${API_URL}/hero-slides/${id}`);
       fetchSlides();
-
-      alert("Deleted");
+      alert("Slide Deleted Successfully");
     } catch (error) {
       console.log(error);
+      alert("Failed to delete slide");
     }
   };
 
@@ -127,6 +144,17 @@ const [link, setLink] = useState("");
     setPreview(slide.image);
     setEditId(slide._id);
     setLink(slide.link || "");
+    setImage(null); // Clear image state
+    setIsImageChanged(false); // Reset image changed flag
+  };
+
+  // Cancel Edit
+  const handleCancelEdit = () => {
+    setImage(null);
+    setPreview("");
+    setEditId(null);
+    setLink("");
+    setIsImageChanged(false);
   };
 
   return (
@@ -134,48 +162,92 @@ const [link, setLink] = useState("");
       {/* HEADER */}
       <div className="flex items-center gap-3 mb-8">
         <FaImages className="text-3xl text-red-500" />
-
-        <h1 className="text-3xl font-bold">
-          Hero Slider
-        </h1>
+        <h1 className="text-3xl font-bold">Hero Slider</h1>
+        <span className="ml-4 text-sm bg-gray-200 px-3 py-1 rounded-full">
+          {slides.length}/10 Slides
+        </span>
       </div>
 
       {/* FORM */}
       <div className="bg-white rounded-2xl p-6 shadow-lg mb-10">
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5"
-        >
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Edit Mode Indicator */}
+          {editId && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between">
+              <span className="text-blue-700 font-medium">
+                Editing Slide {slides.findIndex(s => s._id === editId) + 1}
+              </span>
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Cancel Edit
+              </button>
+            </div>
+          )}
+
           {/* IMAGE INPUT */}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImage}
-            className="w-full border p-3 rounded-xl"
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {editId ? "Change Image (Optional)" : "Select Image"}
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImage}
+              className="w-full border p-3 rounded-xl"
+            />
+            {editId && (
+              <p className="text-xs text-gray-500 mt-1">
+                {image ? "New image selected" : "Leave empty to keep current image"}
+              </p>
+            )}
+          </div>
 
           {/* PREVIEW */}
           {preview && (
-            <img
-              src={preview}
-              alt=""
-              className="w-full md:w-72 h-48 object-cover rounded-xl border"
-            />
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+              <img
+                src={preview}
+                alt="Slide preview"
+                className="w-full md:w-72 h-48 object-cover rounded-xl border"
+              />
+              {editId && isImageChanged && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✓ New image will be uploaded
+                </p>
+              )}
+            </div>
           )}
-<input
-  type="text"
-  placeholder="Enter redirect link"
-  value={link}
-  onChange={(e) => setLink(e.target.value)}
-  className="w-full border p-3 rounded-xl"
-/>
+
+          {/* LINK INPUT */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Redirect Link {editId ? "(Optional)" : "(Optional)"}
+            </label>
+            <input
+              type="text"
+              placeholder="Enter redirect link (e.g., https://example.com)"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              className="w-full border p-3 rounded-xl"
+            />
+            {editId && (
+              <p className="text-xs text-gray-500 mt-1">
+                {link ? "Link will be updated" : "Link will be removed"}
+              </p>
+            )}
+          </div>
+
+          {/* SUBMIT BUTTON */}
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl flex items-center gap-2"
+            className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FaUpload />
-
             {loading
               ? "Processing..."
               : editId
@@ -185,51 +257,62 @@ const [link, setLink] = useState("");
         </form>
       </div>
 
-      {/* SLIDES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {slides.map((slide, index) => (
-          <div
-            key={slide._id}
-            className="bg-white rounded-2xl overflow-hidden shadow-lg border"
-          >
-            <img
-              src={slide.image}
-              alt=""
-              className="w-full h-64 object-cover"
-            />
+      {/* SLIDES LIST */}
+      {slides.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 rounded-2xl">
+          <FaImages className="text-5xl text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">No slides uploaded yet</p>
+          <p className="text-sm text-gray-400">Upload your first slide above</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {slides.map((slide, index) => (
+            <div
+              key={slide._id}
+              className={`bg-white rounded-2xl overflow-hidden shadow-lg border ${
+                editId === slide._id ? "ring-2 ring-blue-500" : ""
+              }`}
+            >
+              <img
+                src={slide.image}
+                alt={`Slide ${index + 1}`}
+                className="w-full h-64 object-cover"
+              />
 
-            <div className="p-4">
-              <h2 className="font-bold text-lg mb-4">
-                Slide {index + 1}
-              </h2>
+              <div className="p-4">
+                <h2 className="font-bold text-lg mb-2">Slide {index + 1}</h2>
+                
+                {/* Display Link if exists */}
+                {slide.link && (
+                  <p className="text-sm text-gray-500 mb-4 truncate">
+                    🔗 {slide.link}
+                  </p>
+                )}
 
-              <div className="flex gap-3">
-                {/* EDIT */}
-                <button
-                  onClick={() =>
-                    handleEdit(slide)
-                  }
-                  className="flex-1 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center gap-2"
-                >
-                  <FaEdit />
-                  Edit
-                </button>
+                <div className="flex gap-3">
+                  {/* EDIT */}
+                  <button
+                    onClick={() => handleEdit(slide)}
+                    className="flex-1 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <FaEdit />
+                    Edit
+                  </button>
 
-                {/* DELETE */}
-                <button
-                  onClick={() =>
-                    handleDelete(slide._id)
-                  }
-                  className="flex-1 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white flex items-center justify-center gap-2"
-                >
-                  <FaTrash />
-                  Delete
-                </button>
+                  {/* DELETE */}
+                  <button
+                    onClick={() => handleDelete(slide._id)}
+                    className="flex-1 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <FaTrash />
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
