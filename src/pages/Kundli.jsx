@@ -284,83 +284,118 @@ const AstrologyPage = () => {
   };
 
   const renderForm = () => (
-    <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-10 max-w-4xl mx-auto shadow-lg border border-orange-100">
-      <div className="text-center mb-8">
-        <div className="text-5xl mb-3">🔮</div>
-        <h1 className="text-2xl md:text-4xl font-bold text-gray-800">Generate Your Free Kundli</h1>
-        <p className="text-gray-500 text-sm md:text-base mt-2">Discover your cosmic blueprint with accurate Vedic astrology – Absolutely Free!</p>
+  <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-10 max-w-4xl mx-auto shadow-lg border border-orange-100">
+    <div className="text-center mb-8">
+      <div className="text-5xl mb-3">🔮</div>
+      <h1 className="text-2xl md:text-4xl font-bold text-gray-800">Generate Your Free Kundli</h1>
+      <p className="text-gray-500 text-sm md:text-base mt-2">Discover your cosmic blueprint with accurate Vedic astrology – Absolutely Free!</p>
+    </div>
+
+    <form onSubmit={generateKundli}>
+      {/* Date of Birth */}
+      <div className="bg-orange-50 p-4 md:p-5 rounded-xl mb-4 border border-orange-100">
+        <div className="flex items-center gap-2 mb-3">
+          <FaCalendarAlt className="text-red-500 text-lg" />
+          <h3 className="font-semibold text-gray-700">Date of Birth</h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input type="number" name="date" placeholder="DD" value={formData.date} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
+          <input type="number" name="month" placeholder="MM" value={formData.month} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
+          <input type="number" name="year" placeholder="YYYY" value={formData.year} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
+        </div>
       </div>
 
-      <form onSubmit={generateKundli}>
-        {/* Date of Birth */}
-        <div className="bg-orange-50 p-4 md:p-5 rounded-xl mb-4 border border-orange-100">
-          <div className="flex items-center gap-2 mb-3">
-            <FaCalendarAlt className="text-red-500 text-lg" />
-            <h3 className="font-semibold text-gray-700">Date of Birth</h3>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <input type="number" name="date" placeholder="DD" value={formData.date} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
-            <input type="number" name="month" placeholder="MM" value={formData.month} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
-            <input type="number" name="year" placeholder="YYYY" value={formData.year} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
-          </div>
+      {/* Time of Birth */}
+      <div className="bg-orange-50 p-4 md:p-5 rounded-xl mb-4 border border-orange-100">
+        <div className="flex items-center gap-2 mb-3">
+          <FaClock className="text-red-500 text-lg" />
+          <h3 className="font-semibold text-gray-700">Time of Birth</h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input type="number" name="hour" placeholder="Hour (0-23)" value={formData.hour} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
+          <input type="number" name="minute" placeholder="Minute (0-59)" value={formData.minute} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
+          <select name="timezone" value={formData.timezone} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none bg-white">
+            <option value="5.5">India (IST) +5:30</option>
+            <option value="0">UTC</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Place of Birth */}
+      <div className="bg-orange-50 p-4 md:p-5 rounded-xl mb-4 border border-orange-100">
+        <div className="flex items-center gap-2 mb-3">
+          <FaMapMarkerAlt className="text-red-500 text-lg" />
+          <h3 className="font-semibold text-gray-700">Place of Birth</h3>
         </div>
 
-        {/* Time of Birth */}
-        <div className="bg-orange-50 p-4 md:p-5 rounded-xl mb-4 border border-orange-100">
-          <div className="flex items-center gap-2 mb-3">
-            <FaClock className="text-red-500 text-lg" />
-            <h3 className="font-semibold text-gray-700">Time of Birth</h3>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <input type="number" name="hour" placeholder="Hour (0-23)" value={formData.hour} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
-            <input type="number" name="minute" placeholder="Minute (0-59)" value={formData.minute} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
-            <select name="timezone" value={formData.timezone} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none bg-white">
-              <option value="5.5">India (IST) +5:30</option>
-              <option value="0">UTC</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Place of Birth */}
-        <div className="bg-orange-50 p-4 md:p-5 rounded-xl mb-4 border border-orange-100">
-          <div className="flex items-center gap-2 mb-3">
-            <FaMapMarkerAlt className="text-red-500 text-lg" />
-            <h3 className="font-semibold text-gray-700">Place of Birth</h3>
-          </div>
-
-          {/* City chips */}
-          <div className="flex flex-wrap gap-2 mb-3">
-            {popularCities.map((city, i) => (
-              <button key={i} type="button" onClick={() => selectPopularCity(city)} className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-full text-sm text-gray-700 transition">
-                {city.name}
-              </button>
-            ))}
-          </div>
-
-          {/* Search city */}
-          <div className="px-3 py-2 text-xs sm:text-sm bg-gray-200 hover:bg-gray-300 rounded-full">
-            <input type="text" name="city" placeholder="Enter City Name" value={formData.city} onChange={handleChange} className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" />
-            <button type="button" onClick={searchCity} disabled={searchingCity} className="px-4 py-3 bg-emerald-500 text-white rounded-lg flex items-center gap-1 hover:bg-emerald-600 transition disabled:opacity-50">
-              <FaSearch /> {searchingCity ? '...' : 'Search'}
+        {/* City chips */}
+        <div className="flex flex-wrap gap-2 mb-3">
+          {popularCities.map((city, i) => (
+            <button key={i} type="button" onClick={() => selectPopularCity(city)} className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-full text-sm text-gray-700 transition">
+              {city.name}
             </button>
-          </div>
-
-          {/* Latitude / Longitude / My Location */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            <input type="number" step="any" name="latitude" placeholder="Latitude" value={formData.latitude} onChange={handleChange} className="flex-1 min-w-[100px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
-            <input type="number" step="any" name="longitude" placeholder="Longitude" value={formData.longitude} onChange={handleChange} className="flex-1 min-w-[100px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none" required />
-            <button type="button" onClick={getCurrentLocation} disabled={gettingLocation} className="px-4 py-3 bg-amber-500 text-white rounded-lg flex items-center gap-1 hover:bg-amber-600 transition disabled:opacity-50">
-              <FaLocationArrow /> {gettingLocation ? 'Getting...' : 'My Location'}
-            </button>
-          </div>
+          ))}
         </div>
 
-        <button type="submit" disabled={loading} className="w-full py-4 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold text-lg rounded-xl hover:shadow-lg transition disabled:opacity-50">
-          {loading ? '✨ Generating Your Kundli... ✨' : '✨ Generate Your Free Kundli ✨'}
-        </button>
-      </form>
-    </div>
-  );
+        {/* Search city – now properly responsive with flex */}
+        <div className="flex flex-col sm:flex-row gap-2 mb-3">
+          <input
+            type="text"
+            name="city"
+            placeholder="Enter City Name"
+            value={formData.city}
+            onChange={handleChange}
+            className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none"
+          />
+          <button
+            type="button"
+            onClick={searchCity}
+            disabled={searchingCity}
+            className="px-4 py-3 bg-emerald-500 text-white rounded-lg flex items-center justify-center gap-1 hover:bg-emerald-600 transition disabled:opacity-50 sm:w-auto w-full"
+          >
+            <FaSearch /> {searchingCity ? '...' : 'Search'}
+          </button>
+        </div>
+
+        {/* Latitude / Longitude / My Location */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          <input
+            type="number"
+            step="any"
+            name="latitude"
+            placeholder="Latitude"
+            value={formData.latitude}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none"
+            required
+          />
+          <input
+            type="number"
+            step="any"
+            name="longitude"
+            placeholder="Longitude"
+            value={formData.longitude}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none"
+            required
+          />
+          <button
+            type="button"
+            onClick={getCurrentLocation}
+            disabled={gettingLocation}
+            className="px-4 py-3 bg-amber-500 text-white rounded-lg flex items-center justify-center gap-1 hover:bg-amber-600 transition disabled:opacity-50"
+          >
+            <FaLocationArrow /> {gettingLocation ? 'Getting...' : 'My Location'}
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" disabled={loading} className="w-full py-4 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold text-lg rounded-xl hover:shadow-lg transition disabled:opacity-50">
+        {loading ? '✨ Generating Your Kundli... ✨' : '✨ Generate Your Free Kundli ✨'}
+      </button>
+    </form>
+  </div>
+);
 
   const renderKundli = () => {
     const data = kundliData || {};
