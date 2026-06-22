@@ -37,8 +37,12 @@ const ProtectedRoute = ({ children }) => {
 
 // Admin Protected Route Component
 const AdminProtectedRoute = ({ children }) => {
-  const adminToken = localStorage.getItem('adminToken');
-  return adminToken ? children : <Navigate to="/admin/login" />;
+  const adminToken = sessionStorage.getItem('adminToken');
+  const admin = sessionStorage.getItem('admin');
+
+  return adminToken && admin
+    ? children
+    : <Navigate to="/admin/login" replace />;
 };
 
 // Layout wrapper component to conditionally show Navbar and Footer
