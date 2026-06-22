@@ -4,17 +4,17 @@ import toast from 'react-hot-toast';
 // Simple API URL detection
 const getApiUrl = () => {
   // Check if we're on Vercel (production)
-  const isVercel = window.location.hostname !== 'localhost' && 
-                   window.location.hostname !== '127.0.0.1';
-  
+  const isVercel = window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1';
+
   console.log('Hostname:', window.location.hostname);
   console.log('Is Vercel:', isVercel);
-  
+
   if (isVercel) {
     // Use your backend URL
     return 'https://astroplanets-backend.vercel.app/api';
   }
-  
+
   // Local development
   return 'http://localhost:5000/api';
 };
@@ -34,15 +34,15 @@ const api = axios.create({
 // Add token to requests
 api.interceptors.request.use(
   (config) => {
-    let token = localStorage.getItem('token');
+    let token = sessionStorage.getItem('token');
     if (!token) {
-      token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+      token = sessionStorage.getItem('adminToken');
     }
-    
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     console.log(`${config.method.toUpperCase()} ${config.url}`, config.data);
     return config;
   },
@@ -61,25 +61,23 @@ api.interceptors.response.use(
   (error) => {
     console.error('Response error:', error.response?.status, error.response?.data);
     console.error('Full error:', error);
-    
+
     if (error.code === 'ECONNABORTED') {
       toast.error('Request timeout. Please check your connection.');
     } else if (!error.response) {
       toast.error('Cannot connect to server. Please check if backend is running.');
     } else {
       const message = error.response?.data?.msg || error.response?.data?.message || 'An error occurred';
-      
+
       if (error.response?.status === 401) {
         if (error.config.url?.includes('/admin/')) {
-          localStorage.removeItem('adminToken');
           sessionStorage.removeItem('adminToken');
-          localStorage.removeItem('admin');
           sessionStorage.removeItem('admin');
           window.location.href = '/admin/login';
           toast.error('Admin session expired. Please login again.');
         } else {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('user');
           window.location.href = '/auth';
           toast.error('Session expired. Please login again.');
         }
@@ -87,7 +85,7 @@ api.interceptors.response.use(
         toast.error(message);
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -96,9 +94,9 @@ api.interceptors.response.use(
 export const register = async (userData) => {
   const response = await api.post('/auth/register', userData);
   if (response.data.token) {
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
-    localStorage.setItem('loginTime', Date.now().toString());
+    sessionStorage.setItem('token', response.data.token);
+    sessionStorage.setItem('user', JSON.stringify(response.data.user));
+    sessionStorage.setItem('loginTime', Date.now().toString());
   }
   return response.data;
 };
@@ -107,9 +105,9 @@ export const login = async (credentials) => {
   console.log('Login API called with:', credentials.email);
   const response = await api.post('/auth/login', credentials);
   if (response.data.token) {
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
-    localStorage.setItem('loginTime', Date.now().toString());
+    sessionStorage.setItem('token', response.data.token);
+    sessionStorage.setItem('user', JSON.stringify(response.data.user));
+    sessionStorage.setItem('loginTime', Date.now().toString());
   }
   return response.data;
 };
@@ -132,16 +130,11 @@ export const getCurrentUser = async () => {
 // ==================== ADMIN APIs ====================
 export const adminLogin = async (credentials) => {
   console.log('Admin login API called with:', credentials.email);
-  
+
   try {
     const response = await api.post('/admin/login', credentials);
     console.log('Admin login response:', response.data);
-    
-    if (response.data.token) {
-      localStorage.setItem('adminToken', response.data.token);
-      localStorage.setItem('admin', JSON.stringify(response.data.admin));
-      console.log('Admin token stored successfully');
-    }
+    // ✅ Only return data, storage handled by component
     return response.data;
   } catch (error) {
     console.error('Admin login API error:', error);
@@ -175,14 +168,12 @@ export const getCurrentAdmin = async () => {
 };
 
 export const isAdminLoggedIn = () => {
-  const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
-  const admin = localStorage.getItem('admin') || sessionStorage.getItem('admin');
+  const token = sessionStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+  const admin = sessionStorage.getItem('admin') || sessionStorage.getItem('admin');
   return !!(token && admin);
 };
 
 export const adminLogout = () => {
-  localStorage.removeItem('adminToken');
-  localStorage.removeItem('admin');
   sessionStorage.removeItem('adminToken');
   sessionStorage.removeItem('admin');
   toast.success('Admin logged out successfully');
@@ -197,7 +188,7 @@ export const getAdminDashboardStats = async (year, month) => {
     if (year) params.append('year', year);
     if (month) params.append('month', month);
     if (params.toString()) url += `?${params.toString()}`;
-    
+
     const response = await api.get(url);
     return response.data;
   } catch (error) {
@@ -457,7 +448,7 @@ export const createSocialContent = async (data) => {
 export const uploadSocialContentFile = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
-  
+
   const response = await api.post('/social-content/upload', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
@@ -497,7 +488,7 @@ export const getAllBlogs = async (tag = '', page = 1, limit = 6) => {
   if (tag) params.append('tag', tag);
   params.append('page', page);
   params.append('limit', limit);
-  
+
   const response = await api.get(`/blogs?${params.toString()}`);
   return response.data;
 };
