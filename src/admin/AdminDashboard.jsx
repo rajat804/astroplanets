@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { FaRupeeSign, FaBookOpen, FaMagic, FaCalendarAlt, FaFilter, FaClock } from "react-icons/fa";
-import { HiOutlineClock } from "react-icons/hi";
+import { HiOutlineClock, HiOutlineRefresh } from "react-icons/hi";
 import AdminRoute from "./AdminRoute";
 import Sidebar from "./components/Sidebar";
 import TopBar from "./components/TopBar";
@@ -24,11 +24,10 @@ import BlogManager from "./components/BlogManager";
 import CouponManager from "./components/CouponManager";
 import PlanManagement from "./components/PlanManagement";
 import OrdersTable from "./components/OrdersTable";
-import OrderStatsCards from "./components/OrderStatsCards";
 import Reports from "./components/Reports";
 import Classes from "./components/Classes";
 import RashiFalManager from "./components/RashiFalManager";
-import { HiOutlineRefresh } from "react-icons/hi";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export default function AdminDashboardShell() {
@@ -53,11 +52,11 @@ function AdminDashboard() {
   // Filter States
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [filterType, setFilterType] = useState("monthly"); // monthly, yearly, custom
+  const [filterType, setFilterType] = useState("monthly");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   // Timing Filter States
-  const [timeFilter, setTimeFilter] = useState("all"); // all, morning, afternoon, evening, night
+  const [timeFilter, setTimeFilter] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [showTimeFilter, setShowTimeFilter] = useState(false);
@@ -78,8 +77,12 @@ function AdminDashboard() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [orderStats, setOrderStats] = useState(null);
 
-  // Available years (current year and 2 years back)
-  const availableYears = [new Date().getFullYear(), new Date().getFullYear() - 1, new Date().getFullYear() - 2];
+  // Available years
+  const availableYears = [
+    new Date().getFullYear(),
+    new Date().getFullYear() - 1,
+    new Date().getFullYear() - 2,
+  ];
 
   // Months
   const months = [
@@ -94,34 +97,30 @@ function AdminDashboard() {
     { value: 9, name: "September" },
     { value: 10, name: "October" },
     { value: 11, name: "November" },
-    { value: 12, name: "December" }
+    { value: 12, name: "December" },
   ];
 
-  // Time slots for filtering
+  // Time slots
   const timeSlots = [
     { value: "all", label: "All Time", icon: "🕐", range: "00:00 - 23:59" },
-    { value: "morning", label: "Morning", icon: "🌅", range: "06:00 - 12:00", startHour: 6, endHour: 12 },
-    { value: "afternoon", label: "Afternoon", icon: "☀️", range: "12:00 - 17:00", startHour: 12, endHour: 17 },
-    { value: "evening", label: "Evening", icon: "🌤️", range: "17:00 - 20:00", startHour: 17, endHour: 20 },
-    { value: "night", label: "Night", icon: "🌙", range: "20:00 - 06:00", startHour: 20, endHour: 24 }
+    { value: "morning", label: "Morning", icon: "🌅", range: "06:00 - 12:00" },
+    { value: "afternoon", label: "Afternoon", icon: "☀️", range: "12:00 - 17:00" },
+    { value: "evening", label: "Evening", icon: "🌤️", range: "17:00 - 20:00" },
+    { value: "night", label: "Night", icon: "🌙", range: "20:00 - 06:00" },
   ];
 
-  // Get Auth Token
+  // ✅ Get token ONLY from sessionStorage
   const getAuthToken = () => {
-    return localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+    return sessionStorage.getItem("adminToken");
   };
 
-  // Filter data by time of day
+  // Filter helpers
   const filterByTimeOfDay = (data) => {
     if (timeFilter === "all") return data;
-
-    const selectedSlot = timeSlots.find(slot => slot.value === timeFilter);
+    const selectedSlot = timeSlots.find((slot) => slot.value === timeFilter);
     if (!selectedSlot) return data;
-
-    return data.filter(item => {
-      const itemDate = new Date(item.createdAt);
-      const hour = itemDate.getHours();
-
+    return data.filter((item) => {
+      const hour = new Date(item.createdAt).getHours();
       if (timeFilter === "morning") return hour >= 6 && hour < 12;
       if (timeFilter === "afternoon") return hour >= 12 && hour < 17;
       if (timeFilter === "evening") return hour >= 17 && hour < 20;
@@ -130,39 +129,31 @@ function AdminDashboard() {
     });
   };
 
-  // Filter data by custom date range
   const filterByDateRange = (data) => {
     if (!startDate && !endDate) return data;
-
-    return data.filter(item => {
+    return data.filter((item) => {
       const itemDate = new Date(item.createdAt);
       const start = startDate ? new Date(startDate) : null;
       const end = endDate ? new Date(endDate) : null;
-
-      if (start && end) {
-        return itemDate >= start && itemDate <= end;
-      } else if (start) {
-        return itemDate >= start;
-      } else if (end) {
-        return itemDate <= end;
-      }
+      if (start && end) return itemDate >= start && itemDate <= end;
+      if (start) return itemDate >= start;
+      if (end) return itemDate <= end;
       return true;
     });
   };
 
-  // Axios interceptor for adding token to all requests
+  // ✅ Axios interceptor - uses sessionStorage token
   useEffect(() => {
     const token = getAuthToken();
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
 
-    // Add response interceptor for handling 401 errors
     const interceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response?.status === 401) {
-          toast.error('Session expired. Please login again.');
+        if (error.response?.status === 401 && window.location.pathname !== "/admin/login") {
+          toast.error("Session expired. Please login again.");
           logout();
         }
         return Promise.reject(error);
@@ -174,134 +165,109 @@ function AdminDashboard() {
     };
   }, []);
 
-  // Fetch Dashboard Data with filters
+  // ✅ Logout - clears both storages (session is primary)
+  const logout = () => {
+    sessionStorage.removeItem("adminToken");
+    sessionStorage.removeItem("admin");
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("admin");
+    delete axios.defaults.headers.common["Authorization"];
+    toast.success("Logged out successfully");
+    nav("/admin/login");
+  };
+
+  // ================================
+  // FETCH FUNCTIONS
+  // ================================
+
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      console.log("Fetching dashboard data with filters:", { filterType, selectedYear, selectedMonth, timeFilter, startDate, endDate });
-
-      // Build query params
       const params = new URLSearchParams();
       if (filterType === "monthly") {
-        params.append('year', selectedYear);
-        params.append('month', selectedMonth);
+        params.append("year", selectedYear);
+        params.append("month", selectedMonth);
       } else if (filterType === "yearly") {
-        params.append('year', selectedYear);
+        params.append("year", selectedYear);
       }
+      if (startDate) params.append("startDate", startDate);
+      if (endDate) params.append("endDate", endDate);
+      if (timeFilter !== "all") params.append("timeFilter", timeFilter);
 
-      // Add custom date range if provided
-      if (startDate) params.append('startDate', startDate);
-      if (endDate) params.append('endDate', endDate);
-      if (timeFilter !== "all") params.append('timeFilter', timeFilter);
-
-      // Fetch stats with filters
-      const statsRes = await axios.get(`${API_URL}/admindashboard/overview-stats?${params.toString()}`);
-      console.log("Stats response:", statsRes.data);
-
+      const statsRes = await axios.get(
+        `${API_URL}/admindashboard/overview-stats?${params.toString()}`
+      );
       if (statsRes.data.success) {
         setDashboardStats(statsRes.data.stats);
         setMonthlyRevenue(statsRes.data.stats.monthlyRevenue || []);
       }
 
-      // Fetch ONLY confirmed/successful service bookings
-      const confirmedBookingsRes = await axios.get(`${API_URL}/servicebookings/confirmed`);
-      console.log("Confirmed Service Bookings:", confirmedBookingsRes.data);
-
-      let allConfirmedBookings = [];
-
-      if (confirmedBookingsRes.data.success && confirmedBookingsRes.data.bookings) {
-        // Filter bookings by selected date range
-        let filteredBookings = confirmedBookingsRes.data.bookings;
-
+      // Fetch confirmed bookings
+      const confirmedRes = await axios.get(`${API_URL}/servicebookings/confirmed`);
+      let allConfirmed = [];
+      if (confirmedRes.data.success && confirmedRes.data.bookings) {
+        let filtered = confirmedRes.data.bookings;
         if (filterType === "monthly") {
-          filteredBookings = filteredBookings.filter(booking => {
-            const bookingDate = new Date(booking.createdAt);
-            return bookingDate.getFullYear() === selectedYear &&
-              (bookingDate.getMonth() + 1) === selectedMonth;
+          filtered = filtered.filter((b) => {
+            const d = new Date(b.createdAt);
+            return d.getFullYear() === selectedYear && d.getMonth() + 1 === selectedMonth;
           });
         } else if (filterType === "yearly") {
-          filteredBookings = filteredBookings.filter(booking => {
-            const bookingDate = new Date(booking.createdAt);
-            return bookingDate.getFullYear() === selectedYear;
-          });
+          filtered = filtered.filter((b) => new Date(b.createdAt).getFullYear() === selectedYear);
         }
-
-        // Apply custom date range filter
-        if (startDate || endDate) {
-          filteredBookings = filterByDateRange(filteredBookings);
-        }
-
-        // Apply time of day filter
-        filteredBookings = filterByTimeOfDay(filteredBookings);
-
-        const serviceBookings = filteredBookings.map(booking => ({
-          _id: booking._id,
-          userName: booking.userName || "Guest User",
-          userEmail: booking.userEmail || "No email",
-          userPhone: booking.userPhone || null,
-          serviceTitle: booking.serviceTitle || "Service Booking",
-          amount: booking.amount || 0,
-          status: booking.status || "confirmed",
-          preferredDate: booking.preferredDate,
-          preferredTime: booking.preferredTime,
-          message: booking.message || null,
-          createdAt: booking.createdAt,
-          type: "service"
+        if (startDate || endDate) filtered = filterByDateRange(filtered);
+        filtered = filterByTimeOfDay(filtered);
+        allConfirmed = filtered.map((b) => ({
+          _id: b._id,
+          userName: b.userName || "Guest User",
+          userEmail: b.userEmail || "No email",
+          userPhone: b.userPhone || null,
+          serviceTitle: b.serviceTitle || "Service Booking",
+          amount: b.amount || 0,
+          status: b.status || "confirmed",
+          preferredDate: b.preferredDate,
+          preferredTime: b.preferredTime,
+          message: b.message || null,
+          createdAt: b.createdAt,
+          type: "service",
         }));
-        allConfirmedBookings = [...serviceBookings];
       }
 
-      // Fetch successful course payments
-      const coursePaymentsRes = await axios.get(`${API_URL}/coursepayment/success-users`);
-      console.log("Course Payments:", coursePaymentsRes.data);
-
-      if (coursePaymentsRes.data.success && coursePaymentsRes.data.users) {
-        // Filter course payments by selected date range
-        let filteredPayments = coursePaymentsRes.data.users;
-
+      // Fetch course payments
+      const courseRes = await axios.get(`${API_URL}/coursepayment/success-users`);
+      if (courseRes.data.success && courseRes.data.users) {
+        let filtered = courseRes.data.users;
         if (filterType === "monthly") {
-          filteredPayments = filteredPayments.filter(payment => {
-            const paymentDate = new Date(payment.createdAt);
-            return paymentDate.getFullYear() === selectedYear &&
-              (paymentDate.getMonth() + 1) === selectedMonth;
+          filtered = filtered.filter((p) => {
+            const d = new Date(p.createdAt);
+            return d.getFullYear() === selectedYear && d.getMonth() + 1 === selectedMonth;
           });
         } else if (filterType === "yearly") {
-          filteredPayments = filteredPayments.filter(payment => {
-            const paymentDate = new Date(payment.createdAt);
-            return paymentDate.getFullYear() === selectedYear;
-          });
+          filtered = filtered.filter((p) => new Date(p.createdAt).getFullYear() === selectedYear);
         }
-
-        // Apply custom date range filter
-        if (startDate || endDate) {
-          filteredPayments = filterByDateRange(filteredPayments);
-        }
-
-        // Apply time of day filter
-        filteredPayments = filterByTimeOfDay(filteredPayments);
-
-        const courseBookings = filteredPayments.map(payment => ({
-          _id: payment._id,
-          userName: payment.userName || "User",
-          userEmail: payment.userEmail || "No email",
-          userPhone: payment.userPhone || null,
-          serviceTitle: payment.courseId?.title || "Course Enrollment",
-          amount: payment.amount || 0,
+        if (startDate || endDate) filtered = filterByDateRange(filtered);
+        filtered = filterByTimeOfDay(filtered);
+        const courseBookings = filtered.map((p) => ({
+          _id: p._id,
+          userName: p.userName || "User",
+          userEmail: p.userEmail || "No email",
+          userPhone: p.userPhone || null,
+          serviceTitle: p.courseId?.title || "Course Enrollment",
+          amount: p.amount || 0,
           status: "success",
-          preferredDate: payment.createdAt,
+          preferredDate: p.createdAt,
           preferredTime: "Flexible",
-          message: `Enrolled in ${payment.courseId?.title || "course"}`,
-          createdAt: payment.createdAt,
-          type: "course"
+          message: `Enrolled in ${p.courseId?.title || "course"}`,
+          createdAt: p.createdAt,
+          type: "course",
         }));
-        allConfirmedBookings = [...allConfirmedBookings, ...courseBookings];
+        allConfirmed = [...allConfirmed, ...courseBookings];
       }
 
-      // Sort by date (newest first) and take top 5
-      const sortedBookings = allConfirmedBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
-      console.log("Final recent bookings:", sortedBookings);
-      setRecentBookings(sortedBookings);
-
+      const sorted = allConfirmed
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5);
+      setRecentBookings(sorted);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       toast.error("Failed to load dashboard data");
@@ -310,340 +276,233 @@ function AdminDashboard() {
     }
   };
 
-  // Fetch Orders - Updated to handle both response formats
-const fetchOrders = async () => {
-  setOrdersLoading(true);
-  try {
-    const token = getAuthToken();
-    const response = await axios.get(`${API_URL}/orders/admin`, {
-      headers: {
-        Authorization: `Bearer ${token}`
+  const fetchOrders = async () => {
+    setOrdersLoading(true);
+    try {
+      const token = getAuthToken();
+      const response = await axios.get(`${API_URL}/orders/admin`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.data.orders) {
+        setOrders(response.data.orders);
+        setOrderStats(response.data.stats || null);
+      } else if (response.data.success) {
+        setOrders(response.data.orders || []);
+        setOrderStats(response.data.stats || null);
+      } else {
+        setOrders(response.data || []);
       }
-    });
-    console.log("Orders response:", response.data);
-    
-    // Handle both response formats
-    if (response.data.orders) {
-      setOrders(response.data.orders);
-      setOrderStats(response.data.stats || null);
-    } else if (response.data.success) {
-      setOrders(response.data.orders || []);
-      setOrderStats(response.data.stats || null);
-    } else {
-      setOrders(response.data || []);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      if (error.response?.status === 401) {
+        toast.error("Unauthorized. Please login again.");
+        logout();
+      } else {
+        toast.error("Failed to fetch orders");
+      }
+    } finally {
+      setOrdersLoading(false);
     }
-    
-  } catch (error) {
-    console.error('Error fetching orders:', error);
-    if (error.response?.status === 404) {
-      console.warn('Orders endpoint not available yet');
-      setOrders([]);
-    } else if (error.response?.status === 401) {
-      toast.error('Unauthorized. Please login again.');
-      logout();
-    } else {
-      toast.error('Failed to fetch orders');
-    }
-  } finally {
-    setOrdersLoading(false);
-  }
-};
+  };
 
-// ✅ REPLACE handleUpdateOrderStatus with this
-const handleUpdateOrderStatus = async (orderId, status) => {
-  try {
-    const token = getAuthToken();
-    if (!token) {
-      toast.error('Please login again');
-      return;
-    }
-
-    console.log('📤 Updating order status:', { orderId, status });
-
-    const response = await axios.put(
-      `${API_URL}/orders/admin/${orderId}/status`,
-      { orderStatus: status },
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+  const handleUpdateOrderStatus = async (orderId, status) => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        toast.error("Please login again");
+        return;
+      }
+      const response = await axios.put(
+        `${API_URL}/orders/admin/${orderId}/status`,
+        { orderStatus: status },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
+      );
+      if (response.data.success) {
+        toast.success(`Order status updated to "${status}"`);
+        fetchOrders();
       }
-    );
-    
-    console.log('✅ Status update response:', response.data);
-    
-    if (response.data.success) {
-      toast.success(`✅ Order status updated to "${status}"`);
-      fetchOrders(); // Refresh orders
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      let msg = "Failed to update order status";
+      if (error.response?.data?.msg) msg = error.response.data.msg;
+      if (error.response?.data?.paymentStatus) {
+        msg = `Cannot update status. Payment is ${error.response.data.paymentStatus}.`;
+      }
+      toast.error(msg);
     }
-  } catch (error) {
-    console.error('❌ Error updating order status:', error);
-    console.error('Response:', error.response?.data);
-    
-    // ✅ Show detailed error message
-    let errorMessage = 'Failed to update order status';
-    
-    if (error.response) {
-      const errorData = error.response.data;
-      
-      if (errorData.msg) {
-        errorMessage = errorData.msg;
-      } else if (errorData.error) {
-        errorMessage = errorData.error;
-      }
-      
-      // ✅ If payment status is pending/failed, show specific message
-      if (errorData.paymentStatus) {
-        errorMessage = `❌ Cannot update status. Payment is ${errorData.paymentStatus}. Please complete payment first.`;
-      }
-      
-      // Show status code
-      errorMessage += ` (Error ${error.response.status})`;
-    } else if (error.request) {
-      errorMessage = 'No response from server. Please check your connection.';
-    } else {
-      errorMessage = error.message || errorMessage;
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to delete this order?")) return;
+    try {
+      const token = getAuthToken();
+      await axios.delete(`${API_URL}/orders/admin/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("Order deleted successfully");
+      fetchOrders();
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      toast.error(error.response?.data?.msg || "Failed to delete order");
     }
-    
-    toast.error(errorMessage);
-  }
-};
+  };
 
-
-  // Delete Order
-const handleDeleteOrder = async (orderId) => {
-  if (!window.confirm('Are you sure you want to delete this order?')) return;
-  
-  try {
-    const token = getAuthToken();
-    const response = await axios.delete(`${API_URL}/orders/admin/${orderId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    
-    toast.success('Order deleted successfully');
-    fetchOrders(); // Refresh orders
-  } catch (error) {
-    console.error('Error deleting order:', error);
-    toast.error(error.response?.data?.msg || 'Failed to delete order');
-  }
-};
-
-  // Product Functions
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
       const response = await axios.get(`${API_URL}/products`);
       setProducts(response.data.products || []);
-
       try {
         const token = getAuthToken();
-        const statsResponse = await axios.get(`${API_URL}/products/stats/admin`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+        const statsRes = await axios.get(`${API_URL}/products/stats/admin`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        setProductStats(statsResponse.data.stats);
-      } catch (statsError) {
-        console.warn('Product stats not available:', statsError.message);
+        setProductStats(statsRes.data.stats);
+      } catch (statsErr) {
+        console.warn("Product stats not available:", statsErr.message);
         setProductStats({
           totalProducts: response.data.products?.length || 0,
           lowStock: 0,
-          outOfStock: 0
+          outOfStock: 0,
         });
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
-      toast.error('Failed to fetch products');
+      console.error("Error fetching products:", error);
+      toast.error("Failed to fetch products");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Booking Functions
   const fetchBookings = async () => {
     setBookingsLoading(true);
     try {
       const response = await axios.get(`${API_URL}/servicebookings/all`);
       setBookingsData(response.data.bookings || []);
     } catch (error) {
-      console.error('Error fetching bookings:', error);
-      toast.error('Failed to fetch bookings');
+      console.error("Error fetching bookings:", error);
+      toast.error("Failed to fetch bookings");
     } finally {
       setBookingsLoading(false);
     }
   };
 
-  // ✅ REPLACE handleCreateProduct
+  // ================================
+  // PRODUCT CRUD
+  // ================================
+
   const handleCreateProduct = async (productData) => {
     try {
-      console.log('📤 Creating product:', productData);
-
-      const token = localStorage.getItem('adminToken');
-
+      const token = getAuthToken();
       if (!token) {
-        toast.error('Please login again');
+        toast.error("Please login again");
         return;
       }
-
-      // Clean data - remove empty values
       const cleanData = {};
-      Object.keys(productData).forEach(key => {
-        if (productData[key] !== undefined &&
-          productData[key] !== null &&
-          productData[key] !== '') {
+      Object.keys(productData).forEach((key) => {
+        if (productData[key] !== undefined && productData[key] !== null && productData[key] !== "") {
           cleanData[key] = productData[key];
         }
       });
-
-      // Ensure required fields
       if (!cleanData.name || !cleanData.price || !cleanData.type || !cleanData.image) {
-        toast.error('Name, price, type, and image are required');
+        toast.error("Name, price, type, and image are required");
         return;
       }
-
-      console.log('🧹 Clean data:', cleanData);
-
-      const response = await axios.post(
-        `${API_URL}/products`,
-        cleanData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-
-      console.log('✅ Create response:', response.data);
-      toast.success('Product created successfully');
-
-      // Refresh products list
+      await axios.post(`${API_URL}/products`, cleanData, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      toast.success("Product created successfully");
       fetchProducts();
-
-      // Close modal
       setShowProductModal(false);
-
     } catch (error) {
-      console.error('❌ Create error:', error);
-      console.error('Response:', error.response?.data);
-
-      const errorMsg = error.response?.data?.msg ||
-        error.response?.data?.error ||
-        error.message ||
-        'Failed to create product';
-      toast.error(errorMsg);
+      console.error("Create product error:", error);
+      toast.error(error.response?.data?.msg || "Failed to create product");
     }
   };
 
-  // ✅ REPLACE handleUpdateProduct
   const handleUpdateProduct = async (id, productData) => {
     try {
-      console.log('📤 Updating product:', id);
-      console.log('📦 Data:', productData);
-
-      const token = localStorage.getItem('adminToken');
-
+      const token = getAuthToken();
       if (!token) {
-        toast.error('Please login again');
+        toast.error("Please login again");
         return;
       }
-
-      // Clean data - remove empty values
       const cleanData = {};
-      Object.keys(productData).forEach(key => {
-        if (productData[key] !== undefined &&
-          productData[key] !== null &&
-          productData[key] !== '') {
+      Object.keys(productData).forEach((key) => {
+        if (productData[key] !== undefined && productData[key] !== null && productData[key] !== "") {
           cleanData[key] = productData[key];
         }
       });
-
-      // Ensure required fields
       if (!cleanData.name || !cleanData.price || !cleanData.type) {
-        toast.error('Name, price, and type are required');
+        toast.error("Name, price, and type are required");
         return;
       }
-
-      console.log('🧹 Clean data:', cleanData);
-
-      const response = await axios.put(
-        `${API_URL}/products/${id}`,
-        cleanData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-
-      console.log('✅ Update response:', response.data);
-      toast.success('Product updated successfully');
-
-      // Refresh products list
+      await axios.put(`${API_URL}/products/${id}`, cleanData, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      toast.success("Product updated successfully");
       fetchProducts();
-
-      // Close modal
       setEditingProduct(null);
       setShowProductModal(false);
-
     } catch (error) {
-      console.error('❌ Update error:', error);
-      console.error('Response:', error.response?.data);
-
-      const errorMsg = error.response?.data?.msg ||
-        error.response?.data?.error ||
-        error.message ||
-        'Failed to update product';
-      toast.error(errorMsg);
+      console.error("Update product error:", error);
+      toast.error(error.response?.data?.msg || "Failed to update product");
     }
   };
 
-  // ✅ handleDeleteProduct (unchanged)
   const handleDeleteProduct = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) return;
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = getAuthToken();
       await axios.delete(`${API_URL}/products/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      setProducts(products.filter(p => p._id !== id));
-      toast.success('Product deleted successfully');
+      setProducts(products.filter((p) => p._id !== id));
+      toast.success("Product deleted successfully");
     } catch (error) {
-      console.error('Error deleting product:', error);
-      toast.error('Failed to delete product');
+      console.error("Delete product error:", error);
+      toast.error("Failed to delete product");
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("admin");
-    sessionStorage.removeItem("adminToken");
-    sessionStorage.removeItem("admin");
-    delete axios.defaults.headers.common['Authorization'];
-    toast.success('Logged out successfully');
-    nav("/admin/login");
-  };
+  // ================================
+  // LIFECYCLE
+  // ================================
 
-  // Reset custom date range
-  const resetCustomDateRange = () => {
-    setStartDate("");
-    setEndDate("");
-  };
+  useEffect(() => {
+    fetchDashboardData();
+    fetchProducts();
+    fetchBookings();
+    fetchOrders();
+  }, []);
 
-  // Handle filter apply
+  useEffect(() => {
+    if (tab === "bookings") fetchBookings();
+    if (tab === "overview") fetchDashboardData();
+    if (tab === "orders") fetchOrders();
+  }, [tab]);
+
+  // ================================
+  // FILTER HANDLERS
+  // ================================
+
   const handleFilterApply = () => {
     fetchDashboardData();
     setShowFilterDropdown(false);
     setShowTimeFilter(false);
   };
 
-  // Reset all filters
   const resetAllFilters = () => {
     setFilterType("monthly");
     setSelectedYear(new Date().getFullYear());
@@ -654,35 +513,19 @@ const handleDeleteOrder = async (orderId) => {
     fetchDashboardData();
   };
 
-  useEffect(() => {
-    fetchDashboardData();
-    fetchProducts();
-    fetchBookings();
-    fetchOrders();
-  }, []);
-
-  useEffect(() => {
-    if (tab === 'bookings') {
-      fetchBookings();
-    }
-    if (tab === 'overview') {
-      fetchDashboardData();
-    }
-    if (tab === 'orders') {
-      fetchOrders();
-    }
-  }, [tab]);
-
-  // Get active filter display text
   const getActiveFilterText = () => {
     if (filterType === "custom") {
       return `Custom: ${startDate || "Any"} to ${endDate || "Any"}`;
     }
     if (filterType === "monthly") {
-      return `${months.find(m => m.value === selectedMonth)?.name} ${selectedYear}`;
+      return `${months.find((m) => m.value === selectedMonth)?.name} ${selectedYear}`;
     }
     return `Year ${selectedYear}`;
   };
+
+  // ================================
+  // RENDER
+  // ================================
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-offWhite flex">
@@ -713,7 +556,7 @@ const handleDeleteOrder = async (orderId) => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                {/* Enhanced Filter Bar with Timing Filter */}
+                {/* Filter Bar */}
                 <div className="bg-white rounded-2xl p-4 mb-6 shadow-lg border border-gray-100">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
@@ -722,64 +565,50 @@ const handleDeleteOrder = async (orderId) => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
-                      {/* Filter Type Toggle */}
                       <div className="flex bg-gray-100 rounded-lg p-1">
-                        <button
-                          onClick={() => setFilterType("monthly")}
-                          className={`px-4 py-2 rounded-md text-sm font-medium transition ${filterType === "monthly"
-                              ? "bg-white text-red-600 shadow-sm"
-                              : "text-gray-600 hover:text-gray-800"
+                        {["monthly", "yearly", "custom"].map((type) => (
+                          <button
+                            key={type}
+                            onClick={() => setFilterType(type)}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+                              filterType === type
+                                ? "bg-white text-red-600 shadow-sm"
+                                : "text-gray-600 hover:text-gray-800"
                             }`}
-                        >
-                          Monthly
-                        </button>
-                        <button
-                          onClick={() => setFilterType("yearly")}
-                          className={`px-4 py-2 rounded-md text-sm font-medium transition ${filterType === "yearly"
-                              ? "bg-white text-red-600 shadow-sm"
-                              : "text-gray-600 hover:text-gray-800"
-                            }`}
-                        >
-                          Yearly
-                        </button>
-                        <button
-                          onClick={() => setFilterType("custom")}
-                          className={`px-4 py-2 rounded-md text-sm font-medium transition ${filterType === "custom"
-                              ? "bg-white text-red-600 shadow-sm"
-                              : "text-gray-600 hover:text-gray-800"
-                            }`}
-                        >
-                          Custom Range
-                        </button>
+                          >
+                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                          </button>
+                        ))}
                       </div>
 
-                      {/* Year Selector */}
                       {(filterType === "monthly" || filterType === "yearly") && (
                         <select
                           value={selectedYear}
                           onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                           className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
                         >
-                          {availableYears.map(year => (
-                            <option key={year} value={year}>{year}</option>
+                          {availableYears.map((year) => (
+                            <option key={year} value={year}>
+                              {year}
+                            </option>
                           ))}
                         </select>
                       )}
 
-                      {/* Month Selector (only for monthly view) */}
                       {filterType === "monthly" && (
                         <select
                           value={selectedMonth}
                           onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
                           className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
                         >
-                          {months.map(month => (
-                            <option key={month.value} value={month.value}>{month.name}</option>
+                          {months.map((month) => (
+                            <option key={month.value} value={month.value}>
+                              {month.name}
+                            </option>
                           ))}
                         </select>
                       )}
 
-                      {/* Custom Date Range Picker */}
                       {filterType === "custom" && (
                         <div className="flex gap-2">
                           <input
@@ -787,7 +616,6 @@ const handleDeleteOrder = async (orderId) => {
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
                             className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-                            placeholder="Start Date"
                           />
                           <span className="text-gray-400">to</span>
                           <input
@@ -795,38 +623,38 @@ const handleDeleteOrder = async (orderId) => {
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
                             className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-                            placeholder="End Date"
                           />
                         </div>
                       )}
 
-                      {/* Time of Day Filter */}
                       <div className="relative">
                         <button
                           onClick={() => setShowTimeFilter(!showTimeFilter)}
-                          className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm transition ${timeFilter !== "all"
+                          className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm transition ${
+                            timeFilter !== "all"
                               ? "border-red-400 bg-red-50 text-red-600"
                               : "border-gray-300 bg-white text-gray-600 hover:border-gray-400"
-                            }`}
+                          }`}
                         >
                           <FaClock className="w-4 h-4" />
                           <span>
-                            {timeFilter === "all" ? "All Times" : timeSlots.find(s => s.value === timeFilter)?.label}
+                            {timeFilter === "all"
+                              ? "All Times"
+                              : timeSlots.find((s) => s.value === timeFilter)?.label}
                           </span>
                         </button>
-
-                        {/* Time Filter Dropdown */}
                         {showTimeFilter && (
                           <div className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg border border-gray-200 z-20 min-w-[200px]">
-                            {timeSlots.map(slot => (
+                            {timeSlots.map((slot) => (
                               <button
                                 key={slot.value}
                                 onClick={() => {
                                   setTimeFilter(slot.value);
                                   setShowTimeFilter(false);
                                 }}
-                                className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center justify-between ${timeFilter === slot.value ? "bg-red-50 text-red-600" : "text-gray-700"
-                                  }`}
+                                className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition flex items-center justify-between ${
+                                  timeFilter === slot.value ? "bg-red-50 text-red-600" : "text-gray-700"
+                                }`}
                               >
                                 <div className="flex items-center gap-2">
                                   <span>{slot.icon}</span>
@@ -839,15 +667,13 @@ const handleDeleteOrder = async (orderId) => {
                         )}
                       </div>
 
-                      {/* Apply Button */}
                       <button
                         onClick={handleFilterApply}
-                        className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg text-sm font-medium hover:from-red-600 hover:to-red-700 transition shadow-md"
+                        className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg text-sm font-medium hover:shadow-md transition"
                       >
                         Apply Filter
                       </button>
 
-                      {/* Reset Button */}
                       <button
                         onClick={resetAllFilters}
                         className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition"
@@ -856,7 +682,6 @@ const handleDeleteOrder = async (orderId) => {
                       </button>
                     </div>
 
-                    {/* Active Filters Display */}
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="flex items-center gap-2 text-sm text-gray-500">
                         <FaCalendarAlt className="w-4 h-4" />
@@ -865,7 +690,7 @@ const handleDeleteOrder = async (orderId) => {
                       {timeFilter !== "all" && (
                         <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs">
                           <FaClock className="w-3 h-3" />
-                          <span>{timeSlots.find(s => s.value === timeFilter)?.label}</span>
+                          <span>{timeSlots.find((s) => s.value === timeFilter)?.label}</span>
                         </div>
                       )}
                     </div>
@@ -879,7 +704,11 @@ const handleDeleteOrder = async (orderId) => {
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-semibold text-gray-800">Revenue Overview</h4>
                       <span className="text-xs text-gray-400">
-                        {filterType === "monthly" ? "Monthly breakdown" : filterType === "yearly" ? "Yearly overview" : "Custom range"}
+                        {filterType === "monthly"
+                          ? "Monthly breakdown"
+                          : filterType === "yearly"
+                          ? "Yearly overview"
+                          : "Custom range"}
                       </span>
                     </div>
                     <RevenueChart data={monthlyRevenue} filterType={filterType} />
@@ -887,9 +716,8 @@ const handleDeleteOrder = async (orderId) => {
                   <RecentBookings bookings={recentBookings} />
                 </div>
 
-                {/* Revenue Breakdown Section */}
+                {/* Revenue Breakdown */}
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
-                  {/* Revenue Breakdown Card */}
                   <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-semibold text-gray-800">Revenue Breakdown</h4>
@@ -926,17 +754,13 @@ const handleDeleteOrder = async (orderId) => {
                       </div>
                       <div className="flex justify-between items-center pt-2">
                         <span className="font-bold text-gray-800">Total Revenue</span>
-                        <div className="text-right">
-                          <span className="text-2xl font-bold text-green-600">
-                            ₹{(dashboardStats?.totalRevenue || 0).toLocaleString()}
-                          </span>
-                          <p className="text-xs text-gray-400">From successful payments</p>
-                        </div>
+                        <span className="text-2xl font-bold text-green-600">
+                          ₹{(dashboardStats?.totalRevenue || 0).toLocaleString()}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Payment Status Card */}
                   <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-semibold text-gray-800">Payment Summary</h4>
@@ -965,8 +789,13 @@ const handleDeleteOrder = async (orderId) => {
                         <span className="text-gray-600">Conversion Rate</span>
                         <span className="font-semibold text-purple-600">
                           {dashboardStats?.totalBookings > 0
-                            ? Math.round(((dashboardStats?.completedBookings || 0) / dashboardStats?.totalBookings) * 100)
-                            : 0}%
+                            ? Math.round(
+                                ((dashboardStats?.completedBookings || 0) /
+                                  dashboardStats?.totalBookings) *
+                                  100
+                              )
+                            : 0}
+                          %
                         </span>
                       </div>
                     </div>
@@ -981,7 +810,9 @@ const handleDeleteOrder = async (orderId) => {
                         {dashboardStats.popularServices.slice(0, 3).map((service, idx) => (
                           <div key={idx} className="flex justify-between items-center">
                             <span className="text-gray-700">{service._id}</span>
-                            <span className="font-semibold text-purple-600">{service.count} bookings</span>
+                            <span className="font-semibold text-purple-600">
+                              {service.count} bookings
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -994,15 +825,21 @@ const handleDeleteOrder = async (orderId) => {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-gray-700">Low Stock Items</span>
-                        <span className="font-semibold text-orange-600">{dashboardStats?.lowStockProducts || 0}</span>
+                        <span className="font-semibold text-orange-600">
+                          {dashboardStats?.lowStockProducts || 0}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Out of Stock</span>
-                        <span className="font-semibold text-red-600">{dashboardStats?.outOfStockProducts || 0}</span>
+                        <span className="font-semibold text-red-600">
+                          {dashboardStats?.outOfStockProducts || 0}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Total Sold</span>
-                        <span className="font-semibold text-green-600">{dashboardStats?.totalProductSales || 0}</span>
+                        <span className="font-semibold text-green-600">
+                          {dashboardStats?.totalProductSales || 0}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1011,15 +848,21 @@ const handleDeleteOrder = async (orderId) => {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-gray-700">Total Requests</span>
-                        <span className="font-semibold text-blue-600">{dashboardStats?.sessionRequests || 0}</span>
+                        <span className="font-semibold text-blue-600">
+                          {dashboardStats?.sessionRequests || 0}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Pending</span>
-                        <span className="font-semibold text-yellow-600">{dashboardStats?.pendingSessions || 0}</span>
+                        <span className="font-semibold text-yellow-600">
+                          {dashboardStats?.pendingSessions || 0}
+                        </span>
                       </div>
                       <div className="flex justify-between pt-2 border-t border-blue-200">
                         <span className="text-gray-700">Completed Sessions</span>
-                        <span className="font-semibold text-green-600">{dashboardStats?.completedSessions || 0}</span>
+                        <span className="font-semibold text-green-600">
+                          {dashboardStats?.completedSessions || 0}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1095,7 +938,6 @@ const handleDeleteOrder = async (orderId) => {
                   </button>
                 </div>
 
-                {/* Order Stats */}
                 {orderStats && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
@@ -1139,21 +981,21 @@ const handleDeleteOrder = async (orderId) => {
                 onUpdateStatus={async (id, status) => {
                   try {
                     await axios.put(`${API_URL}/servicebookings/${id}/status`, { status });
-                    toast.success('Booking status updated');
+                    toast.success("Booking status updated");
                     fetchBookings();
                   } catch (error) {
-                    toast.error('Failed to update status');
+                    toast.error("Failed to update status");
                     console.log(error);
                   }
                 }}
                 onDelete={async (id) => {
-                  if (window.confirm('Delete this booking?')) {
+                  if (window.confirm("Delete this booking?")) {
                     try {
                       await axios.delete(`${API_URL}/servicebookings/${id}`);
-                      toast.success('Booking deleted');
+                      toast.success("Booking deleted");
                       fetchBookings();
                     } catch (error) {
-                      toast.error('Failed to delete');
+                      toast.error("Failed to delete");
                       console.log(error);
                     }
                   }
@@ -1161,37 +1003,18 @@ const handleDeleteOrder = async (orderId) => {
               />
             )}
 
-            {/* Content Tab */}
+            {/* Other Tabs */}
             {tab === "content" && <SocialContentManager />}
-
-            {/* Hero Slider Tab */}
             {tab === "slider" && <HeroSlide />}
-
-            {/* plan management */}
             {tab === "plan" && <PlanManagement />}
-
-            {/* Expert Tab */}
             {tab === "expert" && <AdminExperts />}
-
-            {/* Course Tab */}
             {tab === "course" && <AddCourse />}
-            {/* rashi tab */}
             {tab === "rashi" && <RashiFalManager />}
-            {/* Blog Tab */}
             {tab === "blog" && <BlogManager />}
-
-            {/* Coupons Tab */}
             {tab === "coupons" && <CouponManager />}
-
-            {/* Users Tab */}
             {tab === "users" && <Users />}
-
-            {/* Services Tab */}
             {tab === "services" && <AddServices />}
-
             {tab === "classes" && <Classes />}
-
-            {/* Reports Tab */}
             {tab === "reports" && <Reports />}
           </AnimatePresence>
         </main>
